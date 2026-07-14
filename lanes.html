@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lanes · Create a Lane — Apollo by Nevoya</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#1B4E4C;--teal-soft:#DCEFE9;--ink:#0F172A;--gray:#64748B;--line:#E2E8F0;--bg:#F7F7F8;
+--yellow:#F5E077;--purple:#E4DDF7;--red:#DC2626;--redsoft:#FDECEC;--orange:#E67E22;--green:#27AE60;--greensoft:#E7F6EC;--warnbg:#FCF6DE;--blue:#1D4ED8;--bluesoft:#E0EAFB}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var(--bg);height:100vh;overflow:hidden;font-size:14px}
+#app{display:flex;height:100vh}
+/* rail (matches mvp2-apollo.html) */
+#rail{width:64px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex:none}
+#rail .logo{width:34px;height:34px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;margin-bottom:10px}
+#rail .ric{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#475569;position:relative}
+#rail .ric:hover{background:#F1F5F9}
+#rail .ric.active{background:var(--teal-soft);color:var(--teal)}
+#rail .ric.ghost{opacity:.38;cursor:default}
+#rail .tz{margin-top:auto;font-size:11px;color:var(--gray);font-weight:500}
+#rail .tip{position:absolute;left:52px;background:var(--ink);color:#fff;font-size:11px;padding:3px 8px;border-radius:5px;white-space:nowrap;display:none;z-index:50}
+#rail .ric:hover .tip{display:block}
+/* main */
+#maincol{flex:1;display:flex;flex-direction:column;min-width:0}
+#lanehead{padding:18px 26px 0}
+#lanehead .top{display:flex;align-items:center;gap:14px}
+#lanehead h1{font-size:26px;font-weight:500}
+#lanehead .sub{color:var(--gray);font-size:12.5px;margin-top:4px}
+.abtn{border:1px solid #CBD5E1;background:#fff;border-radius:7px;font-size:13px;font-weight:500;padding:7px 13px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.abtn:hover{background:#F8FAFC}
+.abtn.primary{background:var(--teal);border-color:var(--teal);color:#F7F7F8}
+.abtn.primary:hover{background:#16403E}
+.abtn:disabled{opacity:.45;cursor:not-allowed}
+.toolbar{display:flex;align-items:center;gap:8px;padding:14px 26px 4px;flex-wrap:wrap}
+.chip{border:1px solid #CBD5E1;border-radius:16px;padding:4px 13px;font-size:12.5px;cursor:pointer;background:#fff;color:#334155}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.gtoggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#334155;margin-left:auto;cursor:pointer;user-select:none;white-space:nowrap}
+.gtoggle input{accent-color:var(--teal)}
+#listwrap{flex:1;overflow:auto;padding:10px 26px 90px}
+.listcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr 1.15fr .8fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr 1.15fr .8fr 20px}
+.grouphead{display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:13px;font-weight:500;color:#334155;background:#FAFBFB;border-bottom:1px solid var(--line);border-top:1px solid var(--line);cursor:pointer}
+.grouphead .chev{transition:transform .15s;color:var(--gray);display:inline-block}
+.grouphead.collapsed .chev{transform:rotate(-90deg)}
+.grouphead .n{color:var(--gray);font-weight:400}
+.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr 1.15fr .8fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
+.lanerow:hover{background:#F8FAFC}
+.lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .od{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .win{color:var(--gray);font-size:12.5px;white-space:nowrap}
+.lanerow .lt{color:var(--gray);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .mc{color:var(--gray);font-size:12.5px;text-align:right;white-space:nowrap}
+.colhead .mc{text-align:right}
+.lanerow .chev2{color:#CBD5E1}
+.pill{border-radius:12px;padding:3px 11px;font-size:12px;font-weight:500;display:inline-block}
+.p-active{background:var(--greensoft);color:#166534}
+.p-future{background:var(--bluesoft);color:var(--blue)}
+.p-closed{background:#E5E7EB;color:#374151}
+.lid{background:#F1F5F9;border-radius:6px;padding:3px 9px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
+/* drawer */
+#drawer{width:0;flex:none;background:#fff;border-left:1px solid var(--line);overflow:hidden;transition:width .18s ease;display:flex;flex-direction:column}
+#drawer.open{width:560px}
+#dhead{padding:16px 18px 12px;border-bottom:1px solid var(--line);flex:none}
+#dhead .top{display:flex;align-items:center;gap:8px}
+#dhead .x{margin-left:auto;cursor:pointer;color:var(--gray);font-size:16px;padding:2px 8px;border-radius:6px}
+#dhead .x:hover{background:#F1F5F9}
+#dhead h2{font-size:17px;font-weight:500;margin-top:6px}
+#dhead .meta{color:var(--gray);font-size:12.5px;margin-top:3px}
+#dhead .btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#dtl{flex:1;overflow-y:auto;padding:14px 18px 24px}
+#dtl .sect{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:10px;display:flex}
+#dtl .sect span:last-child{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none}
+#dfoot{flex:none;border-top:1px solid var(--line);padding:12px 18px;display:none;gap:8px;justify-content:flex-end;background:#fff}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin-bottom:6px}
+.dr{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.dr .k{font-size:11px;color:var(--gray);letter-spacing:.3px}
+.dr .v{color:var(--ink)}
+.odview{padding:9px 11px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:13.5px;background:#FBFDFC}
+.odview i{color:#94A3B8;font-style:normal;font-size:12px}
+.provbanner{background:#F1F5F9;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#334155;margin-bottom:14px;line-height:1.5}
+.provlink{color:var(--teal);cursor:pointer;font-weight:500}
+.provlink:hover{text-decoration:underline}
+.mrow{display:grid;grid-template-columns:96px 84px 1fr 64px 64px 22px;gap:8px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
+.mrow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:500;border-bottom:1px solid var(--line)}
+.mrow .note{grid-column:1/-1;color:var(--orange);font-size:11.5px;padding:2px 0 4px}
+.dtick{color:var(--green)}
+.dpend{color:#94A3B8}
+/* form */
+.formsect{margin-bottom:16px}
+.formsect>.lbl{font-size:11px;letter-spacing:.6px;color:var(--gray);font-weight:500;margin-bottom:8px;display:block}
+.frow{display:flex;gap:10px;margin-bottom:14px}
+.ffield{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.frow .ffield{margin-bottom:0}
+.ffield label{font-size:12px;color:#475569;font-weight:500}
+.ffield input[type=text],.ffield input[type=date],.ffield select,.ffield textarea{border:1px solid #CBD5E1;border-radius:7px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%}
+.ffield input:focus,.ffield select:focus{border-color:var(--teal)}
+.ffield .err{color:var(--red);font-size:11.5px;min-height:14px}
+.ffield .hint{font-size:11px;color:#94A3B8}
+.checkrow{display:flex;align-items:center;gap:6px;font-size:13px;color:#334155}
+.odrow{border:1px solid var(--line);border-radius:9px;padding:10px 12px 4px;margin-bottom:8px;position:relative;background:#FBFDFC}
+.odrow .odgrid{display:flex;align-items:center;gap:8px}
+.odrow .arrow{color:var(--gray);margin-top:16px}
+.odrow .rm{position:absolute;top:8px;right:8px;color:var(--gray);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:5px}
+.odrow .rm:hover{background:#F1F5F9;color:var(--red)}
+.odrow .hint{font-size:11px;color:#94A3B8;margin-top:4px}
+.addod{border:1px dashed #CBD5E1;border-radius:8px;padding:8px;text-align:center;font-size:12.5px;color:var(--teal);cursor:pointer;background:#fff}
+.addod:hover{background:#F4FAF7}
+.conflictbanner{background:var(--warnbg);border:1px solid #E8C34A;border-radius:9px;padding:12px 14px;margin-bottom:16px}
+.conflictbanner .t{font-weight:500;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.conflictbanner .d{font-size:12.5px;color:#7C5A00;margin-top:5px;line-height:1.5}
+.conflictbanner .btns{margin-top:9px}
+/* modal + toast */
+#ovl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:100}
+#ovl.show{display:flex}
+.modal{background:#fff;border-radius:12px;width:440px;max-width:92vw;max-height:86vh;overflow-y:auto}
+.modal .mh{display:flex;padding:16px 20px 4px;align-items:center}
+.modal .mh b{font-size:16px}
+.modal .mh .x{margin-left:auto;cursor:pointer;color:var(--gray)}
+.modal .mb{padding:10px 20px 18px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="rail">
+    <div class="logo">N</div>
+    <div class="ric" onclick="location.href='../mvp2-apollo.html'">📦<span class="tip">Loads</span></div>
+    <div class="ric active">🛣<span class="tip">Lanes</span></div>
+    <div class="ric ghost">✦<span class="tip">Ask Apollo — coming to Lanes</span></div>
+    <div class="ric ghost">🔔<span class="tip">Alerts feed — coming soon</span></div>
+    <div class="ric ghost">🗓</div><div class="ric ghost">🚛</div><div class="ric ghost">👤</div><div class="ric ghost">📊</div>
+    <div class="tz">TX·CA</div>
+  </div>
+  <div id="maincol">
+    <div id="lanehead">
+      <div class="top">
+        <div>
+          <h1>Lanes</h1>
+          <div class="sub" id="lanesub">— lanes</div>
+        </div>
+        <button class="abtn primary" style="margin-left:auto" onclick="openCreateDrawer()">＋ Create Lane</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div id="lanechips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <label class="gtoggle"><input type="checkbox" id="groupToggle" checked> Group by customer</label>
+    </div>
+    <div id="listwrap"></div>
+  </div>
+  <div id="drawer">
+    <div id="dhead"></div>
+    <div id="dtl"></div>
+    <div id="dfoot"></div>
+  </div>
+</div>
+
+<div id="ovl"><div class="modal" id="modalbox"></div></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
+const TODAY='2026-07-14';
+const CUSTOMERS=['Coca-Cola','Amazon Relay','C.H. Robinson','ITS Logistics','Uber Freight','RXO','Arrive Logistics','ECHO','Wayfair','APEX'];
+const LOCATIONS=['Waco - Envases','Houston - Coke','Houston Parking','Waco Parking','Dallas Parking','Garland, TX','Sealy, TX','Amazon Coppell, TX','Amazon Houston, TX','LGB3','LGB5','LGB7','TCY5','TCY9','Long Beach Port','Victorville, CA','Phoenix, AZ','Baytown, TX','Pasadena, TX'];
+const BCOS=['Coca-Cola Consolidated','Niagara Bottling','Niagara Bottling (via broker)',"L'Oreal (via XPO)",'Amazon.com Services LLC','Uber Freight LLC','RXO Inc.','ITS Logistics LLC'];
+const LOADTYPES=['','Truckload / Dry Van','Drayage','Drayage relay','Container shuttle','Reefer','Production (dedicated)'];
+
+/* ---------- seed data (grounded in the TX Driver Schedule + CA Operations Schedule) ---------- */
+let LANES={};
+function seedLanes(){LANES={
+ 'CC-001':{id:'CC-001',customer:'Coca-Cola',bco:'Coca-Cola Consolidated',bcoUnknown:false,code:'CC-001',version:1,status:'Active',
+  plannedStart:'2025-01-01',plannedEnd:null,actualStart:'2025-01-01',actualEnd:null,loadType:'Production (dedicated)',dropPickup:true,dropDelivery:true,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'Waco - Envases',destination:'Houston - Coke'}],
+  matched:[
+   {apolloId:'7284',externalId:'556991910',driver:'Timothy Bearfield',pu:'1:00 AM',del:'5:00 AM',delivered:true},
+   {apolloId:'7288',externalId:'556992050',driver:'Steven Bell',pu:'8:00 AM',del:'12:00 PM',delivered:true},
+   {apolloId:'7285',externalId:'556992015',driver:'Suzan Bell',pu:'9:00 AM',del:'1:00 PM',delivered:true},
+   {apolloId:'7293',externalId:'556992030',driver:'Jermarcus Sampson',pu:'11:00 AM',del:'3:00 PM',delivered:false},
+   {apolloId:'7271',externalId:'556991921',driver:'Michael Malave',pu:'12:00 PM',del:'4:00 PM',delivered:true},
+   {apolloId:'7279',externalId:'556991994',driver:'Milton Boyle',pu:'1:00 PM',del:'5:00 PM',delivered:true}
+  ]},
+ 'AMZ-CPL-HOU':{id:'AMZ-CPL-HOU',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-CPL-HOU',version:1,status:'Active',
+  plannedStart:'2025-03-01',plannedEnd:null,actualStart:'2025-03-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'Amazon Coppell, TX',destination:'Amazon Houston, TX'}],
+  matched:[
+   {apolloId:'7311',externalId:'113KF1BN1',driver:'Ronnie Willburn',pu:'5:30 PM',del:'11:59 PM',delivered:false,note:'NEED TO CANCEL PRIOR TO 10AM MON if canceling'},
+   {apolloId:'7345',externalId:'116DYCP6M',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false},
+   {apolloId:'7356',externalId:'111WC1BZW',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false,note:'Canceled but trailer was already onsite'},
+   {apolloId:'7358',externalId:'1128HBDHQ',driver:'Quentin Holmes',pu:'—',del:'—',delivered:false},
+   {apolloId:'7359',externalId:'1135SMPVQ',driver:'Javontae Williams',pu:'12:30 PM',del:'5:30 PM',delivered:false}
+  ]},
+ 'AMZ-LGB5-TCY5':{id:'AMZ-LGB5-TCY5',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB5-TCY5',version:1,status:'Active',
+  plannedStart:'2026-01-01',plannedEnd:null,actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'LGB5',destination:'TCY5'}],
+  matched:[
+   {apolloId:'NEVOV_R102886',externalId:'113FZ1CZF',driver:'Mauricio Palma → Joshua Sanchez',pu:'07/13 5:00',del:'—',delivered:false},
+   {apolloId:'NEVOV_R102893',externalId:'115BCLG23',driver:'—',pu:'07/13 12:30',del:'—',delivered:false,note:'Cancelled by Amazon'},
+   {apolloId:'NEVOV_R102894',externalId:'114HF9949',driver:'Dereith Browning → Scott Deniz',pu:'07/14 13:00',del:'—',delivered:false,note:'Cancelled by Amazon'},
+   {apolloId:'NEVOV_R102895',externalId:'114S1C19D',driver:'Dereith Browning → Joan Deniz',pu:'07/14 13:00',del:'—',delivered:false}
+  ]},
+ 'AMZ-LGB7-TCY9':{id:'AMZ-LGB7-TCY9',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB7-TCY9',version:1,status:'Active',
+  plannedStart:'2026-01-01',plannedEnd:null,actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'LGB7',destination:'TCY9'}],
+  matched:[
+   {apolloId:'NEVOV_R102904',externalId:'113QNPZVX',driver:'Kuldeep Sandhu → Jagroop Man',pu:'07/13 7:45',del:'—',delivered:false},
+   {apolloId:'NEVOV_R102912',externalId:'111Z59G12',driver:'Dominique Callaway → April Debski',pu:'07/13 9:00',del:'—',delivered:false,note:'Rejected — trailer 649123 yellow-tagged, pending reason from ROC'},
+   {apolloId:'NEVOV_R102905',externalId:'115HM41DM',driver:'Kuldeep Sandhu → Jagroop Man',pu:'07/14 7:45',del:'—',delivered:false,note:'Kuldeep called off sick'}
+  ]},
+ 'AMZ-LGB3-TCY5':{id:'AMZ-LGB3-TCY5',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB3-TCY5',version:1,status:'Active',
+  plannedStart:'2026-01-01',plannedEnd:null,actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'LGB3',destination:'TCY5'}],
+  matched:[
+   {apolloId:'NEVOV_R102922',externalId:'11141JMBR',driver:'Mauricio Palma → Joshua Sanchez',pu:'07/14 10:30',del:'—',delivered:false},
+   {apolloId:'NEVOV_R102923',externalId:'112DXFWHB',driver:'Oscar Gracian → Vanthar Aing',pu:'07/14 10:30',del:'—',delivered:false,note:'Covering — Dominique on medical leave'}
+  ]},
+ 'UF-HOU-DAL':{id:'UF-HOU-DAL',customer:'Uber Freight',bco:'Uber Freight LLC',bcoUnknown:false,code:'UF-HOU-DAL',version:1,status:'Active',
+  plannedStart:'2025-08-01',plannedEnd:'2026-07-24',actualStart:'2025-08-01',actualEnd:null,loadType:'Truckload / Dry Van',dropPickup:true,dropDelivery:false,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'Houston Parking',destination:'Dallas Parking'}],
+  matched:[]},
+ 'ITS-LGB-INLAND':{id:'ITS-LGB-INLAND',customer:'ITS Logistics',bco:'ITS Logistics LLC',bcoUnknown:false,code:'ITS-LGB-INLAND',version:1,status:'Closed',
+  plannedStart:'2024-01-01',plannedEnd:'2025-06-30',actualStart:'2024-01-01',actualEnd:'2025-06-30',loadType:'Drayage',dropPickup:false,dropDelivery:false,
+  renewedFrom:null,renewedTo:'ITS-LGB-INLAND-V2',
+  od:[{origin:'LGB3',destination:null}],
+  matched:[]},
+ 'ITS-LGB-INLAND-V2':{id:'ITS-LGB-INLAND-V2',customer:'ITS Logistics',bco:'ITS Logistics LLC',bcoUnknown:false,code:'ITS-LGB-INLAND-V2',version:2,status:'Active',
+  plannedStart:'2025-07-01',plannedEnd:null,actualStart:'2025-07-01',actualEnd:null,loadType:'Drayage',dropPickup:false,dropDelivery:false,
+  renewedFrom:'ITS-LGB-INLAND',renewedTo:null,
+  od:[{origin:'LGB3',destination:null}],
+  matched:[]},
+ 'RXO-DAL-HOU-2027':{id:'RXO-DAL-HOU-2027',customer:'RXO',bco:null,bcoUnknown:true,code:'RXO-DAL-HOU-2027',version:1,status:'Future',
+  plannedStart:'2027-01-01',plannedEnd:null,actualStart:null,actualEnd:null,loadType:null,dropPickup:false,dropDelivery:false,
+  renewedFrom:null,renewedTo:null,
+  od:[{origin:'Dallas Parking',destination:'Houston Parking'}],
+  matched:[]}
+};}
+
+/* ---------- helpers ---------- */
+function fmtDate(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function windowText(l){const s=fmtDate(l.plannedStart)||'—';const e=l.plannedEnd?fmtDate(l.plannedEnd):'ongoing';return s+' – '+e;}
+function odLabel(pair){const o=pair.origin||'any origin';const d=pair.destination||'any destination';return o+' → '+d;}
+function odSummary(l){if(!l.od.length)return '—';const first=odLabel(l.od[0]);return l.od.length>1?first+' +'+(l.od.length-1)+' more':first;}
+function locMatch(a,b){return !a||!b||a.toLowerCase()===b.toLowerCase();}
+function odOverlap(a,b){return locMatch(a.origin,b.origin)&&locMatch(a.destination,b.destination);}
+function dateOverlap(s1,e1,s2,e2){const E1=e1||'9999-12-31',E2=e2||'9999-12-31';return s1<=E2&&s2<=E1;}
+function findConflict(customer,od,start,end,excludeIds){excludeIds=excludeIds||[];
+ for(const id in LANES){const L=LANES[id];
+  if(excludeIds.includes(id))continue;
+  if(L.customer!==customer)continue;
+  if(L.status==='Closed')continue;
+  if(!dateOverlap(start,end,L.plannedStart,L.plannedEnd))continue;
+  for(const p of od)for(const lp of L.od)if(odOverlap(p,lp))return{lane:L,pair:p,lp:lp};
+ }
+ return null;}
+function idFromCode(code){let base=(code||'LANE').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'LANE';let id=base,n=1;while(LANES[id]){n++;id=base+'-'+n;}return id;}
+function autoCode(customer){return (customer||'LANE').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()+'-'+Math.floor(Math.random()*900+100);}
+function prevDay(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);}
+function suggestRenewCode(code){const m=code.match(/-V(\d+)$/i);if(m)return code.replace(/-V\d+$/i,'')+'-V'+(+m[1]+1);
+ const m2=code.match(/(\d+)$/);if(m2){const n=(+m2[1]+1);return code.slice(0,-m2[1].length)+String(n).padStart(m2[1].length,'0');}
+ return code+'-V2';}
+function isExpiringSoon(l){if(l.status!=='Active'||!l.plannedEnd||l.renewedTo)return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
+
+/* ---------- list ---------- */
+let GROUPBY=true,COLLAPSED={},CHIPFILTER='all',SELECTED=null;
+function chipCounts(){const vals=Object.values(LANES);
+ return{all:vals.length,active:vals.filter(l=>l.status==='Active').length,future:vals.filter(l=>l.status==='Future').length,closed:vals.filter(l=>l.status==='Closed').length,exp:vals.filter(isExpiringSoon).length};}
+function renderChips(){const c=chipCounts();
+ const defs=[['all','All lanes',c.all],['active','Active',c.active],['future','Future',c.future],['exp','Expiring soon',c.exp],['closed','Closed',c.closed]];
+ $('lanechips').innerHTML=defs.map(d=>'<div class="chip'+(CHIPFILTER===d[0]?' on':'')+'" onclick="CHIPFILTER=\''+d[0]+'\';renderList()">'+d[1]+' '+d[2]+'</div>').join('');}
+function passFilter(l){if(CHIPFILTER==='all')return true;if(CHIPFILTER==='active')return l.status==='Active';if(CHIPFILTER==='future')return l.status==='Future';if(CHIPFILTER==='closed')return l.status==='Closed';if(CHIPFILTER==='exp')return isExpiringSoon(l);return true;}
+function statusPill(l){const cls=l.status==='Active'?'p-active':l.status==='Future'?'p-future':'p-closed';return '<span class="pill '+cls+'">'+l.status+'</span>';}
+function flagsFor(l){let f='';if(isExpiringSoon(l))f+='<span title="Planned end within 3 weeks — no renewal yet">⏳</span>';if(l.bcoUnknown)f+='<span title="BCO unknown — broker withheld">❔</span>';return f;}
+function rowHTML(id,showCust){const l=LANES[id];
+ return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
+ '<div class="code">'+flagsFor(l)+' '+esc(l.code)+' <span style="color:var(--gray);font-weight:400;font-size:11.5px">v'+l.version+'</span></div>'+
+ '<div>'+statusPill(l)+'</div>'+
+ (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
+ '<div class="od">'+esc(odSummary(l))+'</div>'+
+ '<div class="win">'+windowText(l)+'</div>'+
+ '<div class="lt">'+(l.loadType||'—')+'</div>'+
+ '<div class="mc">'+(l.matched.length?l.matched.length+' matched':'—')+'</div>'+
+ '<div class="chev2">›</div></div>';}
+function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div><div>Load type</div><div class="mc">Matched</div><div></div></div>';}
+function toggleGroup(c){COLLAPSED[c]=!COLLAPSED[c];renderList();}
+function updateSub(){const c=chipCounts();$('lanesub').textContent=c.all+' lanes · '+c.active+' active · '+c.future+' future-dated · '+c.exp+' expiring soon';}
+function renderList(){renderChips();updateSub();
+ const ids=Object.keys(LANES).filter(id=>passFilter(LANES[id]));
+ const wrap=$('listwrap');
+ if(!ids.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray);font-size:13.5px">No lanes match this filter.</div>';return;}
+ if(GROUPBY){
+  const byCust={};ids.forEach(id=>{const c=LANES[id].customer;(byCust[c]=byCust[c]||[]).push(id);});
+  const custs=Object.keys(byCust).sort();
+  wrap.innerHTML='<div class="listcard">'+colHead(false)+custs.map(c=>{
+   const collapsed=!!COLLAPSED[c];
+   return '<div class="grouphead'+(collapsed?' collapsed':'')+'" onclick="toggleGroup(\''+esc(c).replace(/'/g,"\\'")+'\')"><span class="chev">▾</span>'+esc(c)+' <span class="n">· '+byCust[c].length+' lane'+(byCust[c].length>1?'s':'')+'</span></div>'+
+   (collapsed?'':byCust[c].map(id=>rowHTML(id,false)).join(''));
+  }).join('')+'</div>';
+ } else {
+  wrap.innerHTML='<div class="listcard">'+colHead(true)+ids.map(id=>rowHTML(id,true)).join('')+'</div>';
+ }
+}
+
+/* ---------- drawer: view mode ---------- */
+function openLaneDrawer(id){SELECTED=id;$('dfoot').style.display='none';renderDrawerView(id);$('drawer').classList.add('open');}
+function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfoot').style.display='none';renderList();}
+function renderDrawerView(id){const l=LANES[id];if(!l)return;
+ const open=l.status!=='Closed';
+ $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span style="color:var(--gray);font-size:12px">v'+l.version+'</span><span class="x" onclick="closeDrawer()">✕</span></div>'+
+ '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
+ '<div class="btns">'+(open
+   ?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">✎ Edit</button><button class="abtn" onclick="openRenewDrawer(\''+id+'\')">↻ Renew</button><button class="abtn" style="color:var(--red);border-color:#F3C6C6" onclick="openCloseModal(\''+id+'\')">Close lane</button>'
+   :'<span style="color:var(--gray);font-size:12.5px">Closed '+fmtDate(l.actualEnd)+' · new loads no longer match</span>')+
+ '</div>';
+ let html='';
+ if(l.renewedFrom||l.renewedTo){
+  html+='<div class="provbanner">';
+  if(l.renewedFrom){const p=LANES[l.renewedFrom];html+='Renewed from <span class="provlink" onclick="openLaneDrawer(\''+l.renewedFrom+'\')">'+esc(p?p.code:l.renewedFrom)+' (v'+(l.version-1)+')</span>. ';}
+  if(l.renewedTo){const n=LANES[l.renewedTo];html+='Renewed forward to <span class="provlink" onclick="openLaneDrawer(\''+l.renewedTo+'\')">'+esc(n?n.code:l.renewedTo)+' (v'+(l.version+1)+')</span>.';}
+  html+='</div>';
+ }
+ html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
+   drow('Customer',esc(l.customer))+
+   drow('BCO',l.bcoUnknown?'Unknown — broker withheld':esc(l.bco||'—'))+
+   drow('Planned window',windowText(l))+
+   drow('Actual start',l.actualStart?fmtDate(l.actualStart):'— not started')+
+   drow('Actual end',l.actualEnd?fmtDate(l.actualEnd):'—')+
+   drow('Load type',l.loadType||'— not set')+
+   drow('Drop pickup',l.dropPickup?'Yes':'No — live')+
+   drow('Drop delivery',l.dropDelivery?'Yes':'No — live')+
+ '</div>';
+ html+='<div class="sect" style="margin-top:14px"><span>OD PAIRS ('+l.od.length+')</span></div>'+
+  l.od.map(p=>'<div class="odview">'+(p.origin?esc(p.origin):'<i>any origin</i>')+' <span style="color:var(--gray)">→</span> '+(p.destination?esc(p.destination):'<i>any destination</i>')+'</div>').join('');
+ if(!l.matched.length){
+  html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span></div><div style="color:var(--gray);font-size:12.5px;padding:4px 0 2px">No loads auto-matched in this window yet.</div>';
+ } else {
+  html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span><span>'+l.matched.length+' this window</span></div>'+
+  '<div class="mrow head"><div>Load</div><div>Ext ID</div><div>Driver</div><div>PU</div><div>DEL</div><div></div></div>'+
+  l.matched.map(m=>'<div class="mrow"><div>'+esc(m.apolloId)+'</div><div>'+esc(m.externalId||'—')+'</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(m.driver||'—')+'</div><div>'+esc(m.pu||'—')+'</div><div>'+esc(m.del||'—')+'</div><div>'+(m.delivered?'<span class="dtick">✓</span>':'<span class="dpend">•</span>')+'</div>'+(m.note?'<div class="note">⚠ '+esc(m.note)+'</div>':'')+'</div>').join('')+
+  '<div style="font-size:11px;color:#94A3B8;margin-top:8px">Auto-matched by customer + OD + planned window — replaces manually cross-referencing the '+(l.customer==='Amazon Relay'?'CA relay schedule':'TX Driver Schedule')+'.</div>';
+ }
+ $('dtl').innerHTML=html;
+}
+function drow(k,v){return '<div class="dr"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+
+/* ---------- drawer: form mode (create / edit / renew) ---------- */
+function odRowHTML(idx,origin,destination){
+ return '<div class="odrow" data-idx="'+idx+'"><span class="rm" onclick="removeOD('+idx+')" title="Remove">✕</span>'+
+ '<div class="odgrid"><div class="ffield" style="margin-bottom:0"><label>Origin</label><input type="text" list="loclist" data-role="origin" placeholder="— any origin (wildcard) —" value="'+esc(origin||'')+'"></div>'+
+ '<span class="arrow">→</span>'+
+ '<div class="ffield" style="margin-bottom:0"><label>Destination</label><input type="text" list="loclist" data-role="destination" placeholder="— any destination (wildcard) —" value="'+esc(destination||'')+'"></div></div>'+
+ '<div class="hint">Leave one side blank for a wildcard (e.g. Waco → anywhere). Not both.</div>'+
+ '<div class="err" id="oderr'+idx+'"></div></div>';
+}
+let ODCOUNT=0;
+function addOD(origin,destination){ODCOUNT++;$('odlist').insertAdjacentHTML('beforeend',odRowHTML(ODCOUNT,origin,destination));}
+function removeOD(idx){const el=document.querySelector('.odrow[data-idx="'+idx+'"]');if(el&&document.querySelectorAll('.odrow').length>1)el.remove();else toast('A lane needs at least one OD pair.');}
+function toggleBcoUnknown(){const cb=$('in_bcounknown').checked;$('in_bco').disabled=cb;if(cb)$('in_bco').value='';}
+
+function openCreateDrawer(){SELECTED=null;renderForm('create',null);$('drawer').classList.add('open');}
+function openEditDrawer(id){renderForm('edit',id);$('drawer').classList.add('open');}
+function openRenewDrawer(id){renderForm('renew',id);$('drawer').classList.add('open');}
+
+function formFieldsHTML(v){
+ return ''+
+ '<div id="conflictzone"></div>'+
+ '<div class="ffield" id="f_customer"><label>Customer *</label><select id="in_customer">'+
+   '<option value="">— select customer —</option>'+
+   CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
+ '</select><div class="err" id="e_customer"></div></div>'+
+
+ '<div class="frow"><div class="ffield" style="flex:2"><label>BCO (beneficial cargo owner) *</label>'+
+   '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'>'+
+   '<label class="checkrow" style="margin-top:4px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"> Unknown / broker withheld</label>'+
+   '<div class="err" id="e_bco"></div></div>'+
+  '<div class="ffield"><label>Lane code</label><input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'"><div class="hint">Human-readable — blank auto-generates one</div></div></div>'+
+
+ '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+(v.plannedStart||'')+'"><div class="err" id="e_start"></div></div>'+
+  '<div class="ffield"><label>Planned end</label><input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"><div class="hint">Blank = ongoing</div><div class="err" id="e_end"></div></div></div>'+
+
+ '<div class="formsect"><span class="lbl">OD PAIRS</span><div id="odlist"></div><div class="addod" onclick="addOD()">＋ Add OD pair</div></div>'+
+
+ '<div class="frow"><div class="ffield"><label>Load type <span style="color:#94A3B8;font-weight:400">(optional, P1)</span></label><select id="in_loadtype">'+
+   LOADTYPES.map(t=>'<option value="'+t+'"'+(v.loadType===t?' selected':'')+'>'+(t||'— not set —')+'</option>').join('')+
+  '</select></div></div>'+
+
+ '<div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup <span style="color:var(--gray)">(vs. live)</span></label>'+
+  '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery <span style="color:var(--gray)">(vs. live)</span></label></div>'+
+ '<datalist id="loclist">'+LOCATIONS.map(l=>'<option value="'+l+'">').join('')+'</datalist>'+
+ '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
+}
+
+function renderForm(mode,id){
+ const l=id?LANES[id]:null;
+ const title=mode==='create'?'Create Lane':mode==='edit'?'Edit Lane — '+esc(l.code):'Renew Lane — '+esc(l.code);
+ $('dhead').innerHTML='<div class="top"><b style="font-size:15px">'+title+'</b><span class="x" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">✕</span></div>'+
+  (mode==='edit'?'<div class="meta">Minor corrections update in place — no new lane version.</div>':'')+
+  (mode==='create'?'<div class="meta">Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.</div>':'');
+
+ const v=mode==='create'?{customer:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',loadType:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
+  :mode==='edit'?l
+  :{customer:l.customer,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:'',plannedEnd:'',loadType:l.loadType,dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+
+ let html='';
+ if(mode==='renew'){html+='<div class="provbanner">Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving closes '+esc(l.code)+' with an actual end date the day before the new planned start, and creates v'+(l.version+1)+' linked back via <code>renewed_from_lane_id</code>.</div>';}
+ html+=formFieldsHTML(v);
+ $('dtl').innerHTML=html;
+
+ ODCOUNT=0;$('odlist').innerHTML='';
+ (v.od&&v.od.length?v.od:[{origin:'',destination:''}]).forEach(p=>addOD(p.origin,p.destination));
+
+ $('dfoot').style.display='flex';
+ $('dfoot').innerHTML='<button class="abtn" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">Cancel</button>'+
+  '<button class="abtn primary" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+(mode==='create'?'Create Lane':mode==='edit'?'Save changes':'Renew lane')+'</button>';
+}
+
+function clearErrors(){document.querySelectorAll('.err').forEach(e=>e.textContent='');}
+function showErr(id,msg){const el=$(id);if(el)el.textContent=msg;}
+
+function submitForm(mode,id){
+ clearErrors();$('conflictzone').innerHTML='';
+ const customer=$('in_customer').value;
+ const bcoUnknown=$('in_bcounknown').checked;
+ const bco=bcoUnknown?'':$('in_bco').value.trim();
+ const codeInput=$('in_code').value.trim();
+ const start=$('in_start').value;
+ const end=$('in_end').value;
+ const loadType=$('in_loadtype').value;
+ const dropPickup=$('in_droppu').checked;
+ const dropDelivery=$('in_dropdel').checked;
+ const odEls=[...document.querySelectorAll('.odrow')];
+ const odRaw=odEls.map(el=>({origin:el.querySelector('[data-role=origin]').value.trim(),destination:el.querySelector('[data-role=destination]').value.trim(),_el:el}));
+
+ let ok=true;
+ if(!customer){showErr('e_customer','Pick a customer.');ok=false;}
+ if(!bcoUnknown&&!bco){showErr('e_bco','Enter a BCO, or check “Unknown”.');ok=false;}
+ if(!start){showErr('e_start','Planned start is required.');ok=false;}
+ if(start&&end&&end<start){showErr('e_end','End date can’t be before the start date.');ok=false;}
+ odRaw.forEach(p=>{const errEl=p._el.querySelector('.err');if(!p.origin&&!p.destination){errEl.textContent='Needs an origin or a destination — can’t wildcard both.';ok=false;}else errEl.textContent='';});
+ if(!ok)return;
+
+ const cleanOd=odRaw.map(p=>({origin:p.origin||null,destination:p.destination||null}));
+ const excludeIds=(mode==='edit'||mode==='renew')?[id]:[];
+ const conflict=findConflict(customer,cleanOd,start,end||null,excludeIds);
+ if(conflict){
+  $('conflictzone').innerHTML='<div class="conflictbanner"><div class="t">⚠️ Conflicts with an existing lane</div>'+
+   '<div class="d"><b>'+esc(conflict.lane.code)+'</b> ('+esc(conflict.lane.customer)+') already covers <b>'+esc(odLabel(conflict.lp))+'</b> for '+windowText(conflict.lane)+'. Two active lanes can’t claim the same load — adjust the dates/OD or view the existing lane.</div>'+
+   '<div class="btns"><button class="abtn" onclick="openLaneDrawer(\''+conflict.lane.id+'\')">View '+esc(conflict.lane.code)+'</button></div></div>';
+  $('conflictzone').scrollIntoView({behavior:'smooth',block:'start'});
+  return;
+ }
+
+ const code=codeInput||autoCode(customer);
+ if(mode==='create'){
+  const newId=idFromCode(code);
+  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:1,status:(start>TODAY?'Future':'Active'),
+   plannedStart:start,plannedEnd:end||null,actualStart:(start>TODAY?null:start),actualEnd:null,
+   loadType:loadType||null,dropPickup,dropDelivery,renewedFrom:null,renewedTo:null,od:cleanOd,matched:[]};
+  renderList();openLaneDrawer(newId);
+  toast('Lane created — Apollo will begin auto-matching loads within this window.');
+ } else if(mode==='edit'){
+  Object.assign(LANES[id],{customer,bco,bcoUnknown,code,plannedStart:start,plannedEnd:end||null,loadType:loadType||null,dropPickup,dropDelivery,od:cleanOd});
+  renderList();renderDrawerView(id);
+  toast('Saved — no new lane version created.');
+ } else if(mode==='renew'){
+  const old=LANES[id];
+  const closeDate=prevDay(start)||TODAY;
+  old.status='Closed';old.actualEnd=closeDate;
+  const newId=idFromCode(code);
+  old.renewedTo=newId;
+  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:old.version+1,status:(start>TODAY?'Future':'Active'),
+   plannedStart:start,plannedEnd:end||null,actualStart:(start>TODAY?null:start),actualEnd:null,
+   loadType:loadType||null,dropPickup,dropDelivery,renewedFrom:id,renewedTo:null,od:cleanOd,matched:[]};
+  renderList();openLaneDrawer(newId);
+  toast(esc(old.code)+' closed · renewed as '+esc(code)+' (v'+LANES[newId].version+') — history preserved.');
+ }
+}
+
+/* ---------- close lane modal ---------- */
+function openCloseModal(id){const l=LANES[id];
+ $('modalbox').innerHTML='<div class="mh"><b>Close lane '+esc(l.code)+'</b><span class="x" onclick="closeModal()">✕</span></div>'+
+ '<div class="mb"><div style="font-size:13px;color:#475569;margin-bottom:12px">New loads after this date won’t auto-match to '+esc(l.code)+'. Everything already logged stays intact.</div>'+
+ '<div class="ffield"><label>Actual end date</label><input type="date" id="in_closedate" value="'+TODAY+'"></div>'+
+ '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" style="background:var(--red);border-color:var(--red)" onclick="confirmClose(\''+id+'\')">Close lane</button></div></div>';
+ $('ovl').classList.add('show');}
+function confirmClose(id){const d=$('in_closedate').value||TODAY;LANES[id].status='Closed';LANES[id].actualEnd=d;closeModal();renderList();
+ if(SELECTED===id)renderDrawerView(id);
+ toast(esc(LANES[id].code)+' closed — stops matching new loads after '+fmtDate(d)+'.');}
+function closeModal(){$('ovl').classList.remove('show');}
+
+/* ---------- boot ---------- */
+seedLanes();
+$('groupToggle').addEventListener('change',e=>{GROUPBY=e.target.checked;renderList();});
+renderList();
+</script>
+</body>
+</html>
