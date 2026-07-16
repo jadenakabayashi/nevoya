@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MVP 1 · Apollo Load Timeline Bot — Slack</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --aub:#3F0E40; --aub-dark:#350D36; --aub-active:#1164A3; --aub-hover:#4d2a4e;
+  --teal:#00786F; --ink:#1D1C1D; --gray:#616061; --line:#DDDDDD; --bg:#FFFFFF;
+  --yellow:#FCF3D4; --red:#E01E5A; --green:#2BAC76;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Lato,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:#F8F8F8;height:100vh;overflow:hidden}
+#app{display:grid;grid-template-rows:44px 1fr;grid-template-columns:260px 1fr;height:100vh}
+/* top bar */
+#topbar{grid-column:1/4;background:var(--aub-dark);display:flex;align-items:center;justify-content:center;position:relative}
+#topbar .search{background:rgba(255,255,255,.18);color:#fff;font-size:13px;border-radius:6px;padding:4px 10px;width:38%;text-align:center;cursor:default}
+#topbar .hist{position:absolute;left:14px;color:#c9a3ca;font-size:14px;letter-spacing:3px}
+/* sidebar */
+#side{background:var(--aub);color:#CFC3CF;overflow-y:auto;padding-bottom:60px}
+#side .team{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);color:#fff;font-weight:900;font-size:15px}
+#side .team .nlogo{width:24px;height:24px;border-radius:5px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px}
+#side .sect{padding:14px 14px 4px;font-size:13px;color:#BCABBC}
+#side .item{padding:4px 14px 4px 22px;font-size:15px;cursor:pointer;border-radius:6px;margin:0 8px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+#side .item:hover{background:var(--aub-hover)}
+#side .item.active{background:var(--aub-active);color:#fff}
+#side .item .badge{margin-left:auto;background:var(--red);color:#fff;border-radius:9px;font-size:11px;font-weight:700;padding:1px 7px}
+#side .item .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+#side .item .appic{width:18px;height:18px;border-radius:4px;background:var(--teal);color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
+/* main */
+#main{display:flex;flex-direction:column;background:var(--bg);min-width:0;min-height:0}
+#chanhead{border-bottom:1px solid var(--line);padding:10px 18px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+#chanhead b{font-size:17px}
+#chanhead .topic{font-size:12.5px;color:var(--gray)}
+#msgs{flex:1;min-height:0;overflow-y:auto;padding:12px 0 8px}
+.daydiv{display:flex;align-items:center;gap:10px;margin:10px 18px}
+.daydiv::before,.daydiv::after{content:"";flex:1;border-top:1px solid var(--line)}
+.daydiv span{font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:20px;padding:2px 10px;background:#fff}
+.msg{display:flex;gap:10px;padding:6px 18px}
+.msg:hover{background:#F8F8F8}
+.msg .av{width:36px;height:36px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:13px}
+.msg .body{min-width:0;flex:1}
+.msg .head{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.msg .head b{font-size:14.5px}
+.msg .head .app{background:#ECECEC;color:#616061;font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;letter-spacing:.3px}
+.msg .head .ts{font-size:11.5px;color:var(--gray)}
+.msg .txt{font-size:14.5px;line-height:1.45;word-wrap:break-word}
+.mention{background:#E8F5FA;color:#1264A3;border-radius:3px;padding:0 2px;font-weight:700}
+.tlcard{border-left:3px solid var(--teal);padding:6px 10px;margin-top:6px;background:#FBFBFB;border-radius:0 6px 6px 0}
+.tlline{font-size:13.5px;color:#454245;padding:1.5px 0;font-variant-numeric:tabular-nums}
+.tlline .t{color:var(--gray);font-size:12.5px;display:inline-block;width:44px}
+.tlline.audit{background:var(--yellow);border-radius:4px;padding:2px 6px}
+.tlfoot{font-size:12px;color:var(--gray);margin-top:5px}
+.btnrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.sbtn{border:1px solid #BBBABB;background:#fff;border-radius:6px;font-size:13px;font-weight:700;padding:5px 12px;cursor:pointer;font-family:inherit}
+.sbtn:hover{background:#F8F8F8;border-color:#868686}
+.sbtn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.sbtn.primary:hover{opacity:.9}
+.sbtn:disabled{opacity:.3;cursor:not-allowed}
+.sbtn.icon{padding:6px 9px;display:inline-flex;align-items:center}
+.sentflag{color:var(--ink);font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:5px;padding:5px 2px}
+.threadlink{color:#1264A3;font-size:13px;font-weight:700;margin-top:4px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.threadlink:hover{text-decoration:underline}
+.stamp{font-size:11.5px;color:#9a989a;margin-top:4px}
+.stream{color:var(--gray);font-style:italic}
+.stream .dots::after{content:'···';animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.alertpost{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:6px;background:#fff}
+.snoozemenu{position:absolute;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);z-index:60;overflow:hidden}
+.snoozemenu div{padding:8px 16px;font-size:13.5px;cursor:pointer;min-width:200px}
+.snoozemenu div:hover{background:var(--aub-active);color:#fff}
+/* thread panel */
+#thread{border-left:1px solid var(--line);background:#fff;display:none;flex-direction:column;min-width:0;min-height:0}
+#app.threadopen{grid-template-columns:260px minmax(0,1fr) minmax(340px,42%)}
+#app.threadopen #thread{display:flex}
+#thread .th-head{border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:8px}
+#thread .th-head b{font-size:15px}
+#thread .th-head .chan{color:var(--gray);font-size:12.5px}
+#thread .th-head .x{margin-left:auto;cursor:pointer;color:var(--gray);font-size:18px;padding:2px 8px;border-radius:4px}
+#thread .th-head .x:hover{background:#eee}
+#thmsgs{flex:1;min-height:0;overflow-y:auto;padding:8px 0}
+.replyct{font-size:12px;color:var(--gray);padding:4px 18px;border-bottom:1px solid var(--line)}
+/* inputs */
+.inputwrap{padding:8px 18px 14px}
+.inputbox{border:1px solid #8D8D8D;border-radius:8px;padding:9px 12px;display:flex;gap:10px;align-items:center}
+.inputbox input{border:none;outline:none;flex:1;font-size:14.5px;font-family:inherit}
+.inputbox .send{color:#fff;background:#007A5A;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-weight:700}
+.hint{font-size:11.5px;color:#9a989a;padding:4px 20px}
+/* modal */
+#ovl{position:fixed;inset:0;background:rgba(29,28,29,.45);display:none;align-items:center;justify-content:center;z-index:100}
+#ovl.show{display:flex}
+.modal{background:#fff;border-radius:10px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.modal .mh{display:flex;align-items:center;padding:16px 20px 8px}
+.modal .mh b{font-size:19px}
+.modal .mh .x{margin-left:auto;cursor:pointer;color:var(--gray);font-size:20px}
+.modal .sub{padding:0 20px 10px;font-size:13px;color:var(--gray)}
+.modal .mb{padding:6px 20px 18px}
+.radio{display:flex;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:13.5px;align-items:flex-start}
+.radio.sel{border-color:var(--aub-active);background:#F5FAFD}
+.radio input{margin-top:3px}
+.radio small{display:block;color:var(--gray);margin-top:1px}
+.modal textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13.5px;padding:10px;resize:vertical;line-height:1.45}
+.modal .note{font-size:12px;color:var(--gray);margin:8px 0}
+.modal .mfoot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:12px 20px;font-size:12px;color:var(--gray)}
+/* scenario bar */
+#scen{position:fixed;right:16px;bottom:16px;background:#1D1C1D;color:#fff;border-radius:12px;padding:10px 12px;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,.35);width:330px;font-size:13px}
+#scen .row{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
+#scen select{flex:1;background:#2c2b2c;color:#fff;border:1px solid #4a494a;border-radius:6px;padding:5px;font-family:inherit;font-size:12.5px;min-width:0}
+#scen button{background:#2c2b2c;color:#fff;border:1px solid #4a494a;border-radius:6px;padding:5px 9px;cursor:pointer;font-family:inherit;font-size:12.5px}
+#scen button:hover{background:#3a393a}
+#scen button.go{background:var(--green);border-color:var(--green);font-weight:700}
+#scen .clock{margin-left:auto;font-variant-numeric:tabular-nums;color:#9BE8C4;font-weight:700}
+#scen .blurb{color:#b9b8b9;font-size:12px;margin-top:6px;line-height:1.4;min-height:16px}
+#scen .head{display:flex;align-items:center;gap:8px}
+#scen .head b{font-size:13.5px}
+#scen .min{margin-left:auto;cursor:pointer;color:#9a989a}
+#scen.collapsed .row,#scen.collapsed .blurb{display:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#1D1C1D;color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar"><span class="hist">‹ ›</span><div class="search">Search Nevoya</div></div>
+  <div id="side">
+    <div class="team"><span class="nlogo">N</span> Nevoya ▾</div>
+    <div class="sect">▾ Channels</div>
+    <div class="item" data-chan="dispatch"><span>#</span> dispatch</div>
+    <div class="item" data-chan="load-alerts"><span>#</span> load-alerts <span class="badge" id="alertbadge" style="display:none">0</span></div>
+    <div class="item active" data-chan="load-tracking"><span>#</span> load-tracking</div>
+    <div class="item" data-chan="ops-daily"><span>#</span> ops-daily</div>
+    <div class="sect">▾ Direct messages</div>
+    <div class="item"><span class="dot"></span> Talisha Nguyen</div>
+    <div class="item"><span class="dot" style="background:#9a989a"></span> Marcus Bell</div>
+    <div class="sect">▾ Apps</div>
+    <div class="item"><span class="appic">N</span> Apollo</div>
+  </div>
+  <div id="main">
+    <div id="chanhead"></div>
+    <div id="msgs"></div>
+    <div class="inputwrap">
+      <div class="inputbox"><span style="color:#868686;font-weight:700">+</span>
+        <input id="composer" placeholder="Message #load-tracking" autocomplete="off">
+        <button class="send" onclick="sendComposer()">➤</button>
+      </div>
+      <div class="hint">Try: <b>@Apollo status 7644</b> · <b>what did we already tell Arrive?</b> · <b>@Apollo what happened to 7644?</b> · <b>which loads need attention?</b></div>
+    </div>
+  </div>
+  <div id="thread">
+    <div class="th-head"><b>Thread</b><span class="chan"># load-tracking</span><span class="x" onclick="closeThread()">✕</span></div>
+    <div id="thmsgs"></div>
+    <div class="inputwrap"><div class="inputbox"><input id="threadInput" placeholder="Reply…"><button class="send" onclick="sendThread()">➤</button></div></div>
+  </div>
+</div>
+
+<div id="ovl"><div class="modal" id="modalbox"></div></div>
+
+<div id="scen">
+  <div class="head"><b>🎬 Scenario player</b><span class="clock" id="clock">--:--</span><span class="min" onclick="document.getElementById('scen').classList.toggle('collapsed')">▁</span></div>
+  <div class="row">
+    <select id="scensel"></select>
+    <button class="go" onclick="playScenario()">▶ Play</button>
+  </div>
+  <div class="row">
+    <button onclick="setSpeed(1)" id="sp1">1×</button><button onclick="setSpeed(5)" id="sp5">5×</button><button onclick="setSpeed(30)" id="sp30">30×</button>
+    <button onclick="jumpEnd()">⏭ End</button><button onclick="resetAll()">↺ Reset</button>
+  </div>
+  <div class="blurb" id="scenblurb">Pick a scenario. S2 and S5 carry the product argument.</div>
+</div>
+
+<script>
+'use strict';
+/* ============ util ============ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600);}
+function fmtMention(t){return esc(t).replace(/@Apollo/g,'<span class="mention">@Apollo</span>');}
+let CLOCK='07:00';
+function setClock(t){CLOCK=t;$('clock').textContent=t;}
+/* ============ data ============ */
+const PEOPLE={dana:{n:'Dana Ortiz',c:'#7C3085',i:'DO'},talisha:{n:'Talisha Nguyen',c:'#2B6CB0',i:'TN'},apollo:{n:'Apollo',c:'#1B4E4C',i:'N',app:true}};
+const LOADS={
+ 7644:{cust:'Arrive Logistics',driver:'Bruce Handy',truck:'TRK 218',trailer:'TRL 92866',del:'14:30 → 16:30 CDT'},
+ 7670:{cust:'International Paper',driver:'Roy Wright',truck:'TCI 26559',trailer:'TRL 88141',del:'10:57 CDT'},
+ 7691:{cust:'C.H. Robinson',driver:'Unassigned',truck:'—',trailer:'—',del:'Jul 15 · 13:30 CDT'},
+ 7690:{cust:'Uber Freight',driver:'Marcus Follins',truck:'TRK 411',trailer:'TRL 77019',del:'15:00 → 17:30 CDT'},
+ 7692:{cust:'RXO Inc.',driver:'Tanya Tye',truck:'TRK 355',trailer:'TRL 61220',del:'18:15 CDT'},
+ 7665:{cust:'Amazon Relay',driver:'Unassigned',truck:'—',trailer:'(open question for eng!)',del:'Jul 14 · 09:30 PDT'},
+ 7663:{cust:'Pepsi',driver:'Luke Ferry',truck:'TRK 209',trailer:'TRL 50117',del:'16:00 CDT'}
+};
+const TL7644=[
+ ['06:45','🚚','Dispatched — Bruce Handy assigned'],
+ ['08:14','📍','Arrived pickup (Samsara)'],
+ ['09:03','▶️','In transit — delivery ETA Jul 14 · 14:30'],
+ ['09:29','💬','Told Arrive: delivery ETA Jul 14 · 14:30 (Talisha)'],
+ ['11:42','⚠️','Delivery ETA slipped Jul 14 · 14:30 → 16:10 (I-45 closure)'],
+ ['13:12','🚩','Delivery resched 14:00 → 16:30 (broker confirmed)'],
+ ['16:58','✅','Delivered — POD 17:04']
+];
+/* ============ channel state ============ */
+const CHANNELS={
+ 'load-tracking':{topic:'@Apollo status &lt;load #&gt; for a timeline',msgs:[]},
+ 'load-alerts':{topic:'⚠️ urgent · 🔴 open follow-up · 🚩 load changed · ✅ resolved — Sweep cadence: every 15 min',msgs:[]},
+ 'dispatch':{topic:'Ops chatter (static in this prototype)',msgs:[]},
+ 'ops-daily':{topic:'EOD digests (the thing the timeline replaces)',msgs:[]}
+};
+let curChan='load-tracking', threadMsgs=[], alertCount=0, watching={}, timers=[];
+/* ============ render ============ */
+function renderHead(){$('chanhead').innerHTML='<b># '+curChan+'</b><span class="topic">'+CHANNELS[curChan].topic+'</span>';
+ $('composer').placeholder='Message #'+curChan;}
+function msgHTML(m){
+ const p=PEOPLE[m.who];
+ return '<div class="msg" id="'+(m.id||'')+'"><div class="av" style="background:'+p.c+'">'+p.i+'</div><div class="body">'+
+ '<div class="head"><b>'+p.n+'</b>'+(p.app?'<span class="app">APP</span>':'')+'<span class="ts">'+m.t+'</span></div>'+
+ '<div class="txt">'+m.html+'</div>'+
+ (m.stamp?'<div class="stamp">'+m.stamp+'</div>':'')+
+ (m.thread?'<div class="threadlink" onclick="openThread()">'+m.thread+'</div>':'')+
+ '</div></div>';
+}
+function renderChan(){
+ const box=$('msgs');
+ box.innerHTML='<div class="daydiv"><span>Today</span></div>'+CHANNELS[curChan].msgs.map(msgHTML).join('');
+ box.scrollTop=box.scrollHeight;
+ if(curChan==='load-alerts'){alertCount=0;$('alertbadge').style.display='none';}
+}
+function post(chan,m){CHANNELS[chan].msgs.push(m);
+ if(chan===curChan){renderChan();}
+ else if(chan==='load-alerts'){alertCount++;const b=$('alertbadge');b.textContent=alertCount;b.style.display='';}
+ if(m.t)setClock(m.t);
+ return m;}
+function updateMsg(chan,id,html,stamp){const m=CHANNELS[chan].msgs.find(x=>x.id===id);if(m){m.html=html;if(stamp!==undefined)m.stamp=stamp;if(chan===curChan)renderChan();}}
+function renderThread(){
+ $('thmsgs').innerHTML=threadMsgs.length?msgHTML(threadMsgs[0])+'<div class="replyct">'+(threadMsgs.length-1)+' repl'+(threadMsgs.length-1===1?'y':'ies')+'</div>'+threadMsgs.slice(1).map(msgHTML).join(''):'<div class="replyct">No thread yet — play S1 or ask @Apollo below.</div>';
+ $('thmsgs').scrollTop=$('thmsgs').scrollHeight;}
+function openThread(){document.getElementById('app').classList.add('threadopen');renderThread();}
+function closeThread(){document.getElementById('app').classList.remove('threadopen');}
+function tpost(m){threadMsgs.push(m);openThread();renderThread();if(m.t)setClock(m.t);return m;}
+function tupdate(id,html,stamp){const m=threadMsgs.find(x=>x.id===id);if(m){m.html=html;if(stamp!==undefined)m.stamp=stamp;renderThread();}}
+/* live truck location link — only for loads with an actively-tracked, moving truck (not delivered/stale/cancelled/no-driver) */
+function liveTrackLink(lead){return (lead===false?'':' · ')+'<a href="#" onclick="event.preventDefault();toast(\'Opening live truck location (Samsara)…\')" style="color:#1264A3;font-weight:700;text-decoration:underline">📍 Track live location</a>';}
+/* timeline card html */
+function tlCard(loadId,lines,opts){
+ opts=opts||{};const L=LOADS[loadId];
+ let h='<div>📦 <b>Load '+loadId+' · '+L.cust+'</b></div>';
+ if(opts.status)h+='<div>'+opts.status+' — '+esc(L.driver)+' · '+L.truck+' / '+L.trailer+'</div>';
+ h+='<div class="tlcard">'+lines.map(l=>'<div class="tlline'+(l[3]==='audit'?' audit':'')+'"><span class="t">'+l[0]+'</span> '+l[1]+'  '+esc(l[2])+'</div>').join('')+'</div>';
+ if(opts.foot)h+='<div class="tlfoot">'+opts.foot+'</div>';
+ if(opts.buttons)h+='<div class="btnrow">'+opts.buttons+'</div>';
+ return h;}
+/* ============ streaming bot reply ============ */
+function stream(where,chan,build,doneCb){
+ const id='m'+Math.random().toString(36).slice(2);
+ const m={who:'apollo',t:CLOCK,id:id,html:'<span class="stream">Apollo is checking Samsara + Front <span class="dots"></span></span>'};
+ (where==='thread'?tpost(m):post(chan,m));
+ schedule(()=>{ (where==='thread'?tupdate(id,build):updateMsg(chan,id,build)); if(doneCb)doneCb(id); },900);
+ return id;}
+/* ============ composer intents ============ */
+function sendComposer(){const v=$('composer').value.trim();if(!v)return;$('composer').value='';
+ post(curChan,{who:'dana',t:CLOCK,html:fmtMention(v)});
+ handleIntent(v,'chan');}
+function sendThread(){const v=$('threadInput').value.trim();if(!v)return;$('threadInput').value='';
+ tpost({who:'dana',t:CLOCK,html:fmtMention(v)});
+ handleIntent(v,'thread');}
+function handleIntent(v,where){
+ const s=v.toLowerCase();
+ const mLoad=s.match(/(\d{4})/);
+ if(s.includes('what happened')&&mLoad){return replyWhatHappened(mLoad[1],where);}
+ if(s.includes('what did we')&&(s.includes('tell')||s.includes('say'))){return replyAudit(where);}
+ if(s.includes('attention')||s.includes('need a look')){return replyTriage(where);}
+ if(s.includes('status')&&mLoad){return replyStatus(mLoad[1],where);}
+ if(mLoad&&LOADS[mLoad[1]]){return replyStatus(mLoad[1],where);}
+ const id='m'+Math.random().toString(36).slice(2);
+ const m={who:'apollo',t:CLOCK,id,html:'I can help with: <b>status &lt;load #&gt;</b> · <b>what happened to &lt;load #&gt;</b> · <b>what did we already tell &lt;customer&gt;</b> · <b>which loads need attention?</b>',stamp:'Read-only · Apollo Agent Runtime · every answer cites its sources'};
+ where==='thread'?tpost(m):post(curChan,m);}
+function statusButtons(loadId){
+ return '<button class="sbtn" onclick="openReview('+loadId+')">📤 Draft customer reply</button>'+
+ '<button class="sbtn" onclick="watchLoad('+loadId+',this)">👀 Watch this load</button>'+
+ '<button class="sbtn" onclick="window.open(\'./mvp2-apollo.html#load='+loadId+'\')">↗ Open in Apollo</button>';}
+function replyStatus(loadId,where){
+ loadId=+loadId;const L=LOADS[loadId];
+ if(!L){return (where==='thread'?tpost:m=>post(curChan,m))({who:'apollo',t:CLOCK,html:'No load '+loadId+' on the board. It may be an <b>unlinked order #</b> — check the triage queue in #load-alerts.'});}
+ let lines,status,foot;
+ if(loadId===7644){lines=TL7644;status='✅ Delivered 16:58';foot='Updated 2 min ago · Samsara + Apollo + Front · high confidence';}
+ else if(loadId===7670){lines=[['08:02','🚚','Dispatched — Roy Wright'],['09:36','⏱','Dwell 52 min at shipper dock (past window)'],['10:41','📍','Arrived consignee — International Paper'],['11:02','⚠️','Running late — ETD 11:11 (+14 min vs appt)']];status='⚠️ Delayed';foot='as of '+CLOCK+' check · Samsara live · high confidence'+liveTrackLink();}
+ else if(loadId===7691){lines=[['07:15','📋','Tendered — C.H. Robinson · driver Unassigned'],['09:41','🔴','Reschedule request sent to broker — no reply'],[CLOCK,'⏳','Awaiting broker response — follow-up timer running']];status='🔴 Awaiting broker';foot='as of '+CLOCK+' check · Front + Apollo';}
+ else if(loadId===7665){lines=[['06:10','📋','Tendered — Amazon Relay · needs driver'],['—','⚠️','Trailer: (open question for eng!) · appt Jul 14 09:30 PDT']];status='Pending';foot='as of '+CLOCK+' check · Apollo · low confidence (manual entry)';}
+ else if(loadId===7690){lines=[['08:31','🚚','Dispatched — Marcus Follins'],['12:58','🚩','DEL appt 15:00 → 17:30 (broker confirmed via Front)'],['13:00','▶️','In transit — delivery ETA Jul 14 · 16:54 · on plan for new appt']];status='🚩 Rescheduled';foot='as of '+CLOCK+' check · Front → Apollo · high confidence'+liveTrackLink();}
+ else{lines=[[CLOCK,'▶️','In transit — tracking normal (Samsara)']];status='In transit';foot='as of '+CLOCK+' check · Samsara'+liveTrackLink();}
+ stream(where,curChan,tlCard(loadId,lines,{status,foot,buttons:statusButtons(loadId)}));}
+function replyAudit(where){
+ stream(where,curChan,'Twice — both logged:<div class="tlcard">'+
+ '<div class="tlline"><span class="t">09:29</span> 💬  Delivery ETA Jul 14 · 14:30 (Talisha via Front)</div>'+
+ '<div class="tlline"><span class="t">13:15</span> 💬  New appt 16:30 confirmed ✅</div></div>'+
+ '<div class="tlfoot">From the audit log — no contradictions. Quote it as-is.</div>');}
+function replyTriage(where){
+ stream(where,curChan,'Three loads need a look — everything else is tracking on time.<div class="tlcard">'+
+ '<div class="tlline">⚠️ <b>7670</b> late +14 min — Roy Wright at International Paper</div>'+
+ '<div class="tlline">🔴 <b>7691</b> awaiting broker 32 min — C.H. Robinson appt confirm</div>'+
+ '<div class="tlline">🚩 <b>7690</b> rescheduled 15:00 → 17:30 — Uber Freight</div></div>'+
+ '<div class="tlfoot">as of '+CLOCK+' check · hypotheses in #load-alerts · tap a load # for its timeline</div>');}
+function replyWhatHappened(loadId,where){
+ stream(where,curChan,'🔴 <b>Load '+loadId+' — delivered 2h 12m late. Main cause: facility dwell at pickup (detention-flagged).</b>'+
+ '<div class="tlcard">'+
+ '<div class="tlline"><span class="t">08:14</span> ⏱  Pickup dwell 3h 12m (plan 46m) → <b>+1h 58m</b> ⚠️ DETENTION — TS Packaging</div>'+
+ '<div class="tlline"><span class="t">12:05</span> 🔋  Charging +22m (Ontario charger #4 slow — Tesla Fleet, manual reading)</div>'+
+ '<div class="tlline"><span class="t">13:40</span> 🚗  Traffic I-45 +16m (Samsara)</div>'+
+ '<div class="tlline"><span class="t">—</span> ✓  Driving segments on plan (±4 min) · relay wait: none</div></div>'+
+ '<div class="tlfoot">Evidence: 09:52 VendorFlow driver — “dock says 2 more pallets” · 13:12 Front — broker approved resched. Numbers sum to 2h 12m.</div>'+
+ '<div class="btnrow"><button class="sbtn" onclick="toast(\'Detention pack drafted: dwell math + geofence in/out + POD → ready for claim review\')">🧾 Detention pack</button>'+
+ '<button class="sbtn" onclick="openReview('+loadId+')">📤 Customer-safe explanation</button></div>');}
+/* ============ watch / snooze ============ */
+function watchLoad(loadId,btn){
+ if(watching[loadId])return toast('Already watching '+loadId);
+ watching[loadId]=true;if(btn){btn.textContent='👀 Watching ✓';btn.disabled=true;}
+ post('load-alerts',{who:'apollo',t:CLOCK,html:'👀 <b>Watching load '+loadId+' — '+LOADS[loadId].driver+' · '+LOADS[loadId].cust+'</b><br>I will post here when something changes. Sweeps run every ~15 min; quiet sweeps stay quiet. <button class="sbtn" onclick="toast(\'Stopped watching\')">Stop watching</button>',stamp:'as of '+CLOCK+' check · watching for Dana Ortiz'+(isLiveTrackable(loadId)?liveTrackLink():'')});
+ toast('Watching '+loadId+' — updates land in #load-alerts');}
+let snoozeEl=null;
+function snoozeMenu(ev,loadId){ev.stopPropagation();closeSnooze();
+ const m=document.createElement('div');m.className='snoozemenu';
+ m.innerHTML=['Until next sweep (15 min)','For 1 hour','Until status changes','Rest of shift'].map(o=>'<div onclick="doSnooze('+loadId+',\''+o+'\')">'+o+'</div>').join('');
+ document.body.appendChild(m);const r=ev.target.getBoundingClientRect();
+ m.style.left=Math.min(r.left,innerWidth-230)+'px';m.style.top=(r.bottom+4)+'px';snoozeEl=m;
+ setTimeout(()=>document.addEventListener('click',closeSnooze,{once:true}));}
+function closeSnooze(){if(snoozeEl){snoozeEl.remove();snoozeEl=null;}}
+function doSnooze(loadId,opt){closeSnooze();
+ post('load-alerts',{who:'apollo',t:CLOCK,html:'😴 <b>Load '+loadId+'</b> snoozed — '+esc(opt)+' · by Dana. Reopens early if the delay grows past +30 min.',stamp:'Snooze is bounded and honest — it reopens early if the situation worsens, never silently drops.'});}
+/* ============ review & send modal ============ */
+let draftLoad=null;
+/* loads with an actively-tracked, moving truck — same rule the timeline's 📍 link uses; delivered/no-driver/stale/cancelled loads have nothing live to share */
+function isLiveTrackable(loadId){return ![7644,7691,7665].includes(+loadId);}
+function draftText(loadId){
+ const track=isLiveTrackable(loadId)?'\n\nTrack live location: https://track.samsara.com/load/'+loadId:'';
+ if(loadId===7644)return 'Hi team — load 7644 delivered at 4:58 PM. POD was signed at 5:04 and is on the portal now. The rebooked 4:30 appointment was met after this morning’s I-45 closure. Anything else you need on this one?';
+ if(loadId===7670)return 'Hi team — quick update on load 7670. Roy is running 14 minutes behind after a hold at pickup; live delivery ETA is Jul 14 · 11:11 AM CT against the 10:57 delivery appointment. No further delay projected — we’ll confirm as soon as he’s at the dock.'+track;
+ return 'Hi team — update on load '+loadId+': '+ (LOADS[loadId]?LOADS[loadId].cust:'') +' load is tracking; details on request.'+track;}
+function openReview(loadId){draftLoad=loadId;
+ $('modalbox').innerHTML='<div class="mh"><b>Review &amp; send</b><span class="x" onclick="closeModal()">✕</span></div>'+
+ '<div class="sub">📦 Load '+loadId+' · '+LOADS[loadId].cust+' · delivery close-out</div>'+
+ '<div class="mb"><div style="font-weight:700;font-size:13px;margin-bottom:6px">Send via</div>'+
+ '<label class="radio sel"><input type="radio" name="via" checked><span><b>Front</b> — reply on the load’s email thread<small>Continues Talisha’s 9:29 thread with Arrive · recommended</small></span></label>'+
+ '<label class="radio"><input type="radio" name="via"><span><b>Slack Connect</b> — post to #arrive-nevoya<small>Their ops channel · fastest read during business hours</small></span></label>'+
+ '<label class="radio"><input type="radio" name="via"><span><b>Google Chat Connect</b> — post to Arrive Ops space<small>Their coordination space · read receipts show instantly</small></span></label>'+
+ '<label class="radio"><input type="radio" name="via"><span><b>Email</b> — new message<small>ops@arrivelogistics.com · cc dispatch@nevoya.com</small></span></label>'+
+ '<div style="font-weight:700;font-size:13px;margin:10px 0 6px">Message</div>'+
+ '<textarea id="drafttxt">'+draftText(loadId)+'</textarea>'+
+ '<div class="note">Drafted by Apollo from the timeline · edit freely — <b>nothing sends until you click</b></div>'+
+ '<div class="btnrow" style="justify-content:space-between">'+
+ '<button class="sbtn" onclick="closeModal()">Cancel</button>'+
+ '<div style="display:flex;gap:8px"><button class="sbtn icon" onclick="copyDraft()" title="Copy message" aria-label="Copy message"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button><button class="sbtn primary" onclick="doSend()">Send via Front</button></div>'+
+ '</div></div>'+
+ '<div class="mfoot"><span>Sanitized — no rate or internal notes</span><span>Sends as you · logged to the audit trail</span></div>';
+ $('ovl').classList.add('show');
+ document.querySelectorAll('.radio').forEach(r=>r.onclick=()=>{document.querySelectorAll('.radio').forEach(x=>x.classList.remove('sel'));r.classList.add('sel');r.querySelector('input').checked=true;});}
+function closeModal(){$('ovl').classList.remove('show');}
+function copyDraft(){const v=$('drafttxt').value;navigator.clipboard&&navigator.clipboard.writeText(v);toast('Message copied');}
+function doSend(){closeModal();
+ const row=document.getElementById('revrow-'+draftLoad);
+ if(row)row.innerHTML='<span class="sentflag">✅ Sent</span>';
+ tpost({who:'apollo',t:'17:09',html:'✅ <b>Sent to Arrive via Front</b> — 5:09 PM by Dana Ortiz<div class="tlcard"><div class="tlline audit"><span class="t">17:09</span> 💬  Told Arrive: delivered, POD on portal (Dana via Front)</div></div>',stamp:'The send is the human’s click — logged as an audit row and echoed onto the timeline.'});
+ toast('Sent via Front · audit row added to timeline');}
+/* ============ scenario engine ============ */
+let SPEED=5,queue=[],playing=false;
+function setSpeed(x){SPEED=x;['sp1','sp5','sp30'].forEach(i=>$(i).style.background='#2c2b2c');$('sp'+x).style.background='#0e6e4c';toast('Speed '+x+'×');}
+function schedule(fn,ms){const t=setTimeout(fn,ms/(SPEED/1));timers.push(t);}
+function clearTimers(){timers.forEach(clearTimeout);timers=[];}
+function runQueue(steps){let i=0;playing=true;
+ (function next(){if(i>=steps.length){playing=false;return;}
+  const st=steps[i++];schedule(()=>{st.fn();next();},st.wait||1400);})();}
+function jumpEnd(){clearTimers();if(!queue.length)return;queue.forEach(s=>{try{s.fn()}catch(e){}});queue=[];playing=false;toast('Jumped to end');}
+function resetAll(){clearTimers();queue=[];playing=false;threadMsgs=[];watching={};alertCount=0;$('alertbadge').style.display='none';
+ Object.keys(CHANNELS).forEach(k=>CHANNELS[k].msgs=[]);seed();closeThread();closeModal();setClock('07:00');toast('Reset');}
+function playScenario(){resetAll();const id=$('scensel').value;$('scenblurb').textContent=SCEN[id].blurb;
+ queue=SCEN[id].steps();runQueue(queue);}
+/* step helpers */
+const step=(wait,fn)=>({wait,fn});
+/* ============ scenarios ============ */
+const SCEN={
+ S1:{name:'S1 · Happy path — 7644 delivered',blurb:'The full clean story: dispatch → pickup → transit → customer ask answered → delivered. The thread builds live.',steps(){
+  const partial=[];return [
+  step(400,()=>{post('load-tracking',{who:'talisha',t:'04:12',html:fmtMention('@Apollo status 7688'),thread:'1 reply · Today at 4:13'});}),
+  step(900,()=>{post('load-tracking',{who:'dana',t:'06:40',html:fmtMention('@Apollo status 7644'),thread:'View thread'});tpost({who:'dana',t:'06:40',html:fmtMention('@Apollo status 7644')});}),
+  step(700,()=>{tpost({who:'apollo',t:'06:40',id:'s1c',html:'<span class="stream">Apollo is checking Samsara + Front <span class="dots"></span></span>'});}),
+  ...TL7644.map((l,ix)=>step(1300,()=>{partial.push(l);
+    tupdate('s1c',tlCard(7644,partial,{status:ix===TL7644.length-1?'✅ Delivered 16:58':'▶️ Live',foot:'Updated just now · Samsara + Apollo + Front · high confidence'+(ix===TL7644.length-1?'':liveTrackLink()),buttons:ix===TL7644.length-1?statusButtons(7644):''}));setClock(l[0]);})),
+  step(1200,()=>{tpost({who:'dana',t:'17:07',html:'what did we already tell Arrive?'});}),
+  step(900,()=>{replyAudit('thread');})
+ ];}},
+ S2:{name:'S2 · Delay → draft ready (the money demo)',blurb:'Cron sweep catches 7670 slipping, posts the alert with a ready draft. A HUMAN clicks Review & send. Nothing auto-sends.',steps(){return [
+  step(400,()=>{setClock('10:45');post('load-alerts',{who:'apollo',t:'10:45',html:'✅ <b>Load 7663 arrived pickup 10:38</b> — back on schedule',stamp:'as of 10:45 check'});}),
+  step(1600,()=>{setClock('11:00');post('load-alerts',{who:'apollo',t:'11:00',html:'⚠️ <b>Load 7670 running late — ETD 11:11 (+14 min vs appt)</b> · Roy Wright at International Paper<div class="alertpost">📤 Draft reply ready<div class="btnrow" id="revrow-7670"><button class="sbtn primary" onclick="openReview(7670)">Review &amp; send</button><button class="sbtn" onclick="snoozeMenu(event,7670)">Snooze ▾</button></div></div>',stamp:'as of 11:00 check · nothing auto-sends — you review, you send'+liveTrackLink()});if(curChan!=='load-alerts')toast('⚠️ New alert in #load-alerts — click the channel');}),
+  step(2000,()=>{post('load-alerts',{who:'apollo',t:'11:00',html:'🔴 <b>Awaiting broker response 32 min</b> — Load 7691 · C.H. Robinson appt confirm<div class="btnrow"><button class="sbtn" onclick="toast(\'Nudge drafted — opens for review, human sends\')">Draft nudge</button><button class="sbtn" onclick="replyStatus(7691,\'thread\')">Timeline</button></div>',stamp:'as of 11:00 check'});})
+ ];}},
+ S3:{name:'S3 · Awaiting broker — timer breach',blurb:'The 🔴 follow-up timer counts, breaches at 30 min, escalates to ⚠️. Rule 15 made visible.',steps(){
+  let mins=18;return [
+  step(400,()=>{setClock('09:41');post('load-alerts',{who:'apollo',t:'09:41',id:'s3a',html:'🔴 <b>Awaiting broker response — Load 7691</b> · C.H. Robinson appt confirm · reschedule request sent 09:41 · driver: Unassigned<div id="s3timer">⏳ 0 min — follow-up timer running (30 min)</div>',stamp:'as of 09:41 check'});}),
+  ...[6,12,18,24,29].map(m=>step(1200,()=>{setClock('09:'+(41+Math.min(m,19))); updateMsg('load-alerts','s3a','🔴 <b>Awaiting broker response — Load 7691</b> · C.H. Robinson appt confirm · reschedule request sent 09:41 · driver: Unassigned<div id="s3timer">⏳ <b>'+m+' min</b> — follow-up timer running (30 min)</div>');})),
+  step(1500,()=>{setClock('10:11');post('load-alerts',{who:'apollo',t:'10:11',html:'⚠️ <b>ESCALATED: broker silent 30 min — Load 7691</b> · appt at risk (Jul 15 13:30)<div class="btnrow"><button class="sbtn primary" onclick="toast(\'Nudge draft opened — human review required\')">Draft nudge</button><button class="sbtn" onclick="toast(\'Owner set: Talisha\')">Assign owner</button></div>',stamp:'Awaiting-broker starts a 30-min timer with an owner. Breach = ⚠️, never silence.'});})
+ ];}},
+ S4:{name:'S4 · Reschedule 🚩 — history append-only',blurb:'Broker email confirms a new appt. Old time stays visible, struck through. Nothing overwritten.',steps(){return [
+  step(400,()=>{setClock('12:58');post('load-alerts',{who:'apollo',t:'12:58',html:'🚩 <b>Load 7690 rescheduled — DEL appt 15:00 → 17:30</b> · confirmed by Uber Freight via Front (“Confirmed for 17:30 today — thanks for flexing”)<div class="tlcard"><div class="tlline"><span class="t">appt</span> <s>15:00 CDT</s> → <b>17:30 CDT</b> · Fort Worth TX</div></div>',stamp:'as of 13:00 check · history is append-only — the old appointment stays on the record'+liveTrackLink()});}),
+  step(1400,()=>{tpost({who:'dana',t:'13:02',html:fmtMention('@Apollo status 7690')});}),
+  step(900,()=>{stream('thread','load-tracking',tlCard(7690,[['08:31','🚚','Dispatched — Marcus Follins'],['12:58','🚩','DEL appt 15:00 → 17:30 (broker confirmed via Front)'],['13:00','▶️','In transit — delivery ETA Jul 14 · 16:54 · on plan for new appt']],{status:'🚩 Rescheduled',foot:'as of 13:02 check · Front → Apollo · high confidence'+liveTrackLink(),buttons:statusButtons(7690)}));})
+ ];}},
+ S5:{name:'S5 · Conflict — human picks (the honesty demo)',blurb:'Samsara delivery ETA disagrees with the plan. Apollo shows BOTH and waits — a human has to click Use live before anything resolves.',steps(){return [
+  step(400,()=>{setClock('13:05');post('load-tracking',{who:'dana',t:'13:05',html:fmtMention('@Apollo status 7644'),thread:'View thread'});tpost({who:'dana',t:'13:05',html:fmtMention('@Apollo status 7644')});}),
+  step(800,()=>{tpost({who:'apollo',t:'13:05',id:'s5c',html:tlCard(7644,TL7644.slice(0,4),{status:'▶️ In transit',foot:liveTrackLink(false)})+
+   '<div class="alertpost" style="background:var(--yellow);border-color:#E8C34A" id="s5conf">⚠️ <b>Conflict — live tracking disagrees with the plan</b><br>Samsara delivery ETA <b>Jul 14 · 16:10</b> ≠ planned <b>14:30</b> (gap 100 min &gt; 30-min threshold)<div class="btnrow"><button class="sbtn primary" onclick="resolveConflict()">Use live 16:10</button></div><div class="stamp">Rule 10: both values shown · a human picks · never silently resolved</div></div>',stamp:'Playback paused — resolve the conflict to continue.'});toast('S5 waits for YOUR click in the thread');})
+ ];}},
+ S6:{name:'S6 · Stale data — “verify before quoting”',blurb:'No ping for 47 min. Every answer carries its freshness; stale data refuses to sound confident.',steps(){return [
+  step(400,()=>{setClock('14:20');tpost({who:'dana',t:'14:20',html:fmtMention('@Apollo status 7692')});}),
+  step(900,()=>{tpost({who:'apollo',t:'14:20',html:tlCard(7692,[['12:11','▶️','Departed Houston yard — delivery ETA Jul 14 · 17:48'],['13:33','📍','Last ping — I-10 E, 148 mi out'],['14:20','📵','No ping for 47 min — signal gap']],{status:'⚠️ STALE — verify',foot:'⚠️ Data older than 30 min renders as stale (Rule 11). Do NOT quote 17:48 to the customer without verifying.',buttons:'<button class="sbtn" onclick="toast(\'Checking unit… possible tracking misconfig — TRK 355 movement showing on unassigned unit\')">Check unit</button>'}),stamp:'as of 14:20 check · confidence: LOW'});})
+ ];}},
+ S7:{name:'S7 · Cancelled mid-transit',blurb:'Broker cancels while the truck is rolling. 🚩 flag, timeline closes clean, driver redirected.',steps(){return [
+  step(400,()=>{setClock('15:12');post('load-alerts',{who:'apollo',t:'15:12',html:'🚩 <b>Load 7692 CANCELLED mid-transit</b> — RXO email via Front (“cancel 7692, consignee closure”) · Tanya Tye is 82 mi out<div class="btnrow"><button class="sbtn primary" onclick="toast(\'Redirect draft for review: return to Houston yard\')">Draft driver redirect</button><button class="sbtn" onclick="replyStatus(7692,\'thread\')">Timeline</button></div>',stamp:'as of 15:12 check · cancellation logged · detention/TONU evidence preserved'+liveTrackLink()});}),
+  step(1400,()=>{tpost({who:'apollo',t:'15:13',html:tlCard(7692,[['12:11','▶️','Departed Houston — delivery ETA Jul 14 · 17:48'],['15:12','🚩','CANCELLED by RXO (consignee closure) — evidence: Front email 15:11'],['15:13','🧾','TONU claim pack drafted — miles run + time logged']],{status:'🚩 Cancelled',foot:'Timeline closed · nothing deleted — the story survives for the dispute.'})});})
+ ];}},
+ S8:{name:'S8 · Multi-load triage + all-clear',blurb:'“Which loads need attention?” → each flagged load gets its own full S1-style timeline card, not a one-line summary. Ask again after the board calms: the honest empty state.',steps(){return [
+  step(400,()=>{setClock('11:05');post('load-tracking',{who:'dana',t:'11:05',html:'which loads need attention right now?'});}),
+  step(800,()=>{post('load-tracking',{who:'apollo',t:'11:05',html:'Three loads need a look — pulling up the full timeline on each one.'});}),
+  step(1000,()=>{replyStatus(7670,'chan');}),
+  step(1700,()=>{replyStatus(7691,'chan');}),
+  step(1700,()=>{replyStatus(7690,'chan');}),
+  step(2200,()=>{setClock('16:40');post('load-tracking',{who:'dana',t:'16:40',html:'which loads need attention right now?'});}),
+  step(900,()=>{post('load-tracking',{who:'apollo',t:'16:40',html:'✅ <b>All clear.</b> 7 live loads, all tracking on plan. Last exception resolved 13:12 (7690 reschedule confirmed).<div class="tlfoot">as of 16:40 check · quiet sweeps stay quiet — I only post on change</div>'});})
+ ];}},
+ S9:{name:'S9 · Bulk request — status on several loads at once',blurb:'Dana asks for a status roll-up on four loads by number in one message. Apollo answers each in full — a bulk ask never gets flattened into a one-line summary.',steps(){return [
+  step(400,()=>{setClock('12:20');post('load-tracking',{who:'dana',t:'12:20',html:fmtMention('@Apollo status 7644, 7665, 7690 and 7691 please')});}),
+  step(800,()=>{post('load-tracking',{who:'apollo',t:'12:20',html:'4 loads requested — pulling up the full timeline on each one.'});}),
+  step(1000,()=>{replyStatus(7644,'chan');}),
+  step(1700,()=>{replyStatus(7665,'chan');}),
+  step(1700,()=>{replyStatus(7690,'chan');}),
+  step(1700,()=>{replyStatus(7691,'chan');}),
+  step(900,()=>{post('load-tracking',{who:'apollo',t:'12:26',html:'✅ <b>4 of 4 returned.</b> Nothing summarized away — every load gets its own timeline, bulk ask or not.',stamp:'as of 12:26 check'});})
+ ];}}
+};
+function resolveConflict(){
+ const el=document.getElementById('s5conf');
+ if(el)el.innerHTML='✅ <b>Resolved — using live delivery ETA Jul 14 · 16:10</b> (picked by Dana, 13:06). Plan flagged stale for follow-up.<div class="stamp">Logged to the audit trail · the conflict stays on the record</div>';
+ renderThread();
+ schedule(()=>{tpost({who:'apollo',t:'13:12',html:'🚩 Delivery resched 14:00 → 16:30 — broker confirmed (Front). Conflict closed: plan now matches live.',stamp:'as of 13:15 check'});},1200);
+ toast('Live delivery ETA adopted · logged');}
+/* ============ boot ============ */
+function seed(){
+ CHANNELS['load-tracking'].msgs=[
+  {who:'talisha',t:'04:12',html:fmtMention('@Apollo status 7688'),thread:'1 reply · Today at 4:13'},
+  {who:'apollo',t:'04:13',html:'📦 <b>Load 7688 · Pepsi</b> — ▶️ In transit, delivery ETA Jul 14 · 06:10, on plan.',stamp:'as of 04:13 check · Samsara'+liveTrackLink()}
+ ];
+ CHANNELS['load-alerts'].msgs=[
+  {who:'apollo',t:'07:00',html:'☀️ <b>7:00 sweep</b> — 7 loads with PU/DEL in the next 4h · all tracking. Quiet sweeps stay quiet.',stamp:'as of 07:00 check · cadence 15 min'}
+ ];
+ renderHead();renderChan();renderThread();}
+document.querySelectorAll('#side .item[data-chan]').forEach(el=>el.onclick=()=>{
+ document.querySelectorAll('#side .item').forEach(x=>x.classList.remove('active'));el.classList.add('active');
+ curChan=el.dataset.chan;renderHead();renderChan();});
+$('composer').addEventListener('keydown',e=>{if(e.key==='Enter')sendComposer();});
+$('threadInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendThread();});
+const sel=$('scensel');Object.keys(SCEN).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=SCEN[k].name;sel.appendChild(o);});
+sel.onchange=()=>$('scenblurb').textContent=SCEN[sel.value].blurb;
+setSpeed(5);seed();setClock('07:00');
+</script>
+</body>
+</html>

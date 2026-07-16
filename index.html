@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Load Timeline Chat — Prototypes</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#1B4E4C;--ink:#0F172A;--gray:#64748B;--line:#E2E8F0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Roboto,sans-serif;background:#F7F7F8;color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.wrap{width:min(880px,100%)}
+.logo{width:40px;height:40px;border-radius:9px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;margin-bottom:16px}
+h1{font-size:26px;font-weight:500}
+.sub{color:var(--gray);margin-top:6px;font-size:14px;line-height:1.5}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+a.card{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;text-decoration:none;color:inherit;transition:border-color .12s}
+a.card:hover{border-color:var(--teal)}
+.card .tag{font-size:10.5px;letter-spacing:1.2px;color:var(--gray);font-weight:500}
+.card h2{font-size:18px;font-weight:500;margin:8px 0 6px}
+.card p{font-size:13.5px;color:var(--gray);line-height:1.55}
+.card .go{display:inline-block;margin-top:14px;background:var(--teal);color:#fff;border-radius:8px;padding:8px 16px;font-size:13.5px;font-weight:500}
+.scen{margin-top:26px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.scen h3{font-size:13px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:12px}
+.scen .row{display:flex;gap:10px;padding:5px 0;font-size:13.5px;align-items:baseline}
+.scen .row b{flex:none;width:34px;color:var(--teal)}
+.scen .row.star{background:#F4FAF7;border-radius:8px;padding:7px 10px;margin:2px -10px}
+.foot{margin-top:20px;font-size:12px;color:#94A3B8;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">N</div>
+  <h1>Load Timeline Chat — interactive prototypes</h1>
+  <div class="sub">One load, one thread: every signal from Apollo, Samsara, VendorFlow and the comms channels in a single timeline — drafted for humans, sent by humans. Use the 🎬 scenario player (bottom-right of each prototype) to make it perform.</div>
+  <div class="cards">
+    <a class="card" href="./mvp1-slack.html">
+      <div class="tag">MVP 1 · SLACK · APOLLO AGENT RUNTIME</div>
+      <h2>Apollo Load Timeline Bot</h2>
+      <p>Native Slack: ask <b>@Apollo status 7644</b> in-thread, get the emoji timeline, draft replies behind Review &amp; send, watch loads, snooze alerts. The 15-min cron sweep posts to #load-alerts.</p>
+      <span class="go">Open MVP 1 →</span>
+    </a>
+    <a class="card" href="./mvp2-apollo.html">
+      <div class="tag">MVP 2 · IN APOLLO · + FIDELITY</div>
+      <h2>Loads + Timeline drawer + Ask Apollo</h2>
+      <p>The Loads board with live flags, a Side-Sheet timeline per load (sources + freshness on every entry), the conflict card, sanitized share, drafts grounded in Samsara, and approval-gated write-back.</p>
+      <span class="go">Open MVP 2 →</span>
+    </a>
+  </div>
+  <div class="scen">
+    <h3>SCENARIOS (same 10 in both prototypes)</h3>
+    <div class="row"><b>S1</b> Happy path — 7644 builds live from dispatch to POD</div>
+    <div class="row star"><b>S2</b> ⭐ Delay → auto-flag → draft ready → a human sends. The money demo.</div>
+    <div class="row"><b>S3</b> Awaiting broker — the 30-min timer counts, breaches, escalates with an owner</div>
+    <div class="row"><b>S4</b> Reschedule 🚩 — append-only history / approval-gated write-back</div>
+    <div class="row star"><b>S5</b> ⭐ Conflict — Samsara 16:10 ≠ plan 14:30. Both shown. You pick. The honesty demo.</div>
+    <div class="row"><b>S6</b> Stale data — 47-min signal gap refuses to sound confident</div>
+    <div class="row"><b>S7</b> Unlinked order # — queued for triage, never guessed</div>
+    <div class="row"><b>S8</b> TONU — no truck ever came (Unassigned driver · PDT appt · trailer unknown)</div>
+    <div class="row"><b>S9</b> Cancelled mid-transit — story preserved for the TONU dispute</div>
+    <div class="row"><b>S10</b> Triage cards + the honest all-clear empty state</div>
+  </div>
+  <div class="foot">Read-only v1 per the Apollo Agent Runtime plan — the bot drafts, humans send, every run is audit-logged. Single files, no backend: double-click to open, works offline (fonts degrade gracefully). Built from the Claude Design exports + live Apollo tokens · Jul 13, 2026.</div>
+</div>
+</body>
+</html>

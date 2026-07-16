@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MVP 2 · Load Timeline Chat — Apollo by Nevoya</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#00786F;--teal-soft:#F0FDFA;--ink:#0F172A;--gray:#64748B;--line:#E2E8F0;--bg:#F7F7F8;
+--yellow:#F5E077;--purple:#E4DDF7;--red:#DC2626;--redsoft:#FDECEC;--orange:#E67E22;--green:#27AE60;--greensoft:#E7F6EC;--warnbg:#FCF6DE;
+/* Nevoya Component Library tokens (pulled via Figma MCP — see .claude skill nevoya-library.md) */
+--surface-high:#DAE3ED;--surface-default:#E1EAF5;--surface-low:#E6EFFA;--surface-lowest:#F6F8FB;
+--border-default:#CAD5E2;--ink2:#1D293D;--text-default:#314158;--text-muted:#45556C;
+--chip-cancelled-bg:#F5F5F4;--chip-cancelled-fg:#44403B;
+--chip-dispatched-bg:#EDE9FE;--chip-dispatched-fg:#7F22FE;
+--chip-progress-bg:#DBEAFE;--chip-progress-fg:#155DFC;
+--chip-teal-bg:#F0FDFA;--chip-cyan-bg:#CEFAFE;--chip-cyan-fg:#007595;
+--chip-slate-bg:#E6EFFA;--chip-slate-fg:#1D293D;
+--chip-amber-bg:#FEF3C6;--chip-amber-fg:#E17100;
+--chip-red-bg:#FFE2E2;--chip-red-fg:#E7000B;
+--chip-completed-bg:#D0FAE5;--chip-completed-fg:#007A55;
+--chip-pending-bg:#FAE8FF;--chip-pending-fg:#C800DE}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(--bg);height:100vh;overflow:hidden;font-size:14px}
+#app{display:flex;height:100vh}
+/* rail */
+#rail{width:64px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex:none}
+#rail .logo{width:34px;height:34px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;margin-bottom:10px}
+#rail .ric{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#475569;position:relative}
+#rail .ric:hover{background:#F1F5F9}
+#rail .ric.active{background:var(--surface-high);color:var(--teal)}
+#rail .ric.ghost{opacity:.38;cursor:default}
+#rail .tz{margin-top:auto;font-size:11px;color:var(--gray);font-weight:500}
+#rail .tip{position:absolute;left:52px;background:var(--ink);color:#fff;font-size:12px;letter-spacing:.3px;font-weight:500;padding:6px 8px;border-radius:8px;white-space:nowrap;display:none;z-index:50}
+#rail .ric:hover .tip{display:block}
+/* main */
+#maincol{flex:1;display:flex;flex-direction:column;min-width:0}
+.view{display:none;flex:1;min-height:0;flex-direction:column}
+.view.on{display:flex}
+/* LOADS view */
+#loadshead{padding:18px 26px 0}
+#loadshead h1{font-size:26px;font-weight:500}
+.tabs{display:flex;gap:22px;margin-top:12px;border-bottom:1px solid var(--line);padding:0 26px;font-size:12px;letter-spacing:.8px;font-weight:500;color:var(--text-default)}
+.tabs .tab{padding:8px 2px;cursor:pointer;border-bottom:2px solid transparent}
+.tabs .tab.on{color:var(--teal);font-weight:600;border-color:var(--teal)}
+.tabs .cnt{background:var(--chip-amber-bg);color:var(--chip-amber-fg);border-radius:16px;padding:1px 6px;font-size:10px;font-weight:600;letter-spacing:.5px;line-height:12px;margin-left:4px}
+.chips{display:flex;gap:8px;padding:14px 26px 4px}
+.chip{border:1px solid var(--border-default);border-radius:8px;padding:2px 8px;font-size:14px;font-weight:500;cursor:pointer;background:#fff;color:var(--text-default)}
+.chip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);font-weight:600}
+#tblwrap{flex:1;overflow:auto;padding:10px 26px 90px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+thead th{font-size:11.5px;letter-spacing:.4px;color:var(--gray);text-align:left;font-weight:500;padding:11px 12px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+tbody td{padding:12px;border-bottom:1px solid #F1F5F9;font-size:13.5px;vertical-align:middle;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#F8FAFC}
+tbody tr.sel{background:var(--teal-soft)}
+tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
+.lid{background:var(--surface-default);border-radius:16px;padding:4px 8px;font-weight:600;font-size:10px;letter-spacing:.5px;line-height:12px;color:var(--ink2);display:inline-flex;gap:4px;align-items:center}
+.lid .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.lid .dot.p-pending{background:var(--chip-pending-fg)}
+.lid .dot.p-dispatched{background:var(--chip-dispatched-fg)}
+.lid .dot.p-transit{background:var(--chip-progress-fg)}
+.lid .dot.p-delayed{background:var(--chip-red-fg)}
+.lid .dot.p-broker{background:var(--chip-amber-fg)}
+.lid .dot.p-resched{background:var(--chip-slate-fg)}
+.lid .dot.p-delivered{background:var(--chip-completed-fg)}
+.lid .dot.p-tonu,.lid .dot.p-cancel{background:var(--chip-cancelled-fg)}
+.pill{border-radius:16px;padding:4px 8px;font-size:10px;font-weight:600;letter-spacing:.5px;line-height:12px;display:inline-block}
+.p-pending{background:var(--chip-pending-bg);color:var(--chip-pending-fg)}.p-dispatched{background:var(--chip-dispatched-bg);color:var(--chip-dispatched-fg)}
+.p-transit{background:var(--chip-progress-bg);color:var(--chip-progress-fg)}.p-delayed{background:var(--chip-red-bg);color:var(--chip-red-fg)}
+.p-broker{background:var(--chip-amber-bg);color:var(--chip-amber-fg)}.p-resched{background:var(--chip-slate-bg);color:var(--chip-slate-fg)}
+.p-delivered{background:var(--chip-completed-bg);color:var(--chip-completed-fg)}.p-tonu{background:var(--chip-cancelled-bg);color:var(--chip-cancelled-fg)}.p-cancel{background:var(--chip-cancelled-bg);color:var(--chip-cancelled-fg)}
+.eta-late{color:var(--chip-red-fg);font-weight:500}
+.lastu{color:var(--gray);font-size:12px;white-space:normal;max-width:210px}
+/* drawer */
+#drawer{width:0;flex:none;background:#fff;border-left:1px solid var(--line);overflow:hidden;transition:width .18s ease;display:flex;flex-direction:column}
+#drawer.open{width:440px}
+#dhead{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+#dhead .top{display:flex;align-items:center;gap:8px}
+#dhead .x{margin-left:auto;cursor:pointer;color:var(--gray);font-size:16px;padding:2px 8px;border-radius:6px}
+#dhead .x:hover{background:#F1F5F9}
+#dhead h2{font-size:17px;font-weight:500;margin-top:6px}
+#dhead .meta{color:var(--gray);font-size:12.5px;margin-top:3px}
+#dhead .btns{display:flex;gap:8px;margin-top:12px}
+.abtn{border:1px solid var(--border-default);background:#fff;border-radius:8px;font-size:14px;font-weight:600;padding:8px 12px;cursor:pointer;font-family:inherit;color:var(--ink2)}
+.abtn:hover{background:var(--surface-lowest)}
+.abtn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.abtn.primary:hover{opacity:.9}
+.abtn:disabled{opacity:.3;cursor:not-allowed}
+#dtl{flex:1;overflow-y:auto;padding:14px 18px 30px}
+#dtl .sect{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:10px;display:flex}
+#dtl .sect span:last-child{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none}
+.tev{display:flex;gap:12px;position:relative;padding-bottom:16px}
+.tev::before{content:"";position:absolute;left:13px;top:30px;bottom:2px;border-left:2px dashed #CBD5E1}
+.tev:last-child::before{display:none}
+.tev .ic{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;z-index:1}
+.tev.warn .ic{border-color:var(--chip-red-fg)}
+.tev .tc{flex:1;min-width:0}
+.tev .row1{display:flex;align-items:baseline;gap:8px}
+.tev .row1 b{font-size:13.5px;font-weight:500}
+.tev .row1 .rt{margin-left:auto;color:#94A3B8;font-size:11.5px;white-space:nowrap}
+.tev .desc{font-size:13px;color:#475569;margin-top:2px;line-height:1.4}
+.tev .src{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.6px;color:var(--gray);border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin-top:5px}
+.tev .src::before{content:"";width:6px;height:6px;border-radius:50%;flex:none;background:var(--gray)}
+.tev .src.lane-telemetry::before{background:#009966}
+.tev .src.lane-dispatch::before{background:#0084D1}
+.tev .tag{border-radius:10px;font-size:11px;padding:1px 8px;font-weight:500}
+.conflict{background:var(--warnbg);border:1px solid #E8C34A;border-radius:9px;padding:10px 12px;margin-top:6px}
+.conflict .vals{display:flex;gap:10px;margin:8px 0}
+.conflict .val{flex:1;border-radius:7px;padding:7px;text-align:center;font-size:12px}
+.conflict .val b{display:block;font-size:16px}
+.gap{opacity:.75}
+.gap .ic{border-style:dashed!important;border-color:#94A3B8!important}
+/* CHAT DOCK — persistent floating Ask Apollo */
+#chatdock{position:fixed;left:64px;right:0;bottom:0;display:flex;justify-content:center;padding-bottom:18px;pointer-events:none;z-index:60;transition:right .18s ease}
+/* keep the persistent chat centered in the visible area when the drawer is open */
+body.drawer-open #chatdock{right:440px}
+#chatcard{pointer-events:auto;width:min(760px,92%);height:56px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 2px 16px rgba(15,23,42,.14);display:flex;flex-direction:column;overflow:hidden;transition:height .22s cubic-bezier(.4,0,.2,1)}
+#chatcard.expanded{height:min(70vh,660px)}
+#chathead{display:none;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);flex:none}
+#chatcard.expanded #chathead{display:flex}
+#chathead .av{width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+#chathead b{font-size:13px;font-weight:500}
+#chathead .min{margin-left:auto;cursor:pointer;color:var(--gray);padding:2px 9px;border-radius:6px;font-size:16px;line-height:1}
+#chathead .min:hover{background:#F1F5F9}
+#chatbody{flex:1;min-height:0;overflow-y:auto;padding:14px 20px 6px;display:none}
+#chatcard.expanded #chatbody{display:block}
+#askinner{display:flex;flex-direction:column}
+#askempty{text-align:center;padding:4px 0 6px}
+#askempty h1{font-size:22px;font-weight:500}
+#askempty .avatar{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:15px;margin:12px 0 6px}
+#askempty .greet{font-size:15px;font-weight:500}
+#askempty .sub{color:var(--gray);font-size:13px;margin-top:3px}
+.sugg{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13.5px;text-align:left;margin-top:8px;cursor:pointer;display:flex}
+.sugg:hover{border-color:var(--teal);background:#FBFDFC}
+.sugg span:last-child{margin-left:auto;color:var(--gray)}
+.chiprow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.lchip{border:1px solid var(--line);background:#fff;border-radius:14px;font-size:12px;padding:4px 10px;cursor:pointer}
+.lchip:hover{border-color:var(--teal)}
+#chatlog{padding-top:16px}
+.uq{display:flex;justify-content:flex-end;margin:14px 0}
+.uq div{background:var(--teal);color:#fff;border-radius:14px 14px 3px 14px;padding:9px 15px;font-size:14px;max-width:75%}
+.aq{display:flex;gap:10px;margin:14px 0}
+.aq .av{width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.aq .bd{flex:1;min-width:0;font-size:14px;line-height:1.5}
+.stream{color:var(--gray);font-style:italic}
+.stream .dots::after{content:'···';animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.3}}
+.lcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-top:8px}
+.lcard .r1{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.lcard .r1 .eta{margin-left:auto;font-weight:500}
+.lcard .r2{color:var(--gray);font-size:12.5px;margin-top:3px}
+.lcard .btns{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.draftcard{background:#fff;border:1px solid var(--line);border-radius:10px;margin-top:8px;overflow:hidden}
+.draftcard .to{background:#F8FAFC;border-bottom:1px solid var(--line);padding:8px 14px;font-size:12.5px;color:var(--gray);display:flex}
+.draftcard .to span:last-child{margin-left:auto}
+.draftcard .body{padding:12px 14px;font-size:13.5px;line-height:1.55}
+.draftcard textarea{width:100%;border:none;outline:none;font-family:inherit;font-size:13.5px;line-height:1.55;resize:vertical;min-height:90px}
+.draftcard .foot{border-top:1px solid var(--line);padding:9px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gtag{font-size:10px;letter-spacing:.6px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--gray)}
+.saniti{font-size:11.5px;color:var(--chip-completed-fg);font-weight:500}
+.propose{border:1px solid var(--line);border-left:3px solid var(--chip-amber-fg);border-radius:8px;background:#fff;padding:11px 14px;margin-top:8px;font-size:13.5px}
+.propose .delta{background:#FDF6EC;border-radius:7px;padding:8px 10px;margin:8px 0;font-size:13px}
+#chatinputrow{flex:none;padding:11px 12px;position:relative;display:flex;align-items:center}
+#chatcard.expanded #chatinputrow{padding:10px 16px}
+#askinput{width:100%;height:34px;border:1px solid transparent;border-radius:10px;padding:0 46px 0 14px;font-size:14px;line-height:34px;font-family:inherit;outline:none;background:transparent}
+#chatcard.expanded #askinput{border-color:#CBD5E1;background:#fff}
+#askinput:focus{border-color:var(--teal);background:#fff}
+#asksend{position:absolute;right:20px;top:50%;transform:translateY(-50%);background:var(--teal);border:none;color:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:14px}
+#askfoot{text-align:center;font-size:10.5px;color:#94A3B8;padding:0 0 10px;display:none}
+#chatcard.expanded #askfoot{display:block}
+#auto{position:absolute;bottom:100%;left:12px;right:12px;margin-bottom:6px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);display:none;overflow:hidden}
+#auto .ah{font-size:10px;letter-spacing:1px;color:var(--gray);padding:8px 14px 2px}
+#auto .ai{padding:8px 14px;font-size:13px;cursor:pointer;display:flex;gap:8px}
+#auto .ai:hover{background:#F8FAFC}
+#auto .ai .r{margin-left:auto;color:var(--gray);font-size:12px}
+/* modal + scen + toast */
+#ovl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:100}
+#ovl.show{display:flex}
+.modal{background:#fff;border-radius:8px;width:480px;max-width:92vw;max-height:86vh;overflow-y:auto}
+.modal .mh{display:flex;padding:16px 20px 4px;align-items:center}
+.modal .mh b{font-size:20px;font-weight:600;color:var(--ink2)}
+.modal .mh .x{margin-left:auto;cursor:pointer;color:var(--gray)}
+.modal .mb{padding:10px 20px 18px}
+.preview{border:1px solid var(--line);border-radius:9px;padding:12px 14px;font-size:13.5px;line-height:1.55;background:#FBFDFC}
+.preview .ph{font-size:10.5px;letter-spacing:1px;color:var(--gray);margin-bottom:8px}
+#scen{position:fixed;right:16px;bottom:16px;background:var(--ink);color:#fff;border-radius:12px;padding:10px 12px;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,.35);width:330px;font-size:13px;font-family:Inter}
+#scen .row{display:flex;gap:6px;align-items:center;margin-top:8px}
+#scen select{flex:1;background:#1e293b;color:#fff;border:1px solid #475569;border-radius:6px;padding:5px;font-family:inherit;font-size:12.5px;min-width:0}
+#scen button{background:#1e293b;color:#fff;border:1px solid #475569;border-radius:6px;padding:5px 9px;cursor:pointer;font-family:inherit;font-size:12.5px}
+#scen button.go{background:var(--green);border-color:var(--green);font-weight:700}
+#scen .clock{margin-left:auto;font-variant-numeric:tabular-nums;color:#86EFAC;font-weight:700}
+#scen .blurb{color:#94A3B8;font-size:12px;margin-top:6px;line-height:1.4;min-height:16px}
+#scen .head{display:flex;gap:8px;align-items:center}
+#scen .min{margin-left:auto;cursor:pointer;color:#64748B}
+#scen.collapsed .row,#scen.collapsed .blurb{display:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="rail">
+    <div class="logo">N</div>
+    <div class="ric" id="ric-loads" onclick="showView('loads')">📦<span class="tip">Loads</span></div>
+    <div class="ric" id="ric-ask" onclick="toggleChat()">✦<span class="tip">Ask Apollo</span></div>
+    <div class="ric" onclick="location.href='lanes/index.html'">🛣<span class="tip">Lanes</span></div>
+    <div class="ric ghost">🔔<span class="tip">Alerts feed — coming soon</span></div>
+    <div class="ric ghost">🗓</div><div class="ric ghost">🚛</div><div class="ric ghost">👤</div><div class="ric ghost">📊</div>
+    <div class="tz">PDT</div>
+  </div>
+  <div id="maincol">
+    <!-- LOADS -->
+    <div class="view on" id="view-loads">
+      <div style="display:flex;flex-direction:column;min-height:0;flex:1">
+        <div id="loadshead"><div style="display:flex;align-items:center"><h1>Loads</h1><button class="abtn primary" style="margin-left:auto">＋ Create Load</button></div></div>
+        <div class="tabs"><div class="tab on">LOADS</div><div class="tab">INTERNAL MOVES</div><div class="tab">FLAGGED LOADS <span class="cnt" id="flagcnt">3</span></div><div class="tab">CALENDAR</div><div class="tab">DOCUMENTS</div></div>
+        <div class="chips" id="filterchips"></div>
+        <div id="tblwrap"><table>
+          <thead><tr><th>Load ID</th><th>Status</th><th>Customer</th><th>Driver</th><th>DEL appt</th><th>Live ETA</th><th>Flag</th><th>Last update</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+  <!-- DRAWER -->
+  <div id="drawer">
+    <div id="dhead"></div>
+    <div id="dtl"></div>
+  </div>
+</div>
+
+<div id="chatdock">
+  <div id="chatcard" class="collapsed">
+    <div id="chathead"><span class="av">✦</span><b>Ask Apollo</b><span class="min" onclick="collapseChat()" title="Minimize">⌄</span></div>
+    <div id="chatbody"><div id="askinner">
+      <div id="askempty">
+        <h1>Ask Apollo</h1>
+        <div class="avatar">✦</div>
+        <div class="greet">Good morning, Jess</div>
+        <div class="sub" id="boardsub">7 live loads on the board · 3 need attention</div>
+        <div style="text-align:left;margin-top:14px;font-size:10.5px;letter-spacing:1px;color:var(--gray)">SUGGESTED</div>
+        <div class="sugg" onclick="ask('Which loads need attention right now?')">Which loads need attention right now? <span>›</span></div>
+        <div class="sugg" onclick="ask('What changed in the last hour?')">What changed in the last hour? <span>›</span></div>
+        <div class="sugg" onclick="ask('Any load at risk of missing its delivery window?')">Any load at risk of missing its delivery window? <span>›</span></div>
+        <div style="text-align:left;margin-top:14px;font-size:10.5px;letter-spacing:1px;color:var(--gray)">OPEN A LIVE LOAD</div>
+        <div class="chiprow" id="livechips"></div>
+      </div>
+      <div id="chatlog"></div>
+    </div></div>
+    <div id="chatinputrow">
+      <div id="auto"></div>
+      <input id="askinput" placeholder="Ask about loads, drivers, trailers…" autocomplete="off">
+      <button id="asksend" onclick="sendAsk()">➤</button>
+    </div>
+    <div id="askfoot">Read-only · Apollo Agent Runtime over loads, orders, drivers &amp; trailers · replies cite sources</div>
+  </div>
+</div>
+
+<div id="ovl"><div class="modal" id="modalbox"></div></div>
+
+<div id="scen">
+  <div class="head"><b>🎬 Scenario player</b><span class="clock" id="clock">--:--</span><span class="min" onclick="document.getElementById('scen').classList.toggle('collapsed')">▁</span></div>
+  <div class="row"><select id="scensel"></select><button class="go" onclick="playScenario()">▶ Play</button></div>
+  <div class="row"><button onclick="setSpeed(1)" id="sp1">1×</button><button onclick="setSpeed(5)" id="sp5">5×</button><button onclick="setSpeed(30)" id="sp30">30×</button><button onclick="jumpEnd()">⏭ End</button><button onclick="resetAll()">↺ Reset</button></div>
+  <div class="blurb" id="scenblurb">Pick a scenario. S2 and S5 carry the product argument.</div>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600);}
+let CLOCK='10:45';function setClock(t){CLOCK=t;$('clock').textContent=t;}
+/* ---------- data ---------- */
+const PILL={'Pending':'p-pending','Dispatched':'p-dispatched','In transit':'p-transit','Delayed':'p-delayed','Awaiting broker':'p-broker','Rescheduled':'p-resched','Delivered':'p-delivered','TONU':'p-tonu','Cancelled':'p-cancel'};
+/* status→emoji coupling (from mvp1's bot vocabulary; TONU/Cancelled chosen to read distinctly) */
+const SEMOJI={'Pending':'📋','Dispatched':'🚚','In transit':'▶️','Delayed':'⚠️','Awaiting broker':'🔴','Rescheduled':'🚩','Delivered':'✅','TONU':'⛔','Cancelled':'❌'};
+const pillHTML=s=>'<span class="pill '+(PILL[s]||'p-transit')+'">'+(SEMOJI[s]?SEMOJI[s]+' ':'')+s+'</span>';
+let LOADS={};
+function seedLoads(){LOADS={
+ 7670:{cust:'International Paper',driver:'Roy Wright',rig:'TRK 632 / TRL 88141',del:'10:57',eta:'11:11 (+14)',late:true,status:'Delayed',flag:'⚠️',last:'ETA slipped +14 min · Samsara · 2 min ago',attention:true,
+  tl:[ev('11:02','Late +14 min','Live ETA 11:11 vs appt 10:57 — slip from dwell at pickup','SAMSARA','⚠️','4 min ago',1),
+      ev('10:41','Arrived','Checked in at consignee · Arrive DC 12, Dallas TX','SAMSARA','📍','35 min ago'),
+      ev('10:12','Customer note','Dock can flex 15 minutes — no reschedule needed','APOLLO','💬','1 h ago'),
+      ev('09:36','Dwell 52 min','Held at shipper dock past scheduled window','SAMSARA','⏱','2 h ago',1),
+      ev('08:14','Picked up','BOL scanned — Katzen Neite, Pasadena TX','SAMSARA','📦','3 h ago'),
+      ev('07:02','Created','Tendered by International Paper · order 448811207','APOLLO','📋','4 h ago')]},
+ 7691:{cust:'C.H. Robinson',driver:'Unassigned',rig:'— / —',del:'Jul 15 · 13:30',eta:'—',status:'Awaiting broker',flag:'🔴',last:'Reschedule request sent · Front · 32 min ago',attention:true,
+  tl:[ev('10:13','Awaiting broker — 32 min','Reschedule request sent 09:41 · no reply · follow-up timer running','FRONT','🔴','now',1),
+      ev('09:41','Reschedule requested','Appt confirm asked of CHR — order 559952733','FRONT','📨','32 min ago'),
+      ev('07:15','Created','Tendered by C.H. Robinson · driver Unassigned','APOLLO','📋','3 h ago')]},
+ 7690:{cust:'Uber Freight',driver:'Marcus Follins',rig:'TRK 411 / TRL 77019',del:'17:30',eta:'16:54',status:'Rescheduled',flag:'🚩',last:'Appt moved 15:00 → 17:30 · Front · 18 min ago',attention:true,
+  tl:[ev('10:27','Rescheduled','DEL appt 15:00 → 17:30 · “Confirmed for 17:30 today — thanks for flexing” · Fort Worth TX','FRONT','🚩','18 min ago',1),
+      ev('08:31','Dispatched','Marcus Follins · TRK 411 assigned','APOLLO','🚚','2 h ago')]},
+ 7644:{cust:'Arrive Logistics',driver:'Bruce Handy',rig:'TRK 218 / TRL 92866',del:'14:30',eta:'16:05',status:'Delivered',flag:'✅',last:'POD signed · R. Alvarez at dock 4 · 1 h ago',delivered:true,
+  tl:[ev('17:04','POD signed','Signed by R. Alvarez at dock 4','SAMSARA','🧾','1 h ago'),
+      ev('16:58','Arrived','Checked in at consignee — Arrive DC 12, Dallas TX','SAMSARA','📍','1 h ago'),
+      ev('14:38','Broker reply','Dock 4 confirmed for late arrival — no detention charged','FRONT','💬','3 h ago'),
+      {conflict:true,t:'13:05',rt:'5 h ago'},
+      ev('11:20','In transit','Departed pickup — I-45 N, 212 mi remaining','SAMSARA','▶️','6 h ago'),
+      ev('08:14','Picked up','BOL scanned — TS Packaging, Garland TX','SAMSARA','📦','9 h ago')]},
+ 7692:{cust:'RXO Inc.',driver:'Tanya Tye',rig:'TRK 355 / TRL 61220',del:'18:15',eta:'17:48',status:'In transit',flag:'',last:'Departed Houston yard · Samsara · 5 min ago',
+  tl:[ev('12:11','In transit','Departed Houston yard — ETA 17:48','SAMSARA','▶️','5 min ago')]},
+ 7689:{cust:'RXO Inc.',driver:'Itzia Warren',rig:'TRK 340 / TRL 61301',del:'19:00',eta:'18:22',status:'In transit',flag:'',last:'On I-10 E · 148 mi out · Samsara · 3 min ago',
+  tl:[ev('12:40','In transit','On I-10 E — 148 mi to consignee','SAMSARA','▶️','3 min ago')]},
+ 7665:{cust:'Amazon Relay',driver:'Unassigned',rig:'— / (open question for eng!)',del:'Jul 14 · 09:30 PDT',eta:'—',status:'Pending',flag:'',last:'Tendered · needs driver · Apollo · 2 h ago',
+  tl:[ev('06:10','Created','Tendered by Amazon Relay · needs driver · trailer: (open question for eng!)','APOLLO','📋','2 h ago')]}
+};}
+function ev(t,title,desc,src,ic,rt,warn){return{t,title,desc,src,ic,rt,warn:!!warn};}
+let FILTER='all', SELECTED=null, conflictResolved=false;
+/* ---------- loads table ---------- */
+function chipsHTML(){
+ const n=Object.keys(LOADS).length, att=Object.values(LOADS).filter(l=>l.attention).length, del=Object.values(LOADS).filter(l=>l.delivered).length;
+ $('boardsub').textContent=n+' live loads on the board · '+att+' need attention';
+ return [['all','All loads '+n],['att','Needs attention '+att],['del','Delivered today '+del]].map(c=>'<div class="chip'+(FILTER===c[0]?' on':'')+'" onclick="FILTER=\''+c[0]+'\';renderTable()">'+c[1]+'</div>').join('');}
+function renderTable(){
+ $('filterchips').innerHTML=chipsHTML();
+ const ids=Object.keys(LOADS).filter(id=>FILTER==='all'||(FILTER==='att'&&LOADS[id].attention)||(FILTER==='del'&&LOADS[id].delivered));
+ $('tbody').innerHTML=ids.map(id=>{const L=LOADS[id];
+  return '<tr class="'+(SELECTED==id?'sel':'')+'" onclick="openDrawer('+id+')">'+
+  '<td><span class="lid"><span class="dot '+(PILL[L.status]||'p-transit')+'"></span>Load '+id+'</span></td>'+
+  '<td>'+pillHTML(L.status)+'</td>'+
+  '<td>'+L.cust+'</td><td>'+esc(L.driver)+'</td><td>'+L.del+'</td>'+
+  '<td class="'+(L.late?'eta-late':'')+'">'+L.eta+'</td><td>'+(L.flag||'—')+'</td>'+
+  '<td class="lastu">'+esc(L.last)+'</td></tr>';}).join('');
+ $('flagcnt').textContent=Object.values(LOADS).filter(l=>l.attention).length;
+ renderChips();}
+function renderChips(){
+ $('livechips').innerHTML=Object.keys(LOADS).map(id=>{const L=LOADS[id];
+  return '<span class="lchip" onclick="collapseChat();showView(\'loads\');openDrawer('+id+')">'+(L.flag||'')+' '+id+' · '+(L.status==='In transit'?'in transit':L.status.toLowerCase())+'</span>';}).join('');}
+/* ---------- drawer ---------- */
+function openDrawer(id){SELECTED=id;const L=LOADS[id];
+ $('drawer').classList.add('open');document.body.classList.add('drawer-open');
+ $('dhead').innerHTML='<div class="top"><span class="lid"><span class="dot '+(PILL[L.status]||'p-transit')+'"></span>Load '+id+'</span>'+pillHTML(L.status)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
+ '<h2>'+L.cust+'</h2><div class="meta">'+esc(L.driver)+' · '+esc(L.rig)+'</div>'+
+ '<div class="btns"><button class="abtn primary" onclick="openShare('+id+')">⤴ Share status</button><button class="abtn" onclick="ask(\'Draft an update for '+id+'\')">Draft update</button></div>';
+ renderTL();renderTable();}
+function closeDrawer(){$('drawer').classList.remove('open');document.body.classList.remove('drawer-open');SELECTED=null;renderTable();}
+function laneClass(src){if(src==='SAMSARA')return 'lane-telemetry';if(src==='APOLLO')return 'lane-dispatch';return '';}
+function renderTL(){const L=LOADS[SELECTED];if(!L)return;
+ $('dtl').innerHTML='<div class="sect"><span>TIMELINE</span><span>newest first</span></div>'+L.tl.map(e=>{
+  if(e.conflict){return '<div class="tev warn"><div class="ic">⚠️</div><div class="tc"><div class="row1"><b>ETA conflict</b><span class="rt">'+e.rt+'</span></div>'+
+   (conflictResolved
+    ?'<div class="conflict"><b style="font-size:13px">Resolved — live ETA adopted 16:10</b><div class="desc">Picked by Jess · 13:06 · plan flagged stale · logged to audit trail</div></div>'
+    :'<div class="conflict"><div style="font-size:12.5px">Live tracking disagrees with the planned appointment:</div><div class="vals"><div class="val" style="background:#FDECEC"><span style="font-size:10px;letter-spacing:1px">SAMSARA LIVE</span><b>16:10</b></div><div class="val" style="background:#EEF2F7"><span style="font-size:10px;letter-spacing:1px">PLANNED APPT</span><b>14:30</b></div></div><div class="btns" style="display:flex;gap:8px"><button class="abtn primary" onclick="resolveConflict(true)">Use live</button><button class="abtn" onclick="resolveConflict(false)">Verify</button></div><div class="desc" style="margin-top:6px">Rule 10 — both values shown · a human picks · never silently resolved</div></div>')+
+   '<span class="src">SAMSARA vs APOLLO</span></div></div>';}
+  return '<div class="tev'+(e.warn?' warn':'')+(e.stale?' gap':'')+'"><div class="ic">'+e.ic+'</div><div class="tc">'+
+  '<div class="row1"><b>'+esc(e.title)+'</b><span class="rt">'+e.rt+'</span></div>'+
+  '<div class="desc">'+esc(e.desc)+'</div><span class="src '+laneClass(e.src)+'">'+e.src+'</span></div></div>';}).join('');}
+function resolveConflict(useLive){conflictResolved=true;renderTL();
+ toast(useLive?'Live ETA 16:10 adopted · logged to audit trail':'Verification requested — driver text drafted for review');
+ if(useLive){LOADS[7644].eta='16:10';renderTable();}}
+/* ---------- share modal ---------- */
+function openShare(id){const L=LOADS[id];
+ $('modalbox').innerHTML='<div class="mh"><b>Share status with customer</b><span class="x" onclick="closeModal()">✕</span></div>'+
+ '<div class="mb"><div style="font-size:13px;margin-bottom:10px">'+(L.flag||'')+' <b>Load '+id+'</b> · '+L.cust+'</div>'+
+ '<div class="preview"><div class="ph">PREVIEW — WHAT THE CUSTOMER SEES</div>'+shareText(id).replace(/\n/g,'<br>')+'</div>'+
+ '<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="saniti">✓ Sanitized</span><span style="font-size:12px;color:var(--gray)">rate, accessorials &amp; internal notes removed</span></div>'+
+ '<div class="btns" style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="abtn" onclick="navigator.clipboard&&navigator.clipboard.writeText(shareText('+id+'));toast(\'Copied\')">Copy text</button><button class="abtn primary" onclick="closeModal();toast(\'Opened in Front as a draft — human review required, nothing sent\')">Send via Front</button></div></div>';
+ $('ovl').classList.add('show');}
+function shareText(id){const L=LOADS[id];
+ if(id==7670)return 'Quick update on load 7670 — in transit, running about 14 min behind schedule.\nETA 11:11 AM CT (appt 10:57 AM).\n• Picked up · Pasadena TX — 08:14 AM\n• Delivery · Dallas TX — ETA 11:11 AM\n— Nevoya Dispatch';
+ if(id==7644)return 'Load 7644 delivered 4:58 PM. POD signed 5:04 PM and available on the portal.\nThe rebooked 4:30 appointment was met after the morning I-45 closure.\n— Nevoya Dispatch';
+ return 'Update on load '+id+' — '+L.status.toLowerCase()+'. DEL appt '+L.del+(L.eta!=='—'?' · live ETA '+L.eta:'')+'.\n— Nevoya Dispatch';}
+function closeModal(){$('ovl').classList.remove('show');}
+/* ---------- views ---------- */
+function showView(v){$('ric-loads').classList.add('active');renderTable();}
+/* ---------- Ask Apollo ---------- */
+function ask(q){expandChat();$('askempty').style.display='none';
+ $('chatlog').insertAdjacentHTML('beforeend','<div class="uq"><div>'+esc(q)+'</div></div>');
+ answer(q);scrollAsk();}
+function scrollAsk(){const a=$('chatbody');a.scrollTop=a.scrollHeight;}
+let chatExpanded=false;
+function expandChat(){chatExpanded=true;$('chatcard').classList.add('expanded');$('ric-ask').classList.add('active');}
+function collapseChat(){chatExpanded=false;$('chatcard').classList.remove('expanded');$('ric-ask').classList.remove('active');$('askinput').blur();hideAuto();}
+function toggleChat(){chatExpanded?collapseChat():expandChat();}
+function botStream(final,extraDelay){
+ const id='a'+Math.random().toString(36).slice(2);
+ $('chatlog').insertAdjacentHTML('beforeend','<div class="aq" id="'+id+'"><div class="av">✦</div><div class="bd"><span class="stream">Checking Samsara <span class="dots"></span></span></div></div>');
+ scrollAsk();
+ schedule(()=>{document.querySelector('#'+id+' .bd').innerHTML=final;scrollAsk();},extraDelay||900);}
+function cardHTML(id,extra){const L=LOADS[id];
+ return '<div class="lcard"><div class="r1">'+(L.flag||'•')+' <b>'+id+'</b> <span class="pill '+(PILL[L.status]||'')+'">'+L.status+'</span><span class="eta '+(L.late?'eta-late':'')+'">'+(L.eta!=='—'?(L.late?'ETA '+L.eta:'ETA '+L.eta):'appt '+L.del)+'</span></div>'+
+ '<div class="r2">'+L.cust+' · '+esc(L.driver)+(extra?' · '+extra:'')+'</div>'+
+ '<div class="btns"><button class="abtn" onclick="collapseChat();showView(\'loads\');openDrawer('+id+')">Timeline</button><button class="abtn" onclick="ask(\'Draft an update for '+id+'\')">Draft update</button><button class="abtn" onclick="openShare('+id+')">Share w/ customer</button></div></div>';}
+function answer(q){const s=q.toLowerCase();const mLoad=s.match(/(\d{4})/);
+ if(s.includes('attention')||s.includes('risk')){
+  return botStream('Three loads need a look — everything else is tracking on time.'+cardHTML(7670,'slip from dwell at pickup')+cardHTML(7691,'reschedule request sent 09:41 · no reply')+cardHTML(7690,'confirm with Marcus')+'<div style="font-size:11.5px;color:#94A3B8;margin-top:6px">as of '+CLOCK+' check · hypotheses, not verdicts</div>');}
+ if(s.includes('changed')){
+  return botStream('Two changes in the last hour:<div class="lcard"><div class="r1">🚩 <b>7690</b> DEL appt moved 15:00 → 17:30 — broker confirmed via Front · 18 min ago</div></div><div class="lcard"><div class="r1">⚠️ <b>7670</b> ETA slipped +14 min — dwell at pickup · Samsara · 2 min ago</div></div><div style="font-size:11.5px;color:#94A3B8;margin-top:6px">Every change carries its source and timestamp — nothing overwritten.</div>');}
+ if(s.includes('draft')&&mLoad){return draftAnswer(+mLoad[1]);}
+ if((s.includes('confirmed')||s.includes('update the'))&&mLoad){return proposeChange(+mLoad[1]);}
+ if(s.includes('what did we')&&(s.includes('tell')||s.includes('say'))){
+  return botStream('Twice — both logged:<div class="lcard"><div class="r1">💬 09:29 — ETA 14:30 (Talisha via Front)</div></div><div class="lcard"><div class="r1">💬 13:15 — new appt 16:30 confirmed ✅</div></div><div style="font-size:11.5px;color:#94A3B8;margin-top:6px">From the audit log · no contradictions — quote as-is.</div>');}
+ if(s.includes('when will')&&mLoad){const L=LOADS[+mLoad[1]];
+  return botStream(L?('<b>'+mLoad[1]+'</b> — live ETA <b>'+L.eta+'</b> vs appt '+L.del+'. Grounded in Samsara, '+(L.late?'running behind after dwell at pickup; no further slip projected.':'tracking on plan.')+'<div style="font-size:11.5px;color:#94A3B8;margin-top:6px">as of '+CLOCK+' · SAMSARA · high confidence</div>'):'No load '+mLoad[1]+' on the board.');}
+ if(mLoad&&LOADS[+mLoad[1]]){return botStream(cardHTML(+mLoad[1]));}
+ return botStream('I can help with: <b>which loads need attention</b> · <b>what changed in the last hour</b> · <b>when will 7670 actually deliver</b> · <b>draft an update for 7670</b> · a load # for its card. Read-only — I draft, you send.');}
+function draftAnswer(id){
+ botStream('Draft ready — grounded in the live Samsara ETA. Review and send from Front.'+
+ '<div class="draftcard"><div class="to"><span>To: freight-ops@chrpaper.com</span><span class="gtag">VIA FRONT</span></div>'+
+ '<div class="body"><b style="font-size:13px">Load '+id+' — arriving ~11:11 AM (14 min behind appt)</b><br><br><span id="drafttext">Hi team — quick update on load '+id+'. Roy is running 14 minutes behind after a hold at pickup; live ETA is 11:11 AM CT against the 10:57 appointment. No further delay projected — we’ll confirm as soon as he’s at the dock.</span></div>'+
+ '<div class="foot"><span class="gtag">SAMSARA · grounded</span><span class="saniti">✓ Sanitized — no rate or internal notes</span>'+
+ '<span style="margin-left:auto;display:flex;gap:8px"><button class="abtn" onclick="toast(\'Draft is editable in Front\')">Edit draft</button><button class="abtn" onclick="toast(\'Copied\')">Copy text</button><button class="abtn primary" onclick="toast(\'Opened in Front as a draft — human review required\')">Open in Front</button></span></div></div>'+
+ '<div style="font-size:11.5px;color:#94A3B8;margin-top:6px">Human review required — opens as a draft, nothing sends automatically.</div>',1300);}
+function proposeChange(id){const L=LOADS[id];
+ botStream('Here’s the change — <b>nothing is written to Apollo until you apply it.</b>'+
+ '<div class="propose"><div class="r1" style="display:flex;gap:8px;align-items:center"><span class="lid"><span class="dot '+(PILL[L.status]||'p-transit')+'"></span>Load '+id+'</span> Uber Freight <span class="gtag" style="margin-left:auto">PROPOSED CHANGE</span></div>'+
+ '<div class="delta">DEL appointment: <s>15:00</s> → <b>17:30</b> today · Uber Freight DC, Fort Worth TX</div>'+
+ '<div style="font-size:12.5px;color:var(--gray)">💬 “Confirmed for 17:30 today — thanks for flexing” <span class="gtag">FRONT</span></div>'+
+ '<div style="display:flex;gap:8px;margin-top:10px"><button class="abtn primary" onclick="applyChange('+id+',this)">Apply to Apollo</button><button class="abtn" onclick="toast(\'Dismissed — nothing written\')">Dismiss</button></div></div>'+
+ '<div style="font-size:11.5px;color:#94A3B8;margin-top:6px">Write-back is a task-specific tool with human approval — logged to the audit trail.</div>',1200);}
+function applyChange(id,btn){LOADS[id].del='17:30';LOADS[id].status='Rescheduled';LOADS[id].flag='🚩';LOADS[id].last='Appt applied 15:00 → 17:30 · you · just now';
+ LOADS[id].tl.unshift(ev(CLOCK,'Appt applied','DEL 15:00 → 17:30 · applied by Jess from Ask Apollo','APOLLO','✅','just now'));
+ btn.disabled=true;btn.textContent='Applied ✓';renderTable();toast('Applied to Apollo · logged to audit trail');}
+function sendAsk(){const v=$('askinput').value.trim();if(!v)return;$('askinput').value='';hideAuto();ask(v);}
+/* autocomplete */
+function hideAuto(){$('auto').style.display='none';}
+$('askinput').addEventListener('input',e=>{const v=e.target.value;
+ const m=v.match(/(\d{2,4})$/);
+ if(m){const hits=Object.keys(LOADS).filter(id=>id.startsWith(m[1]));
+  if(hits.length){$('auto').innerHTML='<div class="ah">LIVE LOADS</div>'+hits.map(id=>{const L=LOADS[id];
+   return '<div class="ai" onmousedown="pickAuto(\''+id+'\')">'+(L.flag||'•')+' <b>'+id+'</b> '+L.cust+'<span class="r">'+(L.late?'<span class="eta-late">'+L.eta+'</span>':(L.status.toLowerCase()))+'</span></div>';}).join('');
+   $('auto').style.display='block';return;}}
+ hideAuto();});
+function pickAuto(id){$('askinput').value='status '+id;hideAuto();sendAsk();}
+$('askinput').addEventListener('focus',expandChat);
+$('askinput').addEventListener('keydown',e=>{if(e.key==='Enter')sendAsk();
+ if(e.key==='Escape'){if($('askinput').value.trim())$('askinput').value='';else collapseChat();}});
+document.addEventListener('click',e=>{if(!e.target.closest('#chatinputrow'))hideAuto();});
+/* auto-collapse the chat overlay when the user engages anything outside it
+   (a load row, tab, filter chip, rail icon…). #ric-ask is excluded — it owns
+   its own toggle — so clicking it to open the chat isn't instantly undone. */
+document.addEventListener('click',e=>{
+ if(chatExpanded && !e.target.closest('#chatcard') && !e.target.closest('#ric-ask')) collapseChat();
+});
+/* ---------- scenario engine ---------- */
+let SPEED=5,timers=[],queue=[];
+function setSpeed(x){SPEED=x;['sp1','sp5','sp30'].forEach(i=>$(i).style.background='#1e293b');$('sp'+x).style.background='#0e6e4c';toast('Speed '+x+'×');}
+function schedule(fn,ms){const t=setTimeout(fn,ms/SPEED*1);timers.push(t);}
+function clearTimers(){timers.forEach(clearTimeout);timers=[];}
+const step=(wait,fn)=>({wait,fn});
+function runQueue(steps){let i=0;(function next(){if(i>=steps.length)return;const st=steps[i++];schedule(()=>{st.fn();next();},st.wait||1400);})();}
+function jumpEnd(){clearTimers();queue.forEach(s=>{try{s.fn()}catch(e){}});queue=[];toast('Jumped to end');}
+function resetAll(){clearTimers();queue=[];conflictResolved=false;seedLoads();SELECTED=null;closeDrawer();closeModal();collapseChat();
+ $('chatlog').innerHTML='';$('askempty').style.display='';renderTable();setClock('10:45');toast('Reset');}
+function playScenario(){resetAll();const id=$('scensel').value;$('scenblurb').textContent=SCEN[id].blurb;queue=SCEN[id].steps();runQueue(queue);}
+function patch(id,p,tlEv){Object.assign(LOADS[id],p);if(tlEv)LOADS[id].tl.unshift(tlEv);renderTable();if(SELECTED==id){openDrawer(id);}}
+/* ---------- scenarios ---------- */
+const SCEN={
+ S1:{name:'S1 · Happy path — 7644 builds live',blurb:'Watch 7644 go from created to POD in the drawer — the timeline assembles itself.',steps(){
+  const seq=[
+   ['08:14',ev('08:14','Picked up','BOL scanned — TS Packaging, Garland TX','SAMSARA','📦','just now'),{status:'In transit',eta:'14:30',flag:'',last:'Picked up · Samsara · just now',delivered:false}],
+   ['11:20',ev('11:20','In transit','Departed pickup — I-45 N, 212 mi remaining','SAMSARA','▶️','just now'),{}],
+   ['14:38',ev('14:38','Broker reply','Dock 4 confirmed for late arrival — no detention charged','FRONT','💬','just now'),{}],
+   ['16:58',ev('16:58','Arrived','Checked in at consignee — Arrive DC 12, Dallas TX','SAMSARA','📍','just now'),{}],
+   ['17:04',ev('17:04','POD signed','Signed by R. Alvarez at dock 4','SAMSARA','🧾','just now'),{status:'Delivered',flag:'✅',delivered:true,last:'POD signed · R. Alvarez · just now'}]
+  ];
+  return [step(300,()=>{LOADS[7644].tl=[];LOADS[7644].status='Dispatched';LOADS[7644].flag='';showView('loads');openDrawer(7644);}),
+   ...seq.map(x=>step(1500,()=>{setClock(x[0]);patch(7644,x[2],x[1]);}))];}},
+ S2:{name:'S2 · Delay → draft ready (the money demo)',blurb:'7670 slips on the board in real time → open Ask Apollo → Draft update → the human sends from Front.',steps(){return [
+  step(300,()=>{showView('loads');patch(7670,{status:'In transit',flag:'',late:false,eta:'10:52',attention:false,last:'On plan · Samsara · just now'});toast('7670 currently on plan — watch it slip');}),
+  step(1800,()=>{setClock('10:58');patch(7670,{eta:'11:04 (+7)',late:true,last:'ETA slipping · Samsara · just now'});}),
+  step(1600,()=>{setClock('11:02');patch(7670,{status:'Delayed',flag:'⚠️',attention:true,eta:'11:11 (+14)',last:'ETA slipped +14 min · Samsara · just now'},ev('11:02','Late +14 min','Live ETA 11:11 vs appt 10:57 — slip from dwell at pickup','SAMSARA','⚠️','just now',1));toast('⚠️ 7670 Delayed — auto-flagged (Rule 8)');}),
+  step(1800,()=>{expandChat();ask('Draft an update for 7670');})
+ ];}},
+ S3:{name:'S3 · Awaiting broker — timer breach',blurb:'7691’s follow-up timer climbs on the board, breaches 30 min, escalates. Unassigned driver stays honest.',steps(){
+  return [step(300,()=>{showView('loads');patch(7691,{last:'Reschedule request sent · Front · 12 min ago'});openDrawer(7691);}),
+  ...[18,24,29].map((m,i)=>step(1400,()=>{setClock('10:'+(String(m-9).padStart(2,'0')));patch(7691,{last:'Awaiting broker · '+m+' min · Front'});})),
+  step(1500,()=>{setClock('10:11');patch(7691,{flag:'⚠️',last:'ESCALATED — broker silent 30 min · Front · now'},ev('10:11','Escalated','Broker silent 30 min — appt at risk (Jul 15 13:30) · owner: Talisha','APOLLO','⚠️','now',1));toast('⚠️ Rule 15 breach — escalated with an owner');})];}},
+ S4:{name:'S4 · Reschedule 🚩 — write-back with approval',blurb:'Broker confirms 17:30 for 7690 → Ask Apollo proposes the change → YOU apply it → table + timeline update.',steps(){return [
+  step(300,()=>{patch(7690,{status:'In transit',flag:'',del:'15:00',eta:'16:54',attention:false,last:'On plan · Samsara · 5 min ago'});expandChat();}),
+  step(1200,()=>{ask('Uber Freight confirmed 17:30 for 7690 — update the delivery appt');})
+ ];}},
+ S5:{name:'S5 · Conflict — human picks (the honesty demo)',blurb:'Open 7644: Samsara 16:10 ≠ plan 14:30 sits in the timeline waiting for YOUR click. Use live or Verify.',steps(){return [
+  step(300,()=>{conflictResolved=false;showView('loads');openDrawer(7644);toast('Scroll the timeline to the ⚠️ ETA conflict — S5 waits for your click');}),
+  step(1200,()=>{const el=document.querySelector('.conflict');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});})
+ ];}},
+ S6:{name:'S6 · Stale data — verify before quoting',blurb:'7692 goes silent for 47 min. The row greys, ETA refuses confidence, the timeline says why.',steps(){return [
+  step(300,()=>{showView('loads');openDrawer(7692);}),
+  step(1500,()=>{setClock('14:20');patch(7692,{flag:'📵',eta:'17:48 · STALE',late:true,attention:true,last:'No ping 47 min — verify before quoting · Samsara · 14:20'},Object.assign(ev('14:20','Signal gap — 47 min','Last ping 13:33 on I-10 E · possible tracking misconfig: TRK 355 movement showing on an unassigned unit','SAMSARA','📵','now',1),{stale:true}));toast('Rule 11: >30 min old renders as STALE — verify');})
+ ];}},
+ S7:{name:'S7 · Unlinked event — triage queue',blurb:'A Front email references order #559952799 — no match. It queues for triage instead of guessing.',steps(){return [
+  step(300,()=>{expandChat();}),
+  step(900,()=>{ask('status 5599');}),
+  step(200,()=>{}),
+  step(1400,()=>{botStream('📥 <b>No load matches order #559952799.</b> I’ve queued the Front email as an <b>unlinked event</b> for triage — never dropped, never guessed.<div class="lcard"><div class="r1">📨 C.H. Robinson · “appt confirm for order 559952799” · Front · 08:55</div><div class="btns"><button class="abtn" onclick="toast(\'Linked to 7691 — event added to its timeline · logged\')">Link to 7691</button><button class="abtn" onclick="toast(\'Sent to triage queue · owner: dispatch\')">Triage queue</button><button class="abtn" onclick="toast(\'Marked not-ours · logged\')">Not ours</button></div></div><div style="font-size:11.5px;color:#94A3B8;margin-top:6px">Rule 2 — unmatched signals land in the unlinked queue for a human.</div>');})
+ ];}},
+ S8:{name:'S8 · TONU — no truck ever came',blurb:'7665 (driver Unassigned, trailer unknown, PDT appt) misses its window → TONU with the evidence trail.',steps(){return [
+  step(300,()=>{showView('loads');openDrawer(7665);}),
+  step(1500,()=>{setClock('11:00');patch(7665,{status:'TONU',flag:'🚩',attention:true,last:'TONU — no pickup 90 min into window · Apollo · 11:00'},ev('11:00','Marked TONU','No truck assigned 90 min into PU window · Amazon Relay notified (draft reviewed by Jess) · slot released','APOLLO','🚩','now',1));toast('TONU logged — trail preserved for the broker conversation');})
+ ];}},
+ S9:{name:'S9 · Cancelled mid-transit',blurb:'RXO cancels 7692 while Tanya is 82 mi out. Timeline closes clean; TONU evidence pack noted.',steps(){return [
+  step(300,()=>{showView('loads');openDrawer(7692);}),
+  step(1500,()=>{setClock('15:12');patch(7692,{status:'Cancelled',flag:'🚩',attention:true,eta:'—',last:'Cancelled by RXO mid-transit · Front · 15:12'},ev('15:12','Cancelled','RXO email via Front (“cancel 7692, consignee closure”) · Tanya 82 mi out · TONU pack drafted — miles + time logged','FRONT','🚩','now',1));toast('🚩 Cancelled — nothing deleted, the story survives for the dispute');})
+ ];}},
+ S10:{name:'S10 · Triage + the honest all-clear',blurb:'“Which loads need attention?” → three cards. Later the board calms → the empty state that earns trust.',steps(){return [
+  step(300,()=>{expandChat();}),
+  step(800,()=>{ask('Which loads need attention right now?');}),
+  step(3000,()=>{setClock('16:40');patch(7670,{status:'Delivered',flag:'✅',late:false,attention:false,delivered:true,eta:'11:19',last:'Delivered 11:19 · POD 11:24 · Samsara'});patch(7691,{status:'In transit',flag:'',attention:false,driver:'Sandra Velis',last:'Broker replied · appt confirmed · Front'});patch(7690,{attention:false});}),
+  step(900,()=>{ask('Which loads need attention right now?');}),
+  step(200,()=>{}),
+  step(1200,()=>{botStream('✅ <b>All clear.</b> '+Object.keys(LOADS).length+' live loads, all tracking on plan. Last exception resolved 13:12 (7690 reschedule confirmed).<div style="font-size:11.5px;color:#94A3B8;margin-top:6px">as of 16:40 check · quiet boards stay quiet — I only speak on change</div>');})
+ ];}}
+};
+/* ---------- boot ---------- */
+seedLoads();
+const sel=$('scensel');Object.keys(SCEN).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=SCEN[k].name;sel.appendChild(o);});
+sel.onchange=()=>$('scenblurb').textContent=SCEN[sel.value].blurb;
+setSpeed(5);renderTable();setClock('10:45');
+const hash=location.hash.match(/load=(\d+)/);
+if(hash&&LOADS[hash[1]]){showView('loads');openDrawer(+hash[1]);}else{showView('loads');}
+</script>
+</body>
+</html>
