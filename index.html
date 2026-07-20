@@ -39,17 +39,21 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .gtoggle input{accent-color:var(--teal)}
 #listwrap{flex:1;overflow:auto;padding:10px 26px 90px}
 .listcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr 1.15fr .8fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
-.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr 1.15fr .8fr 20px}
+/* Load type column temporarily removed (was 1.15fr before the .8fr Matched track in both rules below) — restore by adding it back in .colhead/.lanerow and .colhead.grouped/.lanerow.grouped */
+.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .8fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr .8fr 20px}
 .grouphead{display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:13px;font-weight:500;color:#334155;background:#FAFBFB;border-bottom:1px solid var(--line);border-top:1px solid var(--line);cursor:pointer}
 .grouphead .chev{transition:transform .15s;color:var(--gray);display:inline-block}
 .grouphead.collapsed .chev{transform:rotate(-90deg)}
 .grouphead .n{color:var(--gray);font-weight:400}
-.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr 1.15fr .8fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
+.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .8fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
 .lanerow:hover{background:#F8FAFC}
 .lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lanerow .od{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .od{color:#334155;overflow:hidden}
+.lanerow .od .odcell{display:flex;align-items:center;gap:5px;min-width:0}
+.lanerow .od .odfirst{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.lanerow .od .odmore{flex:none;color:var(--gray);font-size:11px;font-weight:500;white-space:nowrap;text-decoration:underline;cursor:default}
 .lanerow .win{color:var(--gray);font-size:12.5px;white-space:nowrap}
 .lanerow .lt{color:var(--gray);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .mc{color:var(--gray);font-size:12.5px;text-align:right;white-space:nowrap}
@@ -57,7 +61,6 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .lanerow .chev2{color:#CBD5E1}
 .pill{border-radius:12px;padding:3px 11px;font-size:12px;font-weight:500;display:inline-block}
 .p-active{background:var(--greensoft);color:#166534}
-.p-future{background:var(--bluesoft);color:var(--blue)}
 .p-closed{background:#E5E7EB;color:#374151}
 .lid{background:#F1F5F9;border-radius:6px;padding:3px 9px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
 /* drawer */
@@ -83,20 +86,21 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .provbanner{background:#F1F5F9;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#334155;margin-bottom:14px;line-height:1.5}
 .provlink{color:var(--teal);cursor:pointer;font-weight:500}
 .provlink:hover{text-decoration:underline}
-.mrow{display:grid;grid-template-columns:96px 84px 1fr 64px 64px 22px;gap:8px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
+.mrow{display:grid;grid-template-columns:96px 84px 1fr 64px 64px 80px;gap:8px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
 .mrow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:500;border-bottom:1px solid var(--line)}
 .mrow .note{grid-column:1/-1;color:var(--orange);font-size:11.5px;padding:2px 0 4px}
-.dtick{color:var(--green)}
-.dpend{color:#94A3B8}
+.dtick{color:var(--ink)}
+.dpend{color:var(--ink)}
 /* form */
 .formsect{margin-bottom:16px}
-.formsect>.lbl{font-size:11px;letter-spacing:.6px;color:var(--gray);font-weight:500;margin-bottom:8px;display:block}
+.formsect>.lbl{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:8px;display:block}
 .frow{display:flex;gap:10px;margin-bottom:14px}
 .ffield{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
 .frow .ffield{margin-bottom:0}
 .ffield label{font-size:12px;color:#475569;font-weight:500}
 .ffield input[type=text],.ffield input[type=date],.ffield select,.ffield textarea{border:1px solid #CBD5E1;border-radius:7px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%}
 .ffield input:focus,.ffield select:focus{border-color:var(--teal)}
+.ffield input:disabled{background:#F1F5F9;color:var(--gray);cursor:not-allowed}
 .ffield .err{color:var(--red);font-size:11.5px;min-height:14px}
 .ffield .hint{font-size:11px;color:#94A3B8}
 .checkrow{display:flex;align-items:center;gap:6px;font-size:13px;color:#334155}
@@ -141,7 +145,7 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
           <h1>Lanes</h1>
           <div class="sub" id="lanesub">— lanes</div>
         </div>
-        <button class="abtn primary" style="margin-left:auto" onclick="openCreateDrawer()">＋ Create Lane</button>
+        <button class="abtn primary" style="margin-left:auto" onclick="openCreateDrawer()">＋ Create lane</button>
       </div>
     </div>
     <div class="toolbar">
@@ -168,15 +172,15 @@ const TODAY='2026-07-14';
 const CUSTOMERS=['Coca-Cola','Amazon Relay','C.H. Robinson','ITS Logistics','Uber Freight','RXO','Arrive Logistics','ECHO','Wayfair','APEX'];
 const LOCATIONS=['Waco - Envases','Houston - Coke','Houston Parking','Waco Parking','Dallas Parking','Garland, TX','Sealy, TX','Amazon Coppell, TX','Amazon Houston, TX','LGB3','LGB5','LGB7','TCY5','TCY9','Long Beach Port','Victorville, CA','Phoenix, AZ','Baytown, TX','Pasadena, TX'];
 const BCOS=['Coca-Cola Consolidated','Niagara Bottling','Niagara Bottling (via broker)',"L'Oreal (via XPO)",'Amazon.com Services LLC','Uber Freight LLC','RXO Inc.','ITS Logistics LLC'];
-const LOADTYPES=['','Truckload / Dry Van','Drayage','Drayage relay','Container shuttle','Reefer','Production (dedicated)'];
 
 /* ---------- seed data (grounded in the TX Driver Schedule + CA Operations Schedule) ---------- */
 let LANES={};
 function seedLanes(){LANES={
- 'CC-001':{id:'CC-001',customer:'Coca-Cola',bco:'Coca-Cola Consolidated',bcoUnknown:false,code:'CC-001',version:1,status:'Active',
-  plannedStart:'2025-01-01',plannedEnd:null,actualStart:'2025-01-01',actualEnd:null,loadType:'Production (dedicated)',dropPickup:true,dropDelivery:true,
+ 'CC-001':{id:'CC-001',customer:'C.H. Robinson',bco:'Coca-Cola Consolidated',bcoUnknown:false,code:'CC-001',version:1,status:'Active',
+  plannedStart:'2025-01-01',plannedEnd:'2026-12-31',actualStart:'2025-01-01',actualEnd:null,loadType:'Production (dedicated)',dropPickup:true,dropDelivery:true,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'Waco - Envases',destination:'Houston - Coke'}],
+  od:[{origin:'Waco - Envases',destination:'Houston - Coke'},
+   {origin:'Sealy, TX',destination:'Houston - Coke'}],
   matched:[
    {apolloId:'7284',externalId:'556991910',driver:'Timothy Bearfield',pu:'1:00 AM',del:'5:00 AM',delivered:true},
    {apolloId:'7288',externalId:'556992050',driver:'Steven Bell',pu:'8:00 AM',del:'12:00 PM',delivered:true},
@@ -186,9 +190,14 @@ function seedLanes(){LANES={
    {apolloId:'7279',externalId:'556991994',driver:'Milton Boyle',pu:'1:00 PM',del:'5:00 PM',delivered:true}
   ]},
  'AMZ-CPL-HOU':{id:'AMZ-CPL-HOU',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-CPL-HOU',version:1,status:'Active',
-  plannedStart:'2025-03-01',plannedEnd:null,actualStart:'2025-03-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  plannedStart:'2025-03-01',plannedEnd:'2026-12-31',actualStart:'2025-03-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'Amazon Coppell, TX',destination:'Amazon Houston, TX'}],
+  od:[{origin:'Amazon Coppell, TX',destination:'Amazon Houston, TX'},
+   {origin:'LGB3',destination:'Amazon Houston, TX'},
+   {origin:'LGB5',destination:'Amazon Houston, TX'},
+   {origin:'LGB7',destination:'Amazon Houston, TX'},
+   {origin:'TCY5',destination:'Amazon Houston, TX'},
+   {origin:'TCY9',destination:'Amazon Houston, TX'}],
   matched:[
    {apolloId:'7311',externalId:'113KF1BN1',driver:'Ronnie Willburn',pu:'5:30 PM',del:'11:59 PM',delivered:false,note:'NEED TO CANCEL PRIOR TO 10AM MON if canceling'},
    {apolloId:'7345',externalId:'116DYCP6M',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false},
@@ -197,7 +206,7 @@ function seedLanes(){LANES={
    {apolloId:'7359',externalId:'1135SMPVQ',driver:'Javontae Williams',pu:'12:30 PM',del:'5:30 PM',delivered:false}
   ]},
  'AMZ-LGB5-TCY5':{id:'AMZ-LGB5-TCY5',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB5-TCY5',version:1,status:'Active',
-  plannedStart:'2026-01-01',plannedEnd:null,actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'LGB5',destination:'TCY5'}],
   matched:[
@@ -207,7 +216,7 @@ function seedLanes(){LANES={
    {apolloId:'NEVOV_R102895',externalId:'114S1C19D',driver:'Dereith Browning → Joan Deniz',pu:'07/14 13:00',del:'—',delivered:false}
   ]},
  'AMZ-LGB7-TCY9':{id:'AMZ-LGB7-TCY9',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB7-TCY9',version:1,status:'Active',
-  plannedStart:'2026-01-01',plannedEnd:null,actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'LGB7',destination:'TCY9'}],
   matched:[
@@ -216,7 +225,7 @@ function seedLanes(){LANES={
    {apolloId:'NEVOV_R102905',externalId:'115HM41DM',driver:'Kuldeep Sandhu → Jagroop Man',pu:'07/14 7:45',del:'—',delivered:false,note:'Kuldeep called off sick'}
   ]},
  'AMZ-LGB3-TCY5':{id:'AMZ-LGB3-TCY5',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB3-TCY5',version:1,status:'Active',
-  plannedStart:'2026-01-01',plannedEnd:null,actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
+  plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'LGB3',destination:'TCY5'}],
   matched:[
@@ -226,30 +235,61 @@ function seedLanes(){LANES={
  'UF-HOU-DAL':{id:'UF-HOU-DAL',customer:'Uber Freight',bco:'Uber Freight LLC',bcoUnknown:false,code:'UF-HOU-DAL',version:1,status:'Active',
   plannedStart:'2025-08-01',plannedEnd:'2026-07-24',actualStart:'2025-08-01',actualEnd:null,loadType:'Truckload / Dry Van',dropPickup:true,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'Houston Parking',destination:'Dallas Parking'}],
+  od:[{origin:'Houston Parking',destination:'Dallas Parking'},
+   {origin:'Houston Parking',destination:'Garland, TX'},
+   {origin:'Waco Parking',destination:'Dallas Parking'}],
   matched:[]},
- 'ITS-LGB-INLAND':{id:'ITS-LGB-INLAND',customer:'ITS Logistics',bco:'ITS Logistics LLC',bcoUnknown:false,code:'ITS-LGB-INLAND',version:1,status:'Closed',
+ 'ITS-LGB-INLAND':{id:'ITS-LGB-INLAND',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND',version:1,status:'Closed',
   plannedStart:'2024-01-01',plannedEnd:'2025-06-30',actualStart:'2024-01-01',actualEnd:'2025-06-30',loadType:'Drayage',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:'ITS-LGB-INLAND-V2',
   od:[{origin:'LGB3',destination:null}],
   matched:[]},
- 'ITS-LGB-INLAND-V2':{id:'ITS-LGB-INLAND-V2',customer:'ITS Logistics',bco:'ITS Logistics LLC',bcoUnknown:false,code:'ITS-LGB-INLAND-V2',version:2,status:'Active',
-  plannedStart:'2025-07-01',plannedEnd:null,actualStart:'2025-07-01',actualEnd:null,loadType:'Drayage',dropPickup:false,dropDelivery:false,
+ 'ITS-LGB-INLAND-V2':{id:'ITS-LGB-INLAND-V2',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND-V2',version:2,status:'Active',
+  plannedStart:'2025-07-01',plannedEnd:'2026-12-31',actualStart:'2025-07-01',actualEnd:null,loadType:'Drayage',dropPickup:false,dropDelivery:false,
   renewedFrom:'ITS-LGB-INLAND',renewedTo:null,
-  od:[{origin:'LGB3',destination:null}],
+  od:[{origin:'LGB3',destination:null},
+   {origin:'LGB5',destination:null},
+   {origin:'LGB7',destination:null},
+   {origin:'TCY5',destination:null},
+   {origin:'TCY9',destination:null}],
   matched:[]},
- 'RXO-DAL-HOU-2027':{id:'RXO-DAL-HOU-2027',customer:'RXO',bco:null,bcoUnknown:true,code:'RXO-DAL-HOU-2027',version:1,status:'Future',
-  plannedStart:'2027-01-01',plannedEnd:null,actualStart:null,actualEnd:null,loadType:null,dropPickup:false,dropDelivery:false,
+ 'RXO-DAL-HOU-2027':{id:'RXO-DAL-HOU-2027',customer:'RXO',bco:null,bcoUnknown:true,code:'RXO-DAL-HOU-2027',version:1,status:'Active',
+  plannedStart:'2027-01-01',plannedEnd:'2027-12-31',actualStart:null,actualEnd:null,loadType:null,dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'Dallas Parking',destination:'Houston Parking'}],
+  od:[{origin:'Dallas Parking',destination:'Houston Parking'},
+   {origin:'Houston Parking',destination:'Dallas Parking'},
+   {origin:'Dallas Parking',destination:'Garland, TX'},
+   {origin:'Waco Parking',destination:'Houston Parking'}],
   matched:[]}
 };}
 
 /* ---------- helpers ---------- */
 function fmtDate(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
-function windowText(l){const s=fmtDate(l.plannedStart)||'—';const e=l.plannedEnd?fmtDate(l.plannedEnd):'ongoing';return s+' – '+e;}
+function windowText(l){return (fmtDate(l.plannedStart)||'—')+' – '+(fmtDate(l.plannedEnd)||'—');}
 function odLabel(pair){const o=pair.origin||'any origin';const d=pair.destination||'any destination';return o+' → '+d;}
-function odSummary(l){if(!l.od.length)return '—';const first=odLabel(l.od[0]);return l.od.length>1?first+' +'+(l.od.length-1)+' more':first;}
+function odSummary(l){
+ if(!l.od.length)return '—';
+ return '<span class="odcell" data-lane="'+esc(l.id)+'"><span class="odfirst"></span><span class="odmore"></span></span>';
+}
+function layoutOdCells(){
+ document.querySelectorAll('.odcell[data-lane]').forEach(cell=>{
+  const l=LANES[cell.dataset.lane];
+  if(!l)return;
+  const first=cell.querySelector('.odfirst');
+  const more=cell.querySelector('.odmore');
+  const labels=l.od.map(odLabel);
+  const render=n=>{
+   first.textContent=labels.slice(0,n).join('  ·  ');
+   const remaining=labels.length-n;
+   more.textContent=remaining>0?'+'+remaining+' more':'';
+   more.style.display=remaining>0?'inline':'none';
+   cell.title=remaining>0?labels.join('\n'):'';
+  };
+  let shown=labels.length;
+  render(shown);
+  while(shown>1&&first.scrollWidth>first.clientWidth){shown--;render(shown);}
+ });
+}
 function locMatch(a,b){return !a||!b||a.toLowerCase()===b.toLowerCase();}
 function odOverlap(a,b){return locMatch(a.origin,b.origin)&&locMatch(a.destination,b.destination);}
 function dateOverlap(s1,e1,s2,e2){const E1=e1||'9999-12-31',E2=e2||'9999-12-31';return s1<=E2&&s2<=E1;}
@@ -273,26 +313,25 @@ function isExpiringSoon(l){if(l.status!=='Active'||!l.plannedEnd||l.renewedTo)re
 /* ---------- list ---------- */
 let GROUPBY=true,COLLAPSED={},CHIPFILTER='all',SELECTED=null;
 function chipCounts(){const vals=Object.values(LANES);
- return{all:vals.length,active:vals.filter(l=>l.status==='Active').length,future:vals.filter(l=>l.status==='Future').length,closed:vals.filter(l=>l.status==='Closed').length,exp:vals.filter(isExpiringSoon).length};}
+ return{all:vals.length,active:vals.filter(l=>l.status==='Active').length,closed:vals.filter(l=>l.status==='Closed').length,exp:vals.filter(isExpiringSoon).length};}
 function renderChips(){const c=chipCounts();
- const defs=[['all','All lanes',c.all],['active','Active',c.active],['future','Future',c.future],['exp','Expiring soon',c.exp],['closed','Closed',c.closed]];
+ const defs=[['all','All lanes',c.all],['active','Active',c.active],['exp','Expiring soon',c.exp],['closed','Closed',c.closed]];
  $('lanechips').innerHTML=defs.map(d=>'<div class="chip'+(CHIPFILTER===d[0]?' on':'')+'" onclick="CHIPFILTER=\''+d[0]+'\';renderList()">'+d[1]+' '+d[2]+'</div>').join('');}
-function passFilter(l){if(CHIPFILTER==='all')return true;if(CHIPFILTER==='active')return l.status==='Active';if(CHIPFILTER==='future')return l.status==='Future';if(CHIPFILTER==='closed')return l.status==='Closed';if(CHIPFILTER==='exp')return isExpiringSoon(l);return true;}
-function statusPill(l){const cls=l.status==='Active'?'p-active':l.status==='Future'?'p-future':'p-closed';return '<span class="pill '+cls+'">'+l.status+'</span>';}
-function flagsFor(l){let f='';if(isExpiringSoon(l))f+='<span title="Planned end within 3 weeks — no renewal yet">⏳</span>';if(l.bcoUnknown)f+='<span title="BCO unknown — broker withheld">❔</span>';return f;}
+function passFilter(l){if(CHIPFILTER==='all')return true;if(CHIPFILTER==='active')return l.status==='Active';if(CHIPFILTER==='closed')return l.status==='Closed';if(CHIPFILTER==='exp')return isExpiringSoon(l);return true;}
+function statusPill(l){const cls=l.status==='Active'?'p-active':'p-closed';return '<span class="pill '+cls+'">'+l.status+'</span>';}
 function rowHTML(id,showCust){const l=LANES[id];
  return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
- '<div class="code">'+flagsFor(l)+' '+esc(l.code)+' <span style="color:var(--gray);font-weight:400;font-size:11.5px">v'+l.version+'</span></div>'+
+ '<div class="code">'+esc(l.code)+'</div>'+
  '<div>'+statusPill(l)+'</div>'+
  (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
- '<div class="od">'+esc(odSummary(l))+'</div>'+
+ '<div class="od">'+odSummary(l)+'</div>'+
  '<div class="win">'+windowText(l)+'</div>'+
- '<div class="lt">'+(l.loadType||'—')+'</div>'+
- '<div class="mc">'+(l.matched.length?l.matched.length+' matched':'—')+'</div>'+
+ // '<div class="lt">'+(l.loadType||'—')+'</div>'+  // Load type column temporarily removed — restore this line (and the header below, and the CSS grid tracks) to bring it back
+ '<div class="mc">'+(l.matched.length||'—')+'</div>'+
  '<div class="chev2">›</div></div>';}
-function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div><div>Load type</div><div class="mc">Matched</div><div></div></div>';}
+function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div>'+/* '<div>Load type</div>'+ */'<div class="mc">Matched</div><div></div></div>';}
 function toggleGroup(c){COLLAPSED[c]=!COLLAPSED[c];renderList();}
-function updateSub(){const c=chipCounts();$('lanesub').textContent=c.all+' lanes · '+c.active+' active · '+c.future+' future-dated · '+c.exp+' expiring soon';}
+function updateSub(){const c=chipCounts();$('lanesub').textContent=c.all+' lanes · '+c.active+' active · '+c.exp+' expiring soon';}
 function renderList(){renderChips();updateSub();
  const ids=Object.keys(LANES).filter(id=>passFilter(LANES[id]));
  const wrap=$('listwrap');
@@ -308,6 +347,7 @@ function renderList(){renderChips();updateSub();
  } else {
   wrap.innerHTML='<div class="listcard">'+colHead(true)+ids.map(id=>rowHTML(id,true)).join('')+'</div>';
  }
+ layoutOdCells();
 }
 
 /* ---------- drawer: view mode ---------- */
@@ -315,7 +355,7 @@ function openLaneDrawer(id){SELECTED=id;$('dfoot').style.display='none';renderDr
 function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfoot').style.display='none';renderList();}
 function renderDrawerView(id){const l=LANES[id];if(!l)return;
  const open=l.status!=='Closed';
- $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span style="color:var(--gray);font-size:12px">v'+l.version+'</span><span class="x" onclick="closeDrawer()">✕</span></div>'+
+ $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
  '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
  '<div class="btns">'+(open
    ?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">✎ Edit</button><button class="abtn" onclick="openRenewDrawer(\''+id+'\')">↻ Renew</button><button class="abtn" style="color:var(--red);border-color:#F3C6C6" onclick="openCloseModal(\''+id+'\')">Close lane</button>'
@@ -344,8 +384,8 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
   html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span></div><div style="color:var(--gray);font-size:12.5px;padding:4px 0 2px">No loads auto-matched in this window yet.</div>';
  } else {
   html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span><span>'+l.matched.length+' this window</span></div>'+
-  '<div class="mrow head"><div>Load</div><div>Ext ID</div><div>Driver</div><div>PU</div><div>DEL</div><div></div></div>'+
-  l.matched.map(m=>'<div class="mrow"><div>'+esc(m.apolloId)+'</div><div>'+esc(m.externalId||'—')+'</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(m.driver||'—')+'</div><div>'+esc(m.pu||'—')+'</div><div>'+esc(m.del||'—')+'</div><div>'+(m.delivered?'<span class="dtick">✓</span>':'<span class="dpend">•</span>')+'</div>'+(m.note?'<div class="note">⚠ '+esc(m.note)+'</div>':'')+'</div>').join('')+
+  '<div class="mrow head"><div>Load</div><div>Ext ID</div><div>Driver</div><div>PU</div><div>DEL</div><div>Stage</div></div>'+
+  l.matched.map(m=>'<div class="mrow"><div>'+esc(m.apolloId)+'</div><div>'+esc(m.externalId||'—')+'</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(m.driver||'—')+'</div><div>'+esc(m.pu||'—')+'</div><div>'+esc(m.del||'—')+'</div><div>'+(m.delivered?'<span class="dtick">Drop-off</span>':'<span class="dpend">Pick-up</span>')+'</div>'+(m.note?'<div class="note">⚠ '+esc(m.note)+'</div>':'')+'</div>').join('')+
   '<div style="font-size:11px;color:#94A3B8;margin-top:8px">Auto-matched by customer + OD + planned window — replaces manually cross-referencing the '+(l.customer==='Amazon Relay'?'CA relay schedule':'TX Driver Schedule')+'.</div>';
  }
  $('dtl').innerHTML=html;
@@ -353,17 +393,46 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
 function drow(k,v){return '<div class="dr"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
 
 /* ---------- drawer: form mode (create / edit / renew) ---------- */
-function odRowHTML(idx,origin,destination){
- return '<div class="odrow" data-idx="'+idx+'"><span class="rm" onclick="removeOD('+idx+')" title="Remove">✕</span>'+
- '<div class="odgrid"><div class="ffield" style="margin-bottom:0"><label>Origin</label><input type="text" list="loclist" data-role="origin" placeholder="— any origin (wildcard) —" value="'+esc(origin||'')+'"></div>'+
+function odRowHTML(idx,origin,destination,existing){
+ const oAttrs=existing?' data-orig="'+esc(origin||'')+'" onchange="confirmEditOD(this)"':'';
+ const dAttrs=existing?' data-orig="'+esc(destination||'')+'" onchange="confirmEditOD(this)"':'';
+ return '<div class="odrow" data-idx="'+idx+'" data-existing="'+(existing?'1':'0')+'"><span class="rm" onclick="removeOD('+idx+')" title="Remove">✕</span>'+
+ '<div class="odgrid"><div class="ffield" style="margin-bottom:0"><label>Origin</label><input type="text" list="loclist" data-role="origin" placeholder="— any origin (wildcard) —" value="'+esc(origin||'')+'"'+oAttrs+'></div>'+
  '<span class="arrow">→</span>'+
- '<div class="ffield" style="margin-bottom:0"><label>Destination</label><input type="text" list="loclist" data-role="destination" placeholder="— any destination (wildcard) —" value="'+esc(destination||'')+'"></div></div>'+
+ '<div class="ffield" style="margin-bottom:0"><label>Destination</label><input type="text" list="loclist" data-role="destination" placeholder="— any destination (wildcard) —" value="'+esc(destination||'')+'"'+dAttrs+'></div></div>'+
  '<div class="hint">Leave one side blank for a wildcard (e.g. Waco → anywhere). Not both.</div>'+
  '<div class="err" id="oderr'+idx+'"></div></div>';
 }
 let ODCOUNT=0;
-function addOD(origin,destination){ODCOUNT++;$('odlist').insertAdjacentHTML('beforeend',odRowHTML(ODCOUNT,origin,destination));}
-function removeOD(idx){const el=document.querySelector('.odrow[data-idx="'+idx+'"]');if(el&&document.querySelectorAll('.odrow').length>1)el.remove();else toast('A lane needs at least one OD pair.');}
+function addOD(origin,destination,existing){ODCOUNT++;$('odlist').insertAdjacentHTML('beforeend',odRowHTML(ODCOUNT,origin,destination,existing));}
+function removeOD(idx){
+ const el=document.querySelector('.odrow[data-idx="'+idx+'"]');
+ if(!el)return;
+ if(document.querySelectorAll('.odrow').length<=1){toast('A lane needs at least one OD pair.');return;}
+ if(el.dataset.existing==='1'){confirmRemoveOD(idx);return;}
+ el.remove();
+}
+function confirmRemoveOD(idx){
+ $('modalbox').innerHTML='<div class="mh"><b>Remove OD pair?</b><span class="x" onclick="closeModal()">✕</span></div>'+
+ '<div class="mb"><div style="font-size:13px;color:#475569;margin-bottom:12px">This OD pair is already part of the saved lane. Removing it can change which loads auto-match going forward.</div>'+
+ '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" style="background:var(--red);border-color:var(--red)" onclick="doRemoveOD('+idx+')">Remove OD pair</button></div></div>';
+ $('ovl').classList.add('show');
+}
+function doRemoveOD(idx){closeModal();const el=document.querySelector('.odrow[data-idx="'+idx+'"]');if(el)el.remove();}
+function confirmEditOD(inputEl){
+ const orig=inputEl.dataset.orig||'';
+ const newVal=inputEl.value.trim();
+ if(newVal===orig)return;
+ const role=inputEl.dataset.role;
+ $('modalbox').innerHTML='<div class="mh"><b>Change OD pair?</b><span class="x" id="odeditx">✕</span></div>'+
+ '<div class="mb"><div style="font-size:13px;color:#475569;margin-bottom:12px">This OD pair is already part of the saved lane. Changing the '+role+' can change which loads auto-match going forward.</div>'+
+ '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="abtn" id="odeditcancel">Cancel</button><button class="abtn primary" id="odeditconfirm">Confirm change</button></div></div>';
+ $('ovl').classList.add('show');
+ const revert=()=>{inputEl.value=orig;closeModal();};
+ $('odeditx').onclick=revert;
+ $('odeditcancel').onclick=revert;
+ $('odeditconfirm').onclick=()=>{inputEl.dataset.orig=newVal;closeModal();};
+}
 function toggleBcoUnknown(){const cb=$('in_bcounknown').checked;$('in_bco').disabled=cb;if(cb)$('in_bco').value='';}
 
 function openCreateDrawer(){SELECTED=null;renderForm('create',null);$('drawer').classList.add('open');}
@@ -378,37 +447,33 @@ function formFieldsHTML(v){
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
  '</select><div class="err" id="e_customer"></div></div>'+
 
- '<div class="frow"><div class="ffield" style="flex:2"><label>BCO (beneficial cargo owner) *</label>'+
+ '<div class="frow"><div class="ffield" style="flex:2"><label>BCO (beneficial cargo owner)</label>'+
    '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'>'+
    '<label class="checkrow" style="margin-top:4px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"> Unknown / broker withheld</label>'+
    '<div class="err" id="e_bco"></div></div>'+
   '<div class="ffield"><label>Lane code</label><input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'"><div class="hint">Human-readable — blank auto-generates one</div></div></div>'+
 
- '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+(v.plannedStart||'')+'"><div class="err" id="e_start"></div></div>'+
-  '<div class="ffield"><label>Planned end</label><input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"><div class="hint">Blank = ongoing</div><div class="err" id="e_end"></div></div></div>'+
+ '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+(v.plannedStart||'')+'" '+(v.actualStart?'disabled':'')+'>'+(v.actualStart?'<div class="hint">Locked — loads have already matched against this start date</div>':'')+'<div class="err" id="e_start"></div></div>'+
+  '<div class="ffield"><label>Planned end *</label><input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"><div class="err" id="e_end"></div></div></div>'+
 
  '<div class="formsect"><span class="lbl">OD PAIRS</span><div id="odlist"></div><div class="addod" onclick="addOD()">＋ Add OD pair</div></div>'+
 
- '<div class="frow"><div class="ffield"><label>Load type <span style="color:#94A3B8;font-weight:400">(optional, P1)</span></label><select id="in_loadtype">'+
-   LOADTYPES.map(t=>'<option value="'+t+'"'+(v.loadType===t?' selected':'')+'>'+(t||'— not set —')+'</option>').join('')+
-  '</select></div></div>'+
-
- '<div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup <span style="color:var(--gray)">(vs. live)</span></label>'+
-  '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery <span style="color:var(--gray)">(vs. live)</span></label></div>'+
+ '<div class="formsect"><span class="lbl">LOAD TYPE</span><div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup</label>'+
+  '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery</label></div></div>'+
  '<datalist id="loclist">'+LOCATIONS.map(l=>'<option value="'+l+'">').join('')+'</datalist>'+
  '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
 }
 
 function renderForm(mode,id){
  const l=id?LANES[id]:null;
- const title=mode==='create'?'Create Lane':mode==='edit'?'Edit Lane — '+esc(l.code):'Renew Lane — '+esc(l.code);
+ const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):'Renew lane — '+esc(l.code);
  $('dhead').innerHTML='<div class="top"><b style="font-size:15px">'+title+'</b><span class="x" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">✕</span></div>'+
   (mode==='edit'?'<div class="meta">Minor corrections update in place — no new lane version.</div>':'')+
   (mode==='create'?'<div class="meta">Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.</div>':'');
 
- const v=mode==='create'?{customer:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',loadType:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
+ const v=mode==='create'?{customer:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
-  :{customer:l.customer,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:'',plannedEnd:'',loadType:l.loadType,dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+  :{customer:l.customer,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
  let html='';
  if(mode==='renew'){html+='<div class="provbanner">Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving closes '+esc(l.code)+' with an actual end date the day before the new planned start, and creates v'+(l.version+1)+' linked back via <code>renewed_from_lane_id</code>.</div>';}
@@ -416,11 +481,11 @@ function renderForm(mode,id){
  $('dtl').innerHTML=html;
 
  ODCOUNT=0;$('odlist').innerHTML='';
- (v.od&&v.od.length?v.od:[{origin:'',destination:''}]).forEach(p=>addOD(p.origin,p.destination));
+ (v.od&&v.od.length?v.od:[{origin:'',destination:''}]).forEach(p=>addOD(p.origin,p.destination,mode==='edit'));
 
  $('dfoot').style.display='flex';
  $('dfoot').innerHTML='<button class="abtn" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">Cancel</button>'+
-  '<button class="abtn primary" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+(mode==='create'?'Create Lane':mode==='edit'?'Save changes':'Renew lane')+'</button>';
+  '<button class="abtn primary" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+(mode==='create'?'Create lane':mode==='edit'?'Save changes':'Renew lane')+'</button>';
 }
 
 function clearErrors(){document.querySelectorAll('.err').forEach(e=>e.textContent='');}
@@ -434,7 +499,6 @@ function submitForm(mode,id){
  const codeInput=$('in_code').value.trim();
  const start=$('in_start').value;
  const end=$('in_end').value;
- const loadType=$('in_loadtype').value;
  const dropPickup=$('in_droppu').checked;
  const dropDelivery=$('in_dropdel').checked;
  const odEls=[...document.querySelectorAll('.odrow')];
@@ -442,15 +506,15 @@ function submitForm(mode,id){
 
  let ok=true;
  if(!customer){showErr('e_customer','Pick a customer.');ok=false;}
- if(!bcoUnknown&&!bco){showErr('e_bco','Enter a BCO, or check “Unknown”.');ok=false;}
  if(!start){showErr('e_start','Planned start is required.');ok=false;}
+ if(!end){showErr('e_end','Planned end is required.');ok=false;}
  if(start&&end&&end<start){showErr('e_end','End date can’t be before the start date.');ok=false;}
  odRaw.forEach(p=>{const errEl=p._el.querySelector('.err');if(!p.origin&&!p.destination){errEl.textContent='Needs an origin or a destination — can’t wildcard both.';ok=false;}else errEl.textContent='';});
  if(!ok)return;
 
  const cleanOd=odRaw.map(p=>({origin:p.origin||null,destination:p.destination||null}));
  const excludeIds=(mode==='edit'||mode==='renew')?[id]:[];
- const conflict=findConflict(customer,cleanOd,start,end||null,excludeIds);
+ const conflict=findConflict(customer,cleanOd,start,end,excludeIds);
  if(conflict){
   $('conflictzone').innerHTML='<div class="conflictbanner"><div class="t">⚠️ Conflicts with an existing lane</div>'+
    '<div class="d"><b>'+esc(conflict.lane.code)+'</b> ('+esc(conflict.lane.customer)+') already covers <b>'+esc(odLabel(conflict.lp))+'</b> for '+windowText(conflict.lane)+'. Two active lanes can’t claim the same load — adjust the dates/OD or view the existing lane.</div>'+
@@ -462,13 +526,13 @@ function submitForm(mode,id){
  const code=codeInput||autoCode(customer);
  if(mode==='create'){
   const newId=idFromCode(code);
-  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:1,status:(start>TODAY?'Future':'Active'),
-   plannedStart:start,plannedEnd:end||null,actualStart:(start>TODAY?null:start),actualEnd:null,
-   loadType:loadType||null,dropPickup,dropDelivery,renewedFrom:null,renewedTo:null,od:cleanOd,matched:[]};
+  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:1,status:'Active',
+   plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
+   loadType:null,dropPickup,dropDelivery,renewedFrom:null,renewedTo:null,od:cleanOd,matched:[]};
   renderList();openLaneDrawer(newId);
   toast('Lane created — Apollo will begin auto-matching loads within this window.');
  } else if(mode==='edit'){
-  Object.assign(LANES[id],{customer,bco,bcoUnknown,code,plannedStart:start,plannedEnd:end||null,loadType:loadType||null,dropPickup,dropDelivery,od:cleanOd});
+  Object.assign(LANES[id],{customer,bco,bcoUnknown,code,plannedStart:start,plannedEnd:end,dropPickup,dropDelivery,od:cleanOd});
   renderList();renderDrawerView(id);
   toast('Saved — no new lane version created.');
  } else if(mode==='renew'){
@@ -477,9 +541,9 @@ function submitForm(mode,id){
   old.status='Closed';old.actualEnd=closeDate;
   const newId=idFromCode(code);
   old.renewedTo=newId;
-  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:old.version+1,status:(start>TODAY?'Future':'Active'),
-   plannedStart:start,plannedEnd:end||null,actualStart:(start>TODAY?null:start),actualEnd:null,
-   loadType:loadType||null,dropPickup,dropDelivery,renewedFrom:id,renewedTo:null,od:cleanOd,matched:[]};
+  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:old.version+1,status:'Active',
+   plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
+   loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,renewedTo:null,od:cleanOd,matched:[]};
   renderList();openLaneDrawer(newId);
   toast(esc(old.code)+' closed · renewed as '+esc(code)+' (v'+LANES[newId].version+') — history preserved.');
  }
