@@ -404,7 +404,6 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
    drow('Planned window',windowText(l))+
    drow('Actual start',l.actualStart?fmtDate(l.actualStart):'— not started')+
    drow('Actual end',l.actualEnd?fmtDate(l.actualEnd):'—')+
-   drow('Load type',l.loadType||'— not set')+
    drow('Drop pickup',l.dropPickup?'Yes':'No — live')+
    drow('Drop delivery',l.dropDelivery?'Yes':'No — live')+
  '</div>';
