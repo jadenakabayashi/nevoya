@@ -40,28 +40,32 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 #listwrap{flex:1;overflow:auto;padding:10px 26px 90px}
 .listcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 /* Load type column temporarily removed (was 1.15fr before the .8fr Matched track in both rules below) — restore by adding it back in .colhead/.lanerow and .colhead.grouped/.lanerow.grouped */
-.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .8fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
-.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr .8fr 20px}
+.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr .8fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr .9fr .8fr 20px}
 .grouphead{display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:13px;font-weight:500;color:#334155;background:#FAFBFB;border-bottom:1px solid var(--line);border-top:1px solid var(--line);cursor:pointer}
 .grouphead .chev{transition:transform .15s;color:var(--gray);display:inline-block}
 .grouphead.collapsed .chev{transform:rotate(-90deg)}
 .grouphead .n{color:var(--gray);font-weight:400}
-.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .8fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
+.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr .8fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
 .lanerow:hover{background:#F8FAFC}
 .lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flagexp{background:var(--warnbg);color:#92400E;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none}
 .lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .od{color:#334155;overflow:hidden}
 .lanerow .od .odcell{display:flex;align-items:center;gap:5px;min-width:0}
 .lanerow .od .odfirst{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .lanerow .od .odmore{flex:none;color:var(--gray);font-size:11px;font-weight:500;white-space:nowrap;text-decoration:underline;cursor:default}
 .lanerow .win{color:var(--gray);font-size:12.5px;white-space:nowrap}
+.lanerow .pd{color:var(--gray);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .lt{color:var(--gray);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .mc{color:var(--gray);font-size:12.5px;text-align:right;white-space:nowrap}
 .colhead .mc{text-align:right}
 .lanerow .chev2{color:#CBD5E1}
 .pill{border-radius:12px;padding:3px 11px;font-size:12px;font-weight:500;display:inline-block}
+.p-scheduled{background:var(--bluesoft);color:var(--blue)}
 .p-active{background:var(--greensoft);color:#166534}
-.p-closed{background:#E5E7EB;color:#374151}
+.p-expired{background:var(--warnbg);color:#92400E}
+.p-cancelled{background:#E5E7EB;color:#374151}
 .lid{background:#F1F5F9;border-radius:6px;padding:3px 9px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
 /* drawer */
 #drawer{width:0;flex:none;background:#fff;border-left:1px solid var(--line);overflow:hidden;transition:width .18s ease;display:flex;flex-direction:column}
@@ -86,11 +90,12 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .provbanner{background:#F1F5F9;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#334155;margin-bottom:14px;line-height:1.5}
 .provlink{color:var(--teal);cursor:pointer;font-weight:500}
 .provlink:hover{text-decoration:underline}
-.mrow{display:grid;grid-template-columns:96px 84px 1fr 64px 64px 80px;gap:8px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
+.mrow{display:grid;grid-template-columns:64px 96px 84px 1fr 64px 64px;gap:8px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
 .mrow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:500;border-bottom:1px solid var(--line)}
 .mrow .note{grid-column:1/-1;color:var(--orange);font-size:11.5px;padding:2px 0 4px}
-.dtick{color:var(--ink)}
-.dpend{color:var(--ink)}
+.mrow .late{color:var(--red);font-weight:500}
+.mweekhead{padding:10px 0 4px;font-size:11.5px;font-weight:500;color:#334155}
+.mweekhead .n{color:var(--gray);font-weight:400;margin-left:6px}
 /* form */
 .formsect{margin-bottom:16px}
 .formsect>.lbl{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:8px;display:block}
@@ -170,90 +175,89 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
 const TODAY='2026-07-14';
 const CUSTOMERS=['Coca-Cola','Amazon Relay','C.H. Robinson','ITS Logistics','Uber Freight','RXO','Arrive Logistics','ECHO','Wayfair','APEX'];
-const LOCATIONS=['Waco - Envases','Houston - Coke','Houston Parking','Waco Parking','Dallas Parking','Garland, TX','Sealy, TX','Amazon Coppell, TX','Amazon Houston, TX','LGB3','LGB5','LGB7','TCY5','TCY9','Long Beach Port','Victorville, CA','Phoenix, AZ','Baytown, TX','Pasadena, TX'];
+const LOCATIONS=['Waco - Envases','Houston - Coke','Houston Parking','Waco Parking','Dallas Parking','Garland, TX','Sealy, TX','Amazon Coppell, TX','Amazon Houston, TX','Redlands, CA','Moreno Valley, CA','Eastvale, CA','Tracy, CA','Stockton, CA','Long Beach Port','Victorville, CA','Phoenix, AZ','Baytown, TX','Pasadena, TX'];
 const BCOS=['Coca-Cola Consolidated','Niagara Bottling','Niagara Bottling (via broker)',"L'Oreal (via XPO)",'Amazon.com Services LLC','Uber Freight LLC','RXO Inc.','ITS Logistics LLC'];
 
 /* ---------- seed data (grounded in the TX Driver Schedule + CA Operations Schedule) ---------- */
 let LANES={};
 function seedLanes(){LANES={
- 'CC-001':{id:'CC-001',customer:'C.H. Robinson',bco:'Coca-Cola Consolidated',bcoUnknown:false,code:'CC-001',version:1,status:'Active',
+ 'CC-001':{id:'CC-001',name:'Coca-Cola Waco–Houston Production Run',customer:'C.H. Robinson',bco:'Coca-Cola Consolidated',bcoUnknown:false,code:'CC-001',version:1,
   plannedStart:'2025-01-01',plannedEnd:'2026-12-31',actualStart:'2025-01-01',actualEnd:null,loadType:'Production (dedicated)',dropPickup:true,dropDelivery:true,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'Waco - Envases',destination:'Houston - Coke'},
    {origin:'Sealy, TX',destination:'Houston - Coke'}],
   matched:[
-   {apolloId:'7284',externalId:'556991910',driver:'Timothy Bearfield',pu:'1:00 AM',del:'5:00 AM',delivered:true},
-   {apolloId:'7288',externalId:'556992050',driver:'Steven Bell',pu:'8:00 AM',del:'12:00 PM',delivered:true},
-   {apolloId:'7285',externalId:'556992015',driver:'Suzan Bell',pu:'9:00 AM',del:'1:00 PM',delivered:true},
-   {apolloId:'7293',externalId:'556992030',driver:'Jermarcus Sampson',pu:'11:00 AM',del:'3:00 PM',delivered:false},
-   {apolloId:'7271',externalId:'556991921',driver:'Michael Malave',pu:'12:00 PM',del:'4:00 PM',delivered:true},
-   {apolloId:'7279',externalId:'556991994',driver:'Milton Boyle',pu:'1:00 PM',del:'5:00 PM',delivered:true}
+   {date:'2026-07-14',apolloId:'7284',externalId:'556991910',driver:'Timothy Bearfield',pu:'1:00 AM',del:'5:00 AM',delivered:true},
+   {date:'2026-07-14',apolloId:'7288',externalId:'556992050',driver:'Steven Bell',pu:'8:00 AM',del:'12:00 PM',delivered:true},
+   {date:'2026-07-08',apolloId:'7285',externalId:'556992015',driver:'Suzan Bell',pu:'9:00 AM',del:'1:00 PM',delivered:true},
+   {date:'2026-07-08',apolloId:'7293',externalId:'556992030',driver:'Jermarcus Sampson',pu:'11:00 AM',del:'3:00 PM',delivered:false,lateDelivery:true},
+   {date:'2026-06-24',apolloId:'7271',externalId:'556991921',driver:'Michael Malave',pu:'12:00 PM',del:'4:00 PM',delivered:true},
+   {date:'2026-06-24',apolloId:'7279',externalId:'556991994',driver:'Milton Boyle',pu:'1:00 PM',del:'5:00 PM',delivered:true}
   ]},
- 'AMZ-CPL-HOU':{id:'AMZ-CPL-HOU',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-CPL-HOU',version:1,status:'Active',
+ 'AMZ-CPL-HOU':{id:'AMZ-CPL-HOU',name:'Amazon Coppell–Houston Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-CPL-HOU',version:1,
   plannedStart:'2025-03-01',plannedEnd:'2026-12-31',actualStart:'2025-03-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'Amazon Coppell, TX',destination:'Amazon Houston, TX'},
-   {origin:'LGB3',destination:'Amazon Houston, TX'},
-   {origin:'LGB5',destination:'Amazon Houston, TX'},
-   {origin:'LGB7',destination:'Amazon Houston, TX'},
-   {origin:'TCY5',destination:'Amazon Houston, TX'},
-   {origin:'TCY9',destination:'Amazon Houston, TX'}],
+   {origin:'Garland, TX',destination:'Amazon Houston, TX'},
+   {origin:'Baytown, TX',destination:'Amazon Houston, TX'},
+   {origin:'Pasadena, TX',destination:'Amazon Houston, TX'},
+   {origin:'Sealy, TX',destination:'Amazon Houston, TX'}],
   matched:[
-   {apolloId:'7311',externalId:'113KF1BN1',driver:'Ronnie Willburn',pu:'5:30 PM',del:'11:59 PM',delivered:false,note:'NEED TO CANCEL PRIOR TO 10AM MON if canceling'},
-   {apolloId:'7345',externalId:'116DYCP6M',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false},
-   {apolloId:'7356',externalId:'111WC1BZW',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false,note:'Canceled but trailer was already onsite'},
-   {apolloId:'7358',externalId:'1128HBDHQ',driver:'Quentin Holmes',pu:'—',del:'—',delivered:false},
-   {apolloId:'7359',externalId:'1135SMPVQ',driver:'Javontae Williams',pu:'12:30 PM',del:'5:30 PM',delivered:false}
+   {date:'2026-07-13',apolloId:'7311',externalId:'113KF1BN1',driver:'Ronnie Willburn',pu:'5:30 PM',del:'11:59 PM',delivered:false,latePickup:true,note:'NEED TO CANCEL PRIOR TO 10AM MON if canceling'},
+   {date:'2026-07-13',apolloId:'7345',externalId:'116DYCP6M',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false},
+   {date:'2026-07-07',apolloId:'7356',externalId:'111WC1BZW',driver:'Quentin Holmes',pu:'5:30 PM',del:'11:59 PM',delivered:false,note:'Canceled but trailer was already onsite'},
+   {date:'2026-07-07',apolloId:'7358',externalId:'1128HBDHQ',driver:'Quentin Holmes',pu:'—',del:'—',delivered:false},
+   {date:'2026-06-30',apolloId:'7359',externalId:'1135SMPVQ',driver:'Javontae Williams',pu:'12:30 PM',del:'5:30 PM',delivered:false}
   ]},
- 'AMZ-LGB5-TCY5':{id:'AMZ-LGB5-TCY5',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB5-TCY5',version:1,status:'Active',
+ 'AMZ-LGB5-TCY5':{id:'AMZ-LGB5-TCY5',name:'Amazon Moreno Valley–Tracy Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB5-TCY5',version:1,
   plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'LGB5',destination:'TCY5'}],
+  od:[{origin:'Moreno Valley, CA',destination:'Tracy, CA'}],
   matched:[
-   {apolloId:'NEVOV_R102886',externalId:'113FZ1CZF',driver:'Mauricio Palma → Joshua Sanchez',pu:'07/13 5:00',del:'—',delivered:false},
-   {apolloId:'NEVOV_R102893',externalId:'115BCLG23',driver:'—',pu:'07/13 12:30',del:'—',delivered:false,note:'Cancelled by Amazon'},
-   {apolloId:'NEVOV_R102894',externalId:'114HF9949',driver:'Dereith Browning → Scott Deniz',pu:'07/14 13:00',del:'—',delivered:false,note:'Cancelled by Amazon'},
-   {apolloId:'NEVOV_R102895',externalId:'114S1C19D',driver:'Dereith Browning → Joan Deniz',pu:'07/14 13:00',del:'—',delivered:false}
+   {date:'2026-07-13',apolloId:'NEVOV_R102886',externalId:'113FZ1CZF',driver:'Mauricio Palma → Joshua Sanchez',pu:'5:00 AM',del:'—',delivered:false},
+   {date:'2026-07-13',apolloId:'NEVOV_R102893',externalId:'115BCLG23',driver:'—',pu:'12:30 PM',del:'—',delivered:false,note:'Cancelled by Amazon'},
+   {date:'2026-07-14',apolloId:'NEVOV_R102894',externalId:'114HF9949',driver:'Dereith Browning → Scott Deniz',pu:'1:00 PM',del:'—',delivered:false,note:'Cancelled by Amazon'},
+   {date:'2026-07-14',apolloId:'NEVOV_R102895',externalId:'114S1C19D',driver:'Dereith Browning → Joan Deniz',pu:'1:00 PM',del:'—',delivered:false}
   ]},
- 'AMZ-LGB7-TCY9':{id:'AMZ-LGB7-TCY9',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB7-TCY9',version:1,status:'Active',
+ 'AMZ-LGB7-TCY9':{id:'AMZ-LGB7-TCY9',name:'Amazon Eastvale–Stockton Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB7-TCY9',version:1,
   plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'LGB7',destination:'TCY9'}],
+  od:[{origin:'Eastvale, CA',destination:'Stockton, CA'}],
   matched:[
-   {apolloId:'NEVOV_R102904',externalId:'113QNPZVX',driver:'Kuldeep Sandhu → Jagroop Man',pu:'07/13 7:45',del:'—',delivered:false},
-   {apolloId:'NEVOV_R102912',externalId:'111Z59G12',driver:'Dominique Callaway → April Debski',pu:'07/13 9:00',del:'—',delivered:false,note:'Rejected — trailer 649123 yellow-tagged, pending reason from ROC'},
-   {apolloId:'NEVOV_R102905',externalId:'115HM41DM',driver:'Kuldeep Sandhu → Jagroop Man',pu:'07/14 7:45',del:'—',delivered:false,note:'Kuldeep called off sick'}
+   {date:'2026-07-13',apolloId:'NEVOV_R102904',externalId:'113QNPZVX',driver:'Kuldeep Sandhu → Jagroop Man',pu:'7:45 AM',del:'—',delivered:false},
+   {date:'2026-07-13',apolloId:'NEVOV_R102912',externalId:'111Z59G12',driver:'Dominique Callaway → April Debski',pu:'9:00 AM',del:'—',delivered:false,note:'Rejected — trailer 649123 yellow-tagged, pending reason from ROC'},
+   {date:'2026-07-14',apolloId:'NEVOV_R102905',externalId:'115HM41DM',driver:'Kuldeep Sandhu → Jagroop Man',pu:'7:45 AM',del:'—',delivered:false,latePickup:true,note:'Kuldeep called off sick'}
   ]},
- 'AMZ-LGB3-TCY5':{id:'AMZ-LGB3-TCY5',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB3-TCY5',version:1,status:'Active',
+ 'AMZ-LGB3-TCY5':{id:'AMZ-LGB3-TCY5',name:'Amazon Redlands–Tracy Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB3-TCY5',version:1,
   plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
-  od:[{origin:'LGB3',destination:'TCY5'}],
+  od:[{origin:'Redlands, CA',destination:'Tracy, CA'}],
   matched:[
-   {apolloId:'NEVOV_R102922',externalId:'11141JMBR',driver:'Mauricio Palma → Joshua Sanchez',pu:'07/14 10:30',del:'—',delivered:false},
-   {apolloId:'NEVOV_R102923',externalId:'112DXFWHB',driver:'Oscar Gracian → Vanthar Aing',pu:'07/14 10:30',del:'—',delivered:false,note:'Covering — Dominique on medical leave'}
+   {date:'2026-07-14',apolloId:'NEVOV_R102922',externalId:'11141JMBR',driver:'Mauricio Palma → Joshua Sanchez',pu:'10:30 AM',del:'—',delivered:false},
+   {date:'2026-07-14',apolloId:'NEVOV_R102923',externalId:'112DXFWHB',driver:'Oscar Gracian → Vanthar Aing',pu:'10:30 AM',del:'—',delivered:false,note:'Covering — Dominique on medical leave'}
   ]},
- 'UF-HOU-DAL':{id:'UF-HOU-DAL',customer:'Uber Freight',bco:'Uber Freight LLC',bcoUnknown:false,code:'UF-HOU-DAL',version:1,status:'Active',
+ 'UF-HOU-DAL':{id:'UF-HOU-DAL',name:'Uber Freight Houston–Dallas Dry Van',customer:'Uber Freight',bco:'Uber Freight LLC',bcoUnknown:false,code:'UF-HOU-DAL',version:1,
   plannedStart:'2025-08-01',plannedEnd:'2026-07-24',actualStart:'2025-08-01',actualEnd:null,loadType:'Truckload / Dry Van',dropPickup:true,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'Houston Parking',destination:'Dallas Parking'},
    {origin:'Houston Parking',destination:'Garland, TX'},
    {origin:'Waco Parking',destination:'Dallas Parking'}],
   matched:[]},
- 'ITS-LGB-INLAND':{id:'ITS-LGB-INLAND',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND',version:1,status:'Closed',
+ 'ITS-LGB-INLAND':{id:'ITS-LGB-INLAND',name:'Arrive Long Beach Inland Drayage',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND',version:1,
   plannedStart:'2024-01-01',plannedEnd:'2025-06-30',actualStart:'2024-01-01',actualEnd:'2025-06-30',loadType:'Drayage',dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:'ITS-LGB-INLAND-V2',
-  od:[{origin:'LGB3',destination:null}],
+  od:[{origin:'Long Beach Port',destination:'Redlands, CA'}],
   matched:[]},
- 'ITS-LGB-INLAND-V2':{id:'ITS-LGB-INLAND-V2',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND-V2',version:2,status:'Active',
+ 'ITS-LGB-INLAND-V2':{id:'ITS-LGB-INLAND-V2',name:'Arrive Long Beach Inland Drayage',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND-V2',version:2,
   plannedStart:'2025-07-01',plannedEnd:'2026-12-31',actualStart:'2025-07-01',actualEnd:null,loadType:'Drayage',dropPickup:false,dropDelivery:false,
   renewedFrom:'ITS-LGB-INLAND',renewedTo:null,
-  od:[{origin:'LGB3',destination:null},
-   {origin:'LGB5',destination:null},
-   {origin:'LGB7',destination:null},
-   {origin:'TCY5',destination:null},
-   {origin:'TCY9',destination:null}],
+  od:[{origin:'Long Beach Port',destination:'Redlands, CA'},
+   {origin:'Long Beach Port',destination:'Moreno Valley, CA'},
+   {origin:'Long Beach Port',destination:'Eastvale, CA'},
+   {origin:'Long Beach Port',destination:'Tracy, CA'},
+   {origin:'Long Beach Port',destination:'Stockton, CA'}],
   matched:[]},
- 'RXO-DAL-HOU-2027':{id:'RXO-DAL-HOU-2027',customer:'RXO',bco:null,bcoUnknown:true,code:'RXO-DAL-HOU-2027',version:1,status:'Active',
+ 'RXO-DAL-HOU-2027':{id:'RXO-DAL-HOU-2027',name:'RXO Dallas–Houston (2027 Award)',customer:'RXO',bco:null,bcoUnknown:true,code:'RXO-DAL-HOU-2027',version:1,
   plannedStart:'2027-01-01',plannedEnd:'2027-12-31',actualStart:null,actualEnd:null,loadType:null,dropPickup:false,dropDelivery:false,
   renewedFrom:null,renewedTo:null,
   od:[{origin:'Dallas Parking',destination:'Houston Parking'},
@@ -265,7 +269,21 @@ function seedLanes(){LANES={
 
 /* ---------- helpers ---------- */
 function fmtDate(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fmtDateShort(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function windowText(l){return (fmtDate(l.plannedStart)||'—')+' – '+(fmtDate(l.plannedEnd)||'—');}
+function mondayOf(iso){const d=new Date(iso+'T00:00:00');const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.toISOString().slice(0,10);}
+function addDays(iso,n){const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function weekLabel(mondayIso){return fmtDateShort(mondayIso)+' – '+fmtDateShort(addDays(mondayIso,6));}
+function last4WeeksStart(){return addDays(mondayOf(TODAY),-21);}
+function recentMatched(matched){const windowStart=last4WeeksStart();return matched.filter(m=>m.date&&m.date>=windowStart&&m.date<=TODAY);}
+function groupMatchedByWeek(matched){
+ const recent=recentMatched(matched);
+ const groups={};
+ recent.forEach(m=>{const wk=mondayOf(m.date);(groups[wk]=groups[wk]||[]).push(m);});
+ Object.values(groups).forEach(g=>g.sort((a,b)=>a.date.localeCompare(b.date)));
+ const weeks=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+ return{recent,weeks,groups};
+}
 function odLabel(pair){const o=pair.origin||'any origin';const d=pair.destination||'any destination';return o+' → '+d;}
 function odSummary(l){
  if(!l.od.length)return '—';
@@ -297,7 +315,8 @@ function findConflict(customer,od,start,end,excludeIds){excludeIds=excludeIds||[
  for(const id in LANES){const L=LANES[id];
   if(excludeIds.includes(id))continue;
   if(L.customer!==customer)continue;
-  if(L.status==='Closed')continue;
+  const st=deriveStatus(L);
+  if(st==='Cancelled'||st==='Expired')continue;
   if(!dateOverlap(start,end,L.plannedStart,L.plannedEnd))continue;
   for(const p of od)for(const lp of L.od)if(odOverlap(p,lp))return{lane:L,pair:p,lp:lp};
  }
@@ -308,28 +327,36 @@ function prevDay(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');d.se
 function suggestRenewCode(code){const m=code.match(/-V(\d+)$/i);if(m)return code.replace(/-V\d+$/i,'')+'-V'+(+m[1]+1);
  const m2=code.match(/(\d+)$/);if(m2){const n=(+m2[1]+1);return code.slice(0,-m2[1].length)+String(n).padStart(m2[1].length,'0');}
  return code+'-V2';}
-function isExpiringSoon(l){if(l.status!=='Active'||!l.plannedEnd||l.renewedTo)return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
+function deriveStatus(l){
+ if(l.actualEnd)return 'Cancelled';
+ if(!l.actualStart)return 'Scheduled';
+ if(l.plannedEnd&&TODAY>l.plannedEnd)return 'Expired';
+ return 'Active';
+}
+function isExpiringSoon(l){if(deriveStatus(l)!=='Active'||!l.plannedEnd||l.renewedTo)return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
 
 /* ---------- list ---------- */
 let GROUPBY=true,COLLAPSED={},CHIPFILTER='all',SELECTED=null;
 function chipCounts(){const vals=Object.values(LANES);
- return{all:vals.length,active:vals.filter(l=>l.status==='Active').length,closed:vals.filter(l=>l.status==='Closed').length,exp:vals.filter(isExpiringSoon).length};}
+ return{all:vals.length,scheduled:vals.filter(l=>deriveStatus(l)==='Scheduled').length,active:vals.filter(l=>deriveStatus(l)==='Active').length,expired:vals.filter(l=>deriveStatus(l)==='Expired').length,cancelled:vals.filter(l=>deriveStatus(l)==='Cancelled').length,exp:vals.filter(isExpiringSoon).length};}
 function renderChips(){const c=chipCounts();
- const defs=[['all','All lanes',c.all],['active','Active',c.active],['exp','Expiring soon',c.exp],['closed','Closed',c.closed]];
+ const defs=[['all','All lanes',c.all],['scheduled','Scheduled',c.scheduled],['active','Active',c.active],['exp','Expiring soon',c.exp],['expired','Expired',c.expired],['cancelled','Cancelled',c.cancelled]];
  $('lanechips').innerHTML=defs.map(d=>'<div class="chip'+(CHIPFILTER===d[0]?' on':'')+'" onclick="CHIPFILTER=\''+d[0]+'\';renderList()">'+d[1]+' '+d[2]+'</div>').join('');}
-function passFilter(l){if(CHIPFILTER==='all')return true;if(CHIPFILTER==='active')return l.status==='Active';if(CHIPFILTER==='closed')return l.status==='Closed';if(CHIPFILTER==='exp')return isExpiringSoon(l);return true;}
-function statusPill(l){const cls=l.status==='Active'?'p-active':'p-closed';return '<span class="pill '+cls+'">'+l.status+'</span>';}
+function passFilter(l){if(CHIPFILTER==='all')return true;if(CHIPFILTER==='exp')return isExpiringSoon(l);return deriveStatus(l)===CHIPFILTER[0].toUpperCase()+CHIPFILTER.slice(1);}
+function statusPill(l){const st=deriveStatus(l);const cls='p-'+st.toLowerCase();return '<span class="pill '+cls+'">'+st+'</span>';}
+function pickupDropLabel(l){if(l.dropPickup&&l.dropDelivery)return 'Pick-up & Delivery';if(l.dropPickup)return 'Pick-up';if(l.dropDelivery)return 'Delivery';return '—';}
 function rowHTML(id,showCust){const l=LANES[id];
  return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
- '<div class="code">'+esc(l.code)+'</div>'+
+ '<div class="code">'+esc(l.code)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+
  '<div>'+statusPill(l)+'</div>'+
  (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
  '<div class="od">'+odSummary(l)+'</div>'+
  '<div class="win">'+windowText(l)+'</div>'+
  // '<div class="lt">'+(l.loadType||'—')+'</div>'+  // Load type column temporarily removed — restore this line (and the header below, and the CSS grid tracks) to bring it back
- '<div class="mc">'+(l.matched.length||'—')+'</div>'+
+ '<div class="pd">'+pickupDropLabel(l)+'</div>'+
+ '<div class="mc">'+(recentMatched(l.matched).length||'—')+'</div>'+
  '<div class="chev2">›</div></div>';}
-function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div>'+/* '<div>Load type</div>'+ */'<div class="mc">Matched</div><div></div></div>';}
+function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div>'+/* '<div>Load type</div>'+ */'<div>Pick-up/Delivery</div><div class="mc" title="Matched loads in the last 4 weeks">Matched</div><div></div></div>';}
 function toggleGroup(c){COLLAPSED[c]=!COLLAPSED[c];renderList();}
 function updateSub(){const c=chipCounts();$('lanesub').textContent=c.all+' lanes · '+c.active+' active · '+c.exp+' expiring soon';}
 function renderList(){renderChips();updateSub();
@@ -354,14 +381,19 @@ function renderList(){renderChips();updateSub();
 function openLaneDrawer(id){SELECTED=id;$('dfoot').style.display='none';renderDrawerView(id);$('drawer').classList.add('open');}
 function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfoot').style.display='none';renderList();}
 function renderDrawerView(id){const l=LANES[id];if(!l)return;
- const open=l.status!=='Closed';
+ const status=deriveStatus(l);
+ const open=status!=='Cancelled';
  $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
  '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
  '<div class="btns">'+(open
    ?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">✎ Edit</button><button class="abtn" onclick="openRenewDrawer(\''+id+'\')">↻ Renew</button><button class="abtn" style="color:var(--red);border-color:#F3C6C6" onclick="openCloseModal(\''+id+'\')">Close lane</button>'
-   :'<span style="color:var(--gray);font-size:12.5px">Closed '+fmtDate(l.actualEnd)+' · new loads no longer match</span>')+
+   :'<span style="color:var(--gray);font-size:12.5px">Cancelled '+fmtDate(l.actualEnd)+' · new loads no longer match</span>')+
  '</div>';
  let html='';
+ if(isExpiringSoon(l)){
+  const days=Math.round((new Date(l.plannedEnd)-new Date(TODAY))/86400000);
+  html+='<div class="conflictbanner"><div class="t">⚠️ Expiring soon</div><div class="d">Planned end is '+fmtDate(l.plannedEnd)+' — '+days+' day'+(days===1?'':'s')+' away with no renewal yet. Renew or extend to keep matching new loads.</div></div>';
+ }
  if(l.renewedFrom||l.renewedTo){
   html+='<div class="provbanner">';
   if(l.renewedFrom){const p=LANES[l.renewedFrom];html+='Renewed from <span class="provlink" onclick="openLaneDrawer(\''+l.renewedFrom+'\')">'+esc(p?p.code:l.renewedFrom)+' (v'+(l.version-1)+')</span>. ';}
@@ -369,6 +401,7 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
   html+='</div>';
  }
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
+   drow('Lane name',esc(l.name||'— not set'))+
    drow('Customer',esc(l.customer))+
    drow('BCO',l.bcoUnknown?'Unknown — broker withheld':esc(l.bco||'—'))+
    drow('Planned window',windowText(l))+
@@ -380,12 +413,17 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
  '</div>';
  html+='<div class="sect" style="margin-top:14px"><span>OD PAIRS ('+l.od.length+')</span></div>'+
   l.od.map(p=>'<div class="odview">'+(p.origin?esc(p.origin):'<i>any origin</i>')+' <span style="color:var(--gray)">→</span> '+(p.destination?esc(p.destination):'<i>any destination</i>')+'</div>').join('');
- if(!l.matched.length){
-  html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span></div><div style="color:var(--gray);font-size:12.5px;padding:4px 0 2px">No loads auto-matched in this window yet.</div>';
+ const mg=groupMatchedByWeek(l.matched);
+ if(!mg.recent.length){
+  html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span></div><div style="color:var(--gray);font-size:12.5px;padding:4px 0 2px">No loads auto-matched in the last 4 weeks.</div>';
  } else {
-  html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span><span>'+l.matched.length+' this window</span></div>'+
-  '<div class="mrow head"><div>Load</div><div>Ext ID</div><div>Driver</div><div>PU</div><div>DEL</div><div>Stage</div></div>'+
-  l.matched.map(m=>'<div class="mrow"><div>'+esc(m.apolloId)+'</div><div>'+esc(m.externalId||'—')+'</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(m.driver||'—')+'</div><div>'+esc(m.pu||'—')+'</div><div>'+esc(m.del||'—')+'</div><div>'+(m.delivered?'<span class="dtick">Drop-off</span>':'<span class="dpend">Pick-up</span>')+'</div>'+(m.note?'<div class="note">⚠ '+esc(m.note)+'</div>':'')+'</div>').join('')+
+  html+='<div class="sect" style="margin-top:14px"><span>MATCHED LOADS</span><span>'+mg.recent.length+' in the last 4 weeks</span></div>'+
+  '<div class="mrow head"><div>Date</div><div>Load</div><div>Ext ID</div><div>Driver</div><div>PU</div><div>DEL</div></div>'+
+  mg.weeks.map(wk=>{
+   const g=mg.groups[wk];
+   return '<div class="mweekhead">'+weekLabel(wk)+'<span class="n">· '+g.length+' load'+(g.length>1?'s':'')+'</span></div>'+
+    g.map(m=>'<div class="mrow"><div>'+fmtDateShort(m.date)+'</div><div>'+esc(m.apolloId)+'</div><div>'+esc(m.externalId||'—')+'</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(m.driver||'—')+'</div><div'+(m.latePickup?' class="late"':'')+'>'+esc(m.pu||'—')+'</div><div'+(m.lateDelivery?' class="late"':'')+'>'+esc(m.del||'—')+'</div>'+(m.note?'<div class="note">⚠ '+esc(m.note)+'</div>':'')+'</div>').join('');
+  }).join('')+
   '<div style="font-size:11px;color:#94A3B8;margin-top:8px">Auto-matched by customer + OD + planned window — replaces manually cross-referencing the '+(l.customer==='Amazon Relay'?'CA relay schedule':'TX Driver Schedule')+'.</div>';
  }
  $('dtl').innerHTML=html;
@@ -447,6 +485,8 @@ function formFieldsHTML(v){
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
  '</select><div class="err" id="e_customer"></div></div>'+
 
+ '<div class="ffield"><label>Lane name</label><input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"><div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
+
  '<div class="frow"><div class="ffield" style="flex:2"><label>BCO (beneficial cargo owner)</label>'+
    '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'>'+
    '<label class="checkrow" style="margin-top:4px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"> Unknown / broker withheld</label>'+
@@ -461,7 +501,8 @@ function formFieldsHTML(v){
  '<div class="formsect"><span class="lbl">LOAD TYPE</span><div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup</label>'+
   '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery</label></div></div>'+
  '<datalist id="loclist">'+LOCATIONS.map(l=>'<option value="'+l+'">').join('')+'</datalist>'+
- '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
+ '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>'+
+ '<datalist id="citylist">'+CITIES.map(c=>'<option value="'+c+'">').join('')+'</datalist>';
 }
 
 function renderForm(mode,id){
@@ -471,9 +512,9 @@ function renderForm(mode,id){
   (mode==='edit'?'<div class="meta">Minor corrections update in place — no new lane version.</div>':'')+
   (mode==='create'?'<div class="meta">Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.</div>':'');
 
- const v=mode==='create'?{customer:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
+ const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
-  :{customer:l.customer,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
  let html='';
  if(mode==='renew'){html+='<div class="provbanner">Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving closes '+esc(l.code)+' with an actual end date the day before the new planned start, and creates v'+(l.version+1)+' linked back via <code>renewed_from_lane_id</code>.</div>';}
@@ -494,6 +535,7 @@ function showErr(id,msg){const el=$(id);if(el)el.textContent=msg;}
 function submitForm(mode,id){
  clearErrors();$('conflictzone').innerHTML='';
  const customer=$('in_customer').value;
+ const name=$('in_name').value.trim();
  const bcoUnknown=$('in_bcounknown').checked;
  const bco=bcoUnknown?'':$('in_bco').value.trim();
  const codeInput=$('in_code').value.trim();
@@ -526,22 +568,22 @@ function submitForm(mode,id){
  const code=codeInput||autoCode(customer);
  if(mode==='create'){
   const newId=idFromCode(code);
-  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:1,status:'Active',
+  LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:1,
    plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
    loadType:null,dropPickup,dropDelivery,renewedFrom:null,renewedTo:null,od:cleanOd,matched:[]};
   renderList();openLaneDrawer(newId);
   toast('Lane created — Apollo will begin auto-matching loads within this window.');
  } else if(mode==='edit'){
-  Object.assign(LANES[id],{customer,bco,bcoUnknown,code,plannedStart:start,plannedEnd:end,dropPickup,dropDelivery,od:cleanOd});
+  Object.assign(LANES[id],{customer,name:name||null,bco,bcoUnknown,code,plannedStart:start,plannedEnd:end,dropPickup,dropDelivery,od:cleanOd});
   renderList();renderDrawerView(id);
   toast('Saved — no new lane version created.');
  } else if(mode==='renew'){
   const old=LANES[id];
   const closeDate=prevDay(start)||TODAY;
-  old.status='Closed';old.actualEnd=closeDate;
+  old.actualEnd=closeDate;
   const newId=idFromCode(code);
   old.renewedTo=newId;
-  LANES[newId]={id:newId,customer,bco,bcoUnknown,code,version:old.version+1,status:'Active',
+  LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:old.version+1,
    plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
    loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,renewedTo:null,od:cleanOd,matched:[]};
   renderList();openLaneDrawer(newId);
@@ -556,7 +598,7 @@ function openCloseModal(id){const l=LANES[id];
  '<div class="ffield"><label>Actual end date</label><input type="date" id="in_closedate" value="'+TODAY+'"></div>'+
  '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" style="background:var(--red);border-color:var(--red)" onclick="confirmClose(\''+id+'\')">Close lane</button></div></div>';
  $('ovl').classList.add('show');}
-function confirmClose(id){const d=$('in_closedate').value||TODAY;LANES[id].status='Closed';LANES[id].actualEnd=d;closeModal();renderList();
+function confirmClose(id){const d=$('in_closedate').value||TODAY;LANES[id].actualEnd=d;closeModal();renderList();
  if(SELECTED===id)renderDrawerView(id);
  toast(esc(LANES[id].code)+' closed — stops matching new loads after '+fmtDate(d)+'.');}
 function closeModal(){$('ovl').classList.remove('show');}
