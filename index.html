@@ -501,8 +501,7 @@ function formFieldsHTML(v){
  '<div class="formsect"><span class="lbl">LOAD TYPE</span><div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup</label>'+
   '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery</label></div></div>'+
  '<datalist id="loclist">'+LOCATIONS.map(l=>'<option value="'+l+'">').join('')+'</datalist>'+
- '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>'+
- '<datalist id="citylist">'+CITIES.map(c=>'<option value="'+c+'">').join('')+'</datalist>';
+ '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
 }
 
 function renderForm(mode,id){
