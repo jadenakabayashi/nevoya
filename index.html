@@ -39,14 +39,14 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .gtoggle input{accent-color:var(--teal)}
 #listwrap{flex:1;overflow:auto;padding:10px 26px 90px}
 .listcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-/* Load type column temporarily removed (was 1.15fr before the .8fr Matched track in both rules below) — restore by adding it back in .colhead/.lanerow and .colhead.grouped/.lanerow.grouped */
-.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr .8fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
-.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr .9fr .8fr 20px}
+/* Load type column temporarily removed (was 1.15fr before the trailing chev track in both rules below) — restore by adding it back in .colhead/.lanerow and .colhead.grouped/.lanerow.grouped */
+.colhead{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr 20px;gap:18px;padding:10px 16px;font-size:11px;letter-spacing:.4px;color:var(--gray);font-weight:500;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+.colhead.grouped,.lanerow.grouped{grid-template-columns:1.1fr .7fr 1.8fr 1.3fr .9fr 20px}
 .grouphead{display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:13px;font-weight:500;color:#334155;background:#FAFBFB;border-bottom:1px solid var(--line);border-top:1px solid var(--line);cursor:pointer}
 .grouphead .chev{transition:transform .15s;color:var(--gray);display:inline-block}
 .grouphead.collapsed .chev{transform:rotate(-90deg)}
 .grouphead .n{color:var(--gray);font-weight:400}
-.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr .8fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
+.lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
 .lanerow:hover{background:#F8FAFC}
 .lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flagexp{background:var(--warnbg);color:#92400E;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none}
@@ -58,8 +58,6 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .lanerow .win{color:var(--gray);font-size:12.5px;white-space:nowrap}
 .lanerow .pd{color:var(--gray);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .lt{color:var(--gray);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lanerow .mc{color:var(--gray);font-size:12.5px;text-align:right;white-space:nowrap}
-.colhead .mc{text-align:right}
 .lanerow .chev2{color:#CBD5E1}
 .pill{border-radius:12px;padding:3px 11px;font-size:12px;font-weight:500;display:inline-block}
 .p-scheduled{background:var(--bluesoft);color:var(--blue)}
@@ -354,9 +352,8 @@ function rowHTML(id,showCust){const l=LANES[id];
  '<div class="win">'+windowText(l)+'</div>'+
  // '<div class="lt">'+(l.loadType||'—')+'</div>'+  // Load type column temporarily removed — restore this line (and the header below, and the CSS grid tracks) to bring it back
  '<div class="pd">'+pickupDropLabel(l)+'</div>'+
- '<div class="mc">'+(recentMatched(l.matched).length||'—')+'</div>'+
  '<div class="chev2">›</div></div>';}
-function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div>'+/* '<div>Load type</div>'+ */'<div>Pick-up/Delivery</div><div class="mc" title="Matched loads in the last 4 weeks">Matched</div><div></div></div>';}
+function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')+'"><div>Lane</div><div>Status</div>'+(showCust?'<div>Customer</div>':'')+'<div>OD pair(s)</div><div>Planned window</div>'+/* '<div>Load type</div>'+ */'<div>Pick-up/Delivery</div><div></div></div>';}
 function toggleGroup(c){COLLAPSED[c]=!COLLAPSED[c];renderList();}
 function updateSub(){const c=chipCounts();$('lanesub').textContent=c.all+' lanes · '+c.active+' active · '+c.exp+' expiring soon';}
 function renderList(){renderChips();updateSub();
