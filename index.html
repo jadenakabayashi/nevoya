@@ -505,7 +505,6 @@ function renderForm(mode,id){
  const l=id?LANES[id]:null;
  const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):'Renew lane — '+esc(l.code);
  $('dhead').innerHTML='<div class="top"><b style="font-size:15px">'+title+'</b><span class="x" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">✕</span></div>'+
-  (mode==='edit'?'<div class="meta">Minor corrections update in place — no new lane version.</div>':'')+
   (mode==='create'?'<div class="meta">Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.</div>':'');
 
  const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
