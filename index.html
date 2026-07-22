@@ -398,7 +398,7 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
   html+='</div>';
  }
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
-   drow('Lane name',esc(l.name||'— not set'))+
+   drow('Customer lane name',esc(l.name||'— not set'))+
    drow('Customer',esc(l.customer))+
    drow('BCO',l.bcoUnknown?'Unknown — broker withheld':esc(l.bco||'—'))+
    drow('Planned window',windowText(l))+
@@ -482,7 +482,7 @@ function formFieldsHTML(v){
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
  '</select><div class="err" id="e_customer"></div></div>'+
 
- '<div class="ffield"><label>Lane name</label><input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"><div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
+ '<div class="ffield"><label>Customer lane name</label><input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"><div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
 
  '<div class="frow"><div class="ffield" style="flex:2"><label>BCO (beneficial cargo owner)</label>'+
    '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'>'+
