@@ -474,13 +474,13 @@ function openCreateDrawer(){SELECTED=null;renderForm('create',null);$('drawer').
 function openEditDrawer(id){renderForm('edit',id);$('drawer').classList.add('open');}
 function openRenewDrawer(id){renderForm('renew',id);$('drawer').classList.add('open');}
 
-function formFieldsHTML(v){
+function formFieldsHTML(v,locked){
  return ''+
  '<div id="conflictzone"></div>'+
- '<div class="ffield" id="f_customer"><label>Customer *</label><select id="in_customer">'+
+ '<div class="ffield" id="f_customer"><label>Customer *</label><select id="in_customer" '+(locked?'disabled':'')+'>'+
    '<option value="">— select customer —</option>'+
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
- '</select><div class="err" id="e_customer"></div></div>'+
+ '</select>'+(locked?'<div class="hint">Locked — customer can\'t change on an existing lane. Renew or create a new lane instead.</div>':'')+'<div class="err" id="e_customer"></div></div>'+
 
  '<div class="ffield"><label>Customer lane name</label><input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"><div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
 
@@ -488,14 +488,14 @@ function formFieldsHTML(v){
    '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'>'+
    '<label class="checkrow" style="margin-top:4px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"> Unknown / broker withheld</label>'+
    '<div class="err" id="e_bco"></div></div>'+
-  '<div class="ffield"><label>Lane code</label><input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'"><div class="hint">Human-readable — blank auto-generates one</div></div></div>'+
+  '<div class="ffield"><label>Lane code</label><input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'" '+(locked?'disabled':'')+'><div class="hint">'+(locked?'Locked — code can\'t change on an existing lane':'Human-readable — blank auto-generates one')+'</div></div></div>'+
 
  '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+(v.plannedStart||'')+'" '+(v.actualStart?'disabled':'')+'>'+(v.actualStart?'<div class="hint">Locked — loads have already matched against this start date</div>':'')+'<div class="err" id="e_start"></div></div>'+
   '<div class="ffield"><label>Planned end *</label><input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"><div class="err" id="e_end"></div></div></div>'+
 
  '<div class="formsect"><span class="lbl">OD PAIRS</span><div id="odlist"></div><div class="addod" onclick="addOD()">＋ Add OD pair</div></div>'+
 
- '<div class="formsect"><span class="lbl">LOAD TYPE</span><div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup</label>'+
+ '<div class="formsect"><span class="lbl">PICK-UP/DELIVERY</span><div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup</label>'+
   '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery</label></div></div>'+
  '<datalist id="loclist">'+LOCATIONS.map(l=>'<option value="'+l+'">').join('')+'</datalist>'+
  '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
@@ -513,7 +513,7 @@ function renderForm(mode,id){
 
  let html='';
  if(mode==='renew'){html+='<div class="provbanner">Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving closes '+esc(l.code)+' with an actual end date the day before the new planned start, and creates v'+(l.version+1)+' linked back via <code>renewed_from_lane_id</code>.</div>';}
- html+=formFieldsHTML(v);
+ html+=formFieldsHTML(v,mode==='edit');
  $('dtl').innerHTML=html;
 
  ODCOUNT=0;$('odlist').innerHTML='';
