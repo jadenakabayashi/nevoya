@@ -50,7 +50,6 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .lanerow:hover{background:#F8FAFC}
 .lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flagexp{background:var(--warnbg);color:#92400E;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none}
-.provbadge{background:#F1F5F9;color:var(--gray);font-size:10.5px;font-weight:500;padding:1px 8px;border-radius:10px;white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:3px}
 .lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .od{color:#334155;overflow:hidden}
 .lanerow .od .odcell{display:flex;align-items:center;gap:5px;min-width:0}
@@ -368,6 +367,9 @@ function findConflict(customer,od,start,end,excludeIds){excludeIds=excludeIds||[
  return null;}
 function idFromCode(code){let base=(code||'LANE').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'LANE';let id=base,n=1;while(LANES[id]){n++;id=base+'-'+n;}return id;}
 function autoCode(customer){return (customer||'LANE').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()+'-'+Math.floor(Math.random()*900+100);}
+function suggestRenewCode(code){const m=code.match(/-V(\d+)$/i);if(m)return code.replace(/-V\d+$/i,'')+'-V'+(+m[1]+1);
+ const m2=code.match(/(\d+)$/);if(m2){const n=(+m2[1]+1);return code.slice(0,-m2[1].length)+String(n).padStart(m2[1].length,'0');}
+ return code+'-V2';}
 function deriveStatus(l){
  if(l.actualEnd)return 'Cancelled';
  if(!l.actualStart)return 'Scheduled';
@@ -376,13 +378,6 @@ function deriveStatus(l){
 }
 function renewedToLane(id){return Object.values(LANES).find(x=>x.renewedFrom===id)||null;}
 function provVerb(endedLane){return(endedLane&&endedLane.cancelReason==='Renegotiation')?'Renegotiated':'Renewed';}
-function renewalBadge(l,compact){
- if(!l.renewedFrom)return '';
- const parent=LANES[l.renewedFrom];
- const verb=provVerb(parent);
- const icon=verb==='Renegotiated'?'⇄':'↻';
- return '<span class="provbadge" title="'+verb+' from '+esc(parent?parent.code:l.renewedFrom)+'">'+(compact?icon:icon+' '+verb)+'</span>';
-}
 function isExpiringSoon(l){if(deriveStatus(l)!=='Active'||!l.plannedEnd||renewedToLane(l.id))return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
 
 /* ---------- list ---------- */
@@ -397,7 +392,7 @@ function statusPill(l){const st=deriveStatus(l);const cls='p-'+st.toLowerCase();
 function pickupDropLabel(l){if(l.dropPickup&&l.dropDelivery)return 'Pick-up & Delivery';if(l.dropPickup)return 'Pick-up';if(l.dropDelivery)return 'Delivery';return '—';}
 function rowHTML(id,showCust){const l=LANES[id];
  return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
- '<div class="code">'+esc(l.code)+renewalBadge(l,true)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+
+ '<div class="code">'+esc(l.code)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+
  '<div>'+statusPill(l)+'</div>'+
  (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
  '<div class="od">'+odSummary(l)+'</div>'+
@@ -435,7 +430,7 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
  const hasSuccessor=!!renewedToLane(l.id);
  const canRenew=open&&!hasSuccessor&&(status==='Expired'||isExpiringSoon(l));
  const canRenegotiate=open&&!hasSuccessor&&status==='Active';
- $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+renewalBadge(l)+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
+ $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
  '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
  '<div class="btns">'+(open
    ?'<button class="abtn" onclick="openEditModal(\''+id+'\')">✎ Edit</button>'
@@ -640,7 +635,7 @@ function renderForm(mode,id,renegotiate){
 
  const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
-  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:'',plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
  let body='';
  if(mode==='renew'){body+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
