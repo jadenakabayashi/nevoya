@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit Log — Apollo by Nevoya</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Nevoya Component Library tokens — pulled from shared/tokens.css + .claude/skills/nevoya-prototype/references/nevoya-library.md.
+     Switch (53:824), Segmented control (46:614/49:580), Table (120:2365), and Search (131:2540) were all
+     verified live via Figma Dev Mode MCP on 2026-07-29 — see get_variable_defs output for exact hex/px values. */
+  --teal:#00786F;--teal-soft:#F0FDFA;--ink:#0F172A;--gray:#64748B;--line:#E2E8F0;--bg:#F7F7F8;
+  --surface-high:#DAE3ED;--surface-default:#E1EAF5;--surface-low:#E6EFFA;--surface-lowest:#F6F8FB;
+  --border-default:#CAD5E2;--border-muted:#E2E8F0;--ink2:#1D293D;--text-default:#314158;--text-muted:#45556C;
+  --icon-muted:#99A1AF;--table-header-fg:#62748E;--table-body-fg:#1D293D;
+  --chip-cancelled-bg:#F5F5F4;--chip-cancelled-fg:#44403B;
+  --chip-dispatched-bg:#EDE9FE;--chip-dispatched-fg:#7F22FE;
+  --chip-progress-bg:#DBEAFE;--chip-progress-fg:#155DFC;
+  --chip-cyan-bg:#CEFAFE;--chip-cyan-fg:#007595;
+  --chip-slate-bg:#E6EFFA;--chip-slate-fg:#1D293D;
+  --chip-amber-bg:#FEF3C6;--chip-amber-fg:#E17100;
+  --chip-red-bg:#FFE2E2;--chip-red-fg:#E7000B;
+  --chip-completed-bg:#D0FAE5;--chip-completed-fg:#007A55;
+  --chip-pending-bg:#FAE8FF;--chip-pending-fg:#C800DE;
+  /* category badges (audit log) — reuse Status-chip color pairs, repurposed */
+  --cat-lifecycle-bg:var(--teal-soft);--cat-lifecycle-fg:var(--teal);
+  --cat-dispatch-bg:var(--chip-dispatched-bg);--cat-dispatch-fg:var(--chip-dispatched-fg);
+  --cat-shift-bg:var(--chip-progress-bg);--cat-shift-fg:var(--chip-progress-fg);
+  --cat-stops-bg:var(--chip-cyan-bg);--cat-stops-fg:var(--chip-cyan-fg);
+  --cat-documents-bg:var(--chip-slate-bg);--cat-documents-fg:var(--chip-slate-fg);
+  --cat-billing-bg:var(--chip-amber-bg);--cat-billing-fg:var(--chip-amber-fg);
+  --cat-tags-bg:var(--chip-pending-bg);--cat-tags-fg:var(--chip-pending-fg);
+  --cat-operational-bg:var(--chip-cancelled-bg);--cat-operational-fg:var(--chip-cancelled-fg);
+  --cat-integration-bg:var(--chip-completed-bg);--cat-integration-fg:var(--chip-completed-fg);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(--bg);height:100vh;overflow:hidden;font-size:14px}
+button{font-family:inherit}
+#app{display:flex;height:100vh}
+/* rail (matches load-timeline family chrome) */
+#rail{width:64px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex:none}
+#rail .logo{width:34px;height:34px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;margin-bottom:10px}
+#rail .ric{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#475569;position:relative}
+#rail .ric:hover{background:#F1F5F9}
+#rail .ric.active{background:var(--surface-high);color:var(--teal)}
+#rail .ric.ghost{opacity:.38;cursor:default}
+#rail .tip{position:absolute;left:52px;background:var(--ink);color:#fff;font-size:12px;letter-spacing:.3px;font-weight:500;padding:6px 8px;border-radius:8px;white-space:nowrap;display:none;z-index:50}
+#rail .ric:hover .tip{display:block}
+
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* page header */
+#pagehead{padding:20px 28px 0;flex:none}
+#pagehead h1{font-size:22px;font-weight:600;color:var(--ink2)}
+.pagedesc{color:var(--text-muted);font-size:13px;margin-top:6px;max-width:560px;line-height:1.5}
+.pill{border-radius:16px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.4px;line-height:14px;display:inline-block;flex:none}
+.p-transit{background:var(--chip-progress-bg);color:var(--chip-progress-fg)}
+.p-dispatched{background:var(--chip-dispatched-bg);color:var(--chip-dispatched-fg)}
+.p-completed{background:var(--chip-completed-bg);color:var(--chip-completed-fg)}
+
+/* Search (131:2540): bg background/low #E6EFFA, min-h 40, padding 10/4, radius md(10), gap 8,
+   20px icon, placeholder text Input label/Muted #45556C 14px medium — verified via get_design_context */
+.searchwrap{position:relative;margin-top:14px;max-width:440px}
+.searchbox{background:var(--surface-low);display:flex;align-items:center;gap:8px;min-height:40px;padding:4px 10px;border-radius:10px}
+.searchbox svg{flex:none;color:var(--text-muted)}
+.searchbox input{border:none;outline:none;background:transparent;flex:1;font-size:14px;font-weight:500;font-family:inherit;color:var(--ink2);min-width:0}
+.searchbox input::placeholder{color:var(--text-muted);font-weight:500}
+.clearbtn{border:none;background:transparent;cursor:pointer;color:var(--gray);font-size:13px;padding:4px 6px;display:none;align-items:center;border-radius:6px;flex:none}
+.clearbtn:hover{background:#fff}
+
+.resultsdrop{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.12);max-height:300px;overflow-y:auto;z-index:20}
+.resultsdrop.show{display:block}
+.resultrow{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer}
+.resultrow:hover{background:var(--surface-lowest)}
+.resulttype{font-size:9.5px;letter-spacing:.5px;font-weight:700;color:var(--gray);border:1px solid var(--border-default);border-radius:4px;padding:2px 6px;flex:none;white-space:nowrap}
+.resultmain{min-width:0;flex:1}
+.resultmain .rlabel{font-size:13.5px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resultmain .rsub{font-size:11.5px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resultempty{padding:14px;font-size:13px;color:var(--gray);text-align:center}
+
+/* selected-entity context card, shown below search once an entity is chosen */
+.contextcard{display:none;align-items:center;gap:10px;margin-top:12px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:13.5px;flex-wrap:wrap}
+.contextcard b{color:var(--ink2);font-weight:600}
+.ctxsub{color:var(--gray);font-size:12.5px}
+.clearctx{margin-left:auto;border:none;background:transparent;color:var(--teal);font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:6px}
+.clearctx:hover{background:var(--surface-lowest)}
+
+#activitywrap{flex:1;overflow-y:auto;padding:16px 28px 60px}
+.actheadrow{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.actheadrow .desc{font-size:13px;color:var(--text-muted);max-width:520px;line-height:1.5}
+.actheadrow .desc b{color:var(--ink2);font-weight:600}
+.toolbar{margin-left:auto;display:flex;align-items:center;gap:18px;flex:none}
+
+/* Switch (53:824): track 48x24 radius md(10), padding 2; thumb is a 27x20 rounded-sm(8) rect (not a circle);
+   off track = Icon/Muted #99A1AF, on track = Icon/Primary #00786F — verified via get_design_context */
+.swrow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-default);font-weight:500}
+.switch{position:relative;width:48px;height:24px;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch .track{position:absolute;inset:0;background:var(--icon-muted);border-radius:10px;transition:background .15s ease;cursor:pointer}
+.switch .thumb{position:absolute;top:2px;left:2px;width:27px;height:20px;background:#fff;border-radius:8px;transition:transform .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
+.switch input:checked + .track{background:var(--teal)}
+.switch input:checked + .track .thumb{transform:translateX(17px)}
+
+.legendbtn{border:1px solid var(--border-default);background:#fff;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:500;color:var(--ink2);cursor:pointer;display:flex;align-items:center;gap:5px}
+.legendbtn:hover{background:var(--surface-lowest)}
+#legend{display:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text-default)}
+#legend.show{display:block}
+#legend .lgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+#legend h4{font-size:11px;letter-spacing:.6px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:6px}
+#legend .lrow{display:flex;align-items:center;gap:7px;margin-top:5px}
+
+/* Table (120:2365): container bg background/lowest #F6F8FB, padding lg(12), radius xl(16); header text
+   Table header/Default #62748E semibold 14 (not small-caps); body text Table body/Default #1D293D medium 14;
+   row divider = Border/Muted #E2E8F0, distinct from the general Border/Default used elsewhere — all verified
+   via get_design_context/get_variable_defs */
+#feed{background:var(--surface-lowest);border:1px solid var(--border-muted);border-radius:16px;padding:12px;overflow:hidden}
+.frow-head{display:grid;grid-template-columns:26px 1.3fr 1fr 0.85fr 2.2fr;gap:10px;padding:10px 14px;font-size:14px;color:var(--table-header-fg);font-weight:600;border-bottom:1px solid var(--border-muted)}
+.frow{border-bottom:1px solid var(--border-muted)}
+.frow:last-child{border-bottom:none}
+.frow .fmain{display:grid;grid-template-columns:26px 1.3fr 1fr 0.85fr 2.2fr;gap:10px;align-items:center;padding:11px 14px;cursor:pointer}
+.frow .fmain:hover{background:#fff}
+.frow.open .fmain{background:var(--teal-soft)}
+.chev{width:16px;height:16px;color:var(--gray);transition:transform .12s ease;flex:none}
+.frow.open .chev{transform:rotate(90deg);color:var(--teal)}
+
+/* provenance (actor) chip — outlined, distinct from filled category badge */
+.actor{display:inline-flex;align-items:center;gap:7px;min-width:0}
+.actoricon{width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--surface-lowest);color:var(--text-muted)}
+.actoricon.type-user{border-radius:50%;background:var(--surface-high);color:var(--ink2);font-size:9.5px;font-weight:700}
+.actoricon svg{width:13px;height:13px}
+.actorlabel{min-width:0}
+.actorlabel .name{font-size:13px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actorlabel .type{font-size:10.5px;color:var(--gray);letter-spacing:.3px}
+.actorlabel .entlink{font-size:11px;color:var(--teal);font-weight:600;cursor:pointer;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actorlabel .entlink:hover{text-decoration:underline}
+
+.catbadge{display:inline-block;border-radius:16px;padding:2px 7px;font-size:10.5px;font-weight:600;letter-spacing:.15px;line-height:14px;white-space:nowrap}
+.time{font-size:12px;color:var(--gray);white-space:nowrap;font-variant-numeric:tabular-nums}
+.summary{font-size:14px;font-weight:500;color:var(--table-body-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* expanded detail panel */
+.fdetail{display:none;padding:4px 14px 18px 50px;background:var(--surface-lowest);border-top:1px dashed var(--border-default)}
+.frow.open .fdetail{display:block}
+.fdetail .dsec{margin-top:12px}
+.fdetail .dsec:first-child{margin-top:12px}
+.fdetail h5{font-size:10.5px;letter-spacing:.6px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:6px}
+.changetbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.changetbl td{padding:7px 10px;font-size:12.5px;border-bottom:1px solid #F1F5F9}
+.changetbl tr:last-child td{border-bottom:none}
+.changetbl td.field{color:var(--gray);width:34%}
+.changetbl td.diff .old{color:var(--chip-red-fg);text-decoration:line-through;margin-right:6px}
+.changetbl td.diff .new{color:var(--chip-completed-fg);font-weight:600}
+.linkrow{display:flex;align-items:center;gap:7px;font-size:13px}
+.doclink{color:var(--teal);font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.doclink:hover{text-decoration:underline}
+.stopchip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border-default);background:#fff;border-radius:8px;padding:4px 9px;font-size:12.5px;color:var(--ink2)}
+.billinglock{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray);font-style:italic}
+.rawbtn{border:none;background:transparent;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:4px}
+pre.rawjson{display:none;margin-top:8px;background:var(--ink2);color:#D1FAE5;font-size:11.5px;line-height:1.5;padding:12px 14px;border-radius:8px;overflow-x:auto;font-family:'SF Mono',Menlo,monospace}
+pre.rawjson.show{display:block}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.toast.show{opacity:1}
+svg.icon{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="rail">
+    <div class="logo">N</div>
+    <div class="ric" title="Loads">📦<span class="tip">Loads</span></div>
+    <div class="ric active" title="Audit Log">📜<span class="tip">Audit Log</span></div>
+    <div class="ric" title="Ask Apollo">✦<span class="tip">Ask Apollo</span></div>
+    <div class="ric ghost">🛣<span class="tip">Lanes</span></div>
+    <div class="ric ghost">🔔</div><div class="ric ghost">🗓</div><div class="ric ghost">🚛</div><div class="ric ghost">👤</div>
+  </div>
+
+  <div id="main">
+    <div id="pagehead">
+      <h1>Audit Log</h1>
+      <div class="pagedesc">Search any load, internal movement, or driver shift to pull up its full activity history — who or what changed it, when, and why.</div>
+
+      <div class="searchwrap" id="searchwrap">
+        <div class="searchbox">
+          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="searchInput" placeholder="Search by load #, internal movement, or driver…" autocomplete="off" oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)">
+          <button class="clearbtn" id="clearBtn" onclick="clearSelection()">✕</button>
+        </div>
+        <div class="resultsdrop" id="results"></div>
+      </div>
+
+      <div class="contextcard" id="contextcard"></div>
+    </div>
+
+    <div id="activitywrap">
+      <div class="actheadrow">
+        <div class="desc" id="feedDesc"></div>
+        <div class="toolbar">
+          <button class="legendbtn" onclick="toggleLegend()">
+            <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+            Badge key
+          </button>
+          <label class="swrow">
+            <span class="switch">
+              <input type="checkbox" id="opToggle" onchange="renderFeed()">
+              <span class="track"><span class="thumb"></span></span>
+            </span>
+            Show operational events
+          </label>
+        </div>
+      </div>
+
+      <div id="legend">
+        <div class="lgrid">
+          <div>
+            <h4>Actor / source (who or what)</h4>
+            <div class="lrow"><span class="actoricon type-user">AG</span> Apollo user, via UI or API</div>
+            <div class="lrow"><span class="actoricon" style="border-radius:6px">🚚</span> Driver, via driver app / SMS</div>
+            <div class="lrow"><span class="actoricon">⚙️</span> System — Apollo automation (geofence, ELD, auto-dispatch, jobs)</div>
+            <div class="lrow"><span class="actoricon">🔌</span> Integration — external system (CHR, Samsara)</div>
+          </div>
+          <div>
+            <h4>Category (what kind of thing)</h4>
+            <div class="lrow"><span class="catbadge" style="background:var(--cat-lifecycle-bg);color:var(--cat-lifecycle-fg)">Lifecycle</span></div>
+            <div class="lrow"><span class="catbadge" style="background:var(--cat-dispatch-bg);color:var(--cat-dispatch-fg)">Dispatch</span> <span class="catbadge" style="background:var(--cat-shift-bg);color:var(--cat-shift-fg)">Shift</span></div>
+            <div class="lrow"><span class="catbadge" style="background:var(--cat-stops-bg);color:var(--cat-stops-fg)">Stops &amp; appointments</span></div>
+            <div class="lrow"><span class="catbadge" style="background:var(--cat-documents-bg);color:var(--cat-documents-fg)">Documents</span> <span class="catbadge" style="background:var(--cat-billing-bg);color:var(--cat-billing-fg)">Billing</span></div>
+            <div class="lrow"><span class="catbadge" style="background:var(--cat-tags-bg);color:var(--cat-tags-fg)">Tags &amp; exceptions</span> <span class="catbadge" style="background:var(--cat-integration-bg);color:var(--cat-integration-fg)">Integration</span></div>
+            <div class="lrow"><span class="catbadge" style="background:var(--cat-operational-bg);color:var(--cat-operational-fg)">Operational</span> <span style="color:var(--gray)">— hidden by default, toggle above</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="feed">
+        <div class="frow-head">
+          <span></span><span>Actor / Source</span><span>Category</span><span>Time</span><span>Event</span>
+        </div>
+        <div id="feedbody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toastEl"></div>
+
+<script>
+const ICON = {
+  user:(init)=>`<span class="actoricon type-user">${init}</span>`,
+  driver:()=>`<span class="actoricon">🚚</span>`,
+  system:()=>`<span class="actoricon">⚙️</span>`,
+  integration:()=>`<span class="actoricon">🔌</span>`
+};
+const CAT_LABEL = {
+  lifecycle:'Lifecycle', dispatch:'Dispatch', shift:'Shift',
+  stops_and_appointments:'Stops & appointments', documents:'Documents',
+  billing:'Billing', tags_and_exceptions:'Tags & exceptions',
+  operational:'Operational', integration:'Integration'
+};
+const CAT_VAR = {
+  lifecycle:'lifecycle', dispatch:'dispatch', shift:'shift',
+  stops_and_appointments:'stops', documents:'documents',
+  billing:'billing', tags_and_exceptions:'tags',
+  operational:'operational', integration:'integration'
+};
+const TYPE_LABEL = { load:'LOAD', im:'INTERNAL MOVEMENT', shift:'SHIFT' };
+const TYPE_NOUN = { load:'load', im:'internal movement', shift:'shift' };
+
+// Searchable index of entities. Load 7671 / IM-1619 / Andrew Garcia's shift carry the rich event sets
+// (nearly verbatim from the addendum's example table + the TRD's event-type catalog, covering every
+// actor-type x category combo the docs call out); the other three are lighter, just to prove search
+// works across multiple loads/movements/shifts, not only the one "hero" example of each type.
+const ENTITIES = [
+  {
+    id:'load-7671', type:'load', label:'Load 7671',
+    sub:'Ontario, CA → Phoenix, AZ · Carrier-owned · Andrew Garcia (Planner)',
+    status:'In Progress', statusClass:'p-transit',
+    events:[
+      {time:'06/16/26 08:14 AM', actorType:'user', actorInit:'AG', actorName:'Andrew Garcia', source:'UI',
+       category:'stops_and_appointments', eventType:'LOAD_APPOINTMENT_CHANGED',
+       summary:'Pickup appointment changed from 08:00 to 10:00',
+       changes:[{field:'pickup_appointment_from',old:'2026-06-16T08:00:00Z',new:'2026-06-16T10:00:00Z'},
+                {field:'pickup_appointment_to',old:'2026-06-16T08:00:00Z',new:'2026-06-16T10:00:00Z'}],
+       stop:'Stop 1 · Pickup — Ontario, CA',
+       raw:{entity_type:'load',entity_id:'2f6f0b2a-5bc8-4a73-a4fd-317c26e5b97f',event_type:'LOAD_APPOINTMENT_CHANGED',category:'stops_and_appointments',source:'ui',actor_type:'user',actor_user_id:'71a20f23-5d2d-4d79-aa5b-a4ef72f760af',actor_label:'Andrew Garcia'}},
+
+      {time:'06/16/26 09:02 AM', actorType:'integration', actorName:'CHR Webhook', source:'CHR webhook',
+       category:'integration', eventType:'LOAD_UPDATED_FROM_CHR',
+       summary:'CHR updated pickup appointment and reference numbers',
+       changes:[{field:'requested_date',old:'2026-06-16T08:00:00Z',new:'2026-06-16T10:00:00Z'},
+                {field:'reference_numbers.pickup_number',old:'PIN# 7343',new:'PIN# 8831'}],
+       raw:{entity_type:'load',event_type:'LOAD_UPDATED_FROM_CHR',category:'integration',actor_type:'integration',actor_label:'CHR Webhook',source:'chr_webhook',external_system:'chr',webhook_event_id:'chr-evt-12345'}},
+
+      {time:'06/16/26 11:40 AM', actorType:'user', actorInit:'SP', actorName:'Sandra (Planner)', source:'UI',
+       category:'dispatch', eventType:'LOAD_DISPATCHED',
+       summary:'Dispatched to Tarus Tye · TCI-25319',
+       changes:[{field:'dispatch_owner_id',old:'—',new:'Tarus Tye'},{field:'load_status',old:'PENDING',new:'DISPATCHED'}],
+       raw:{entity_type:'load',event_type:'LOAD_DISPATCHED',category:'dispatch',actor_type:'user',actor_label:'Sandra',source:'ui',vehicle_id:'TCI-25319'}},
+
+      {time:'06/16/26 4:31 PM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'lifecycle', eventType:'LOAD_STATUS_CHANGED',
+       summary:'Load status changed to In Progress by geofence automation',
+       changes:[{field:'load_status',old:'DISPATCHED',new:'IN_PROGRESS'}],
+       raw:{entity_type:'load',event_type:'LOAD_STATUS_CHANGED',category:'lifecycle',source:'geofence',actor_type:'system',actor_label:'Geofence automation',actual_event_id:'7a708f59-a658-4d78-8bd1-2044306a3845',geofence_event_id:'9d6c48a9-7ab8-42af-bb71-6c4181d19f11'}},
+
+      {time:'06/17/26 07:52 AM', actorType:'driver', actorName:'Tarus Tye', source:'Driver app',
+       category:'documents', eventType:'POD_UPLOADED',
+       summary:'Signed POD uploaded at delivery',
+       document:'POD_7671_signed.pdf',
+       stop:'Stop 2 · Delivery — Phoenix, AZ',
+       raw:{entity_type:'load',event_type:'POD_UPLOADED',category:'documents',actor_type:'driver',actor_label:'Tarus Tye',source:'driver_app',document_id:'d0c9e6a1-1111-4a2b-9c3d-abc123456789'}},
+
+      {time:'06/17/26 08:10 AM', actorType:'system', actorName:'Billing automation', source:'System task',
+       category:'billing', eventType:'INVOICE_GENERATED', billing:true,
+       summary:'Invoice generated for load 7671',
+       raw:{entity_type:'load',event_type:'INVOICE_GENERATED',category:'billing',actor_type:'system',actor_label:'Billing automation',source:'system_task'}},
+
+      {time:'06/17/26 08:15 AM', actorType:'user', actorInit:'LT', actorName:'Laura (Driver Mgr)', source:'UI',
+       category:'tags_and_exceptions', eventType:'TAG_RESOLVED',
+       summary:'"Needs review" tag resolved — POD confirmed legible',
+       changes:[{field:'tag_status',old:'OPEN',new:'RESOLVED'}],
+       raw:{entity_type:'load',event_type:'TAG_RESOLVED',category:'tags_and_exceptions',actor_type:'user',actor_label:'Laura',source:'ui',tag_id:'tag-4471'}},
+
+      {time:'06/17/26 08:20 AM', actorType:'integration', actorName:'Samsara', source:'Samsara webhook',
+       category:'integration', eventType:'SAMSARA_ROUTE_SYNCED',
+       summary:'Route synced to Samsara for completed delivery',
+       raw:{entity_type:'load',event_type:'SAMSARA_ROUTE_SYNCED',category:'integration',actor_type:'integration',actor_label:'Samsara',source:'samsara_webhook'}},
+
+      // operational evidence — hidden unless the toggle is on
+      {time:'06/18/26 4:29 PM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'operational', eventType:'GEOFENCE_EVENT_MATCHED',
+       summary:'Truck entered delivery geofence',
+       raw:{entity_type:'load',event_type:'GEOFENCE_EVENT_MATCHED',category:'operational',source:'geofence',payload:{geofence_event_id:'9d6c48a9-7ab8-42af-bb71-6c4181d19f11',vehicle_id:'a5a25ba9-e4ef-4c69-bf5f-177ca9440192',event_time:'2026-06-18T16:29:00Z'}}},
+      {time:'06/18/26 4:31 PM', actorType:'system', actorName:'ELD boundary resolver', source:'ELD boundary',
+       category:'operational', eventType:'SHIFT_BOUNDARY_RESOLVED',
+       summary:'Shift boundary resolved from ELD evidence',
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_BOUNDARY_RESOLVED',category:'operational',source:'eld_boundary'}},
+      {time:'06/18/26 4:33 PM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'operational', eventType:'ARRIVED_AT_STOP',
+       summary:'Actual arrival recorded at Stop 2 · Delivery',
+       raw:{entity_type:'load',event_type:'ARRIVED_AT_STOP',category:'operational',source:'geofence'}},
+    ]
+  },
+  {
+    id:'load-7802', type:'load', label:'Load 7802',
+    sub:'Rialto, CA → Las Vegas, NV · Brokered · Sandra (Planner)',
+    status:'Dispatched', statusClass:'p-dispatched',
+    events:[
+      {time:'07/24/26 09:00 AM', actorType:'user', actorInit:'SP', actorName:'Sandra (Planner)', source:'UI',
+       category:'dispatch', eventType:'LOAD_DISPATCHED',
+       summary:'Dispatched to Marcus Reyes · TCI-19042',
+       changes:[{field:'dispatch_owner_id',old:'—',new:'Marcus Reyes'},{field:'load_status',old:'PENDING',new:'DISPATCHED'}],
+       raw:{entity_type:'load',event_type:'LOAD_DISPATCHED',category:'dispatch',actor_type:'user',actor_label:'Sandra',source:'ui',vehicle_id:'TCI-19042'}},
+      {time:'07/24/26 09:40 AM', actorType:'user', actorInit:'AG', actorName:'Andrew Garcia', source:'UI',
+       category:'stops_and_appointments', eventType:'LOAD_APPOINTMENT_CHANGED',
+       summary:'Delivery appointment changed from 14:00 to 16:00',
+       changes:[{field:'delivery_appointment_from',old:'2026-07-24T14:00:00Z',new:'2026-07-24T16:00:00Z'}],
+       stop:'Stop 2 · Delivery — Las Vegas, NV',
+       raw:{entity_type:'load',event_type:'LOAD_APPOINTMENT_CHANGED',category:'stops_and_appointments',actor_type:'user',actor_label:'Andrew Garcia',source:'ui'}},
+      {time:'07/24/26 10:15 AM', actorType:'integration', actorName:'CHR Webhook', source:'CHR webhook',
+       category:'integration', eventType:'LOAD_UPDATED_FROM_CHR',
+       summary:'CHR updated reference numbers',
+       changes:[{field:'reference_numbers.pickup_number',old:'PIN# 2201',new:'PIN# 2255'}],
+       raw:{entity_type:'load',event_type:'LOAD_UPDATED_FROM_CHR',category:'integration',actor_type:'integration',actor_label:'CHR Webhook',source:'chr_webhook'}},
+    ]
+  },
+  {
+    id:'im-1619', type:'im', label:'Internal Movement IM-1619',
+    sub:'Trailer/yard → Hub · TCI-25319 · Leg 1',
+    status:'Completed', statusClass:'p-completed',
+    events:[
+      {time:'07/25/26 11:47 AM', actorType:'user', actorInit:'AG', actorName:'Andrew Garcia', source:'UI',
+       category:'dispatch', eventType:'INTERNAL_MOVEMENT_CREATED',
+       summary:'Internal movement created and dispatched — Leg 1',
+       raw:{entity_type:'internal_movement',event_type:'INTERNAL_MOVEMENT_CREATED',category:'dispatch',actor_type:'user',actor_label:'Andrew Garcia',source:'ui'}},
+      {time:'07/25/26 12:10 PM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'lifecycle', eventType:'INTERNAL_MOVEMENT_STATUS_CHANGED',
+       summary:'Status changed to In Progress by geofence automation',
+       changes:[{field:'status',old:'DISPATCHED',new:'IN_PROGRESS'}],
+       raw:{entity_type:'internal_movement',event_type:'INTERNAL_MOVEMENT_STATUS_CHANGED',category:'lifecycle',actor_type:'system',source:'geofence'}},
+      {time:'07/25/26 3:00 PM', actorType:'user', actorInit:'AG', actorName:'Andrew Garcia', source:'UI',
+       category:'lifecycle', eventType:'INTERNAL_MOVEMENT_STATUS_CHANGED',
+       summary:'Internal movement marked complete',
+       changes:[{field:'status',old:'IN_PROGRESS',new:'COMPLETED'}],
+       raw:{entity_type:'internal_movement',event_type:'INTERNAL_MOVEMENT_STATUS_CHANGED',category:'lifecycle',actor_type:'user',source:'ui'}},
+      {time:'07/25/26 3:02 PM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'operational', eventType:'GEOFENCE_EVENT_MATCHED',
+       summary:'Truck entered hub geofence',
+       raw:{entity_type:'internal_movement',event_type:'GEOFENCE_EVENT_MATCHED',category:'operational',source:'geofence'}},
+    ]
+  },
+  {
+    id:'im-1842', type:'im', label:'Internal Movement IM-1842',
+    sub:'Hub → Trailer/yard · Leg 2',
+    status:'In Progress', statusClass:'p-transit',
+    events:[
+      {time:'07/25/26 09:10 AM', actorType:'user', actorInit:'SP', actorName:'Sandra (Planner)', source:'UI',
+       category:'dispatch', eventType:'INTERNAL_MOVEMENT_CREATED',
+       summary:'Internal movement created and dispatched — Leg 2',
+       raw:{entity_type:'internal_movement',event_type:'INTERNAL_MOVEMENT_CREATED',category:'dispatch',actor_type:'user',actor_label:'Sandra',source:'ui'}},
+      {time:'07/25/26 09:45 AM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'lifecycle', eventType:'INTERNAL_MOVEMENT_STATUS_CHANGED',
+       summary:'Status changed to In Progress by geofence automation',
+       changes:[{field:'status',old:'DISPATCHED',new:'IN_PROGRESS'}],
+       raw:{entity_type:'internal_movement',event_type:'INTERNAL_MOVEMENT_STATUS_CHANGED',category:'lifecycle',actor_type:'system',source:'geofence'}},
+      {time:'07/25/26 09:47 AM', actorType:'system', actorName:'Geofence automation', source:'Geofence',
+       category:'operational', eventType:'GEOFENCE_EVENT_MATCHED',
+       summary:'Truck left trailer/yard geofence',
+       raw:{entity_type:'internal_movement',event_type:'GEOFENCE_EVENT_MATCHED',category:'operational',source:'geofence'}},
+    ]
+  },
+  {
+    id:'shift-agarcia', type:'shift', label:'Driver Shift — Andrew Garcia',
+    sub:'Jul 25 · 11:47 – 23:00 CDT · IM-1619 / 1',
+    status:'Active', statusClass:'p-transit',
+    events:[
+      {time:'07/25/26 07:16 AM', actorType:'user', actorInit:'AG', actorName:'Andrew Garcia', source:'UI',
+       category:'shift', eventType:'SHIFT_ACTUAL_TIMES_UPDATED',
+       summary:'Shift actual start time changed to 07:16',
+       changes:[{field:'actual_start_time',old:'—',new:'2026-06-16T07:16:00Z'}],
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_ACTUAL_TIMES_UPDATED',category:'shift',actor_type:'user',actor_label:'Andrew Garcia',source:'ui',correlation_id:'01JY6A6H4VY8F7G5N0YS5E3NQ4'}},
+      {time:'07/25/26 08:00 AM', actorType:'system', actorName:'Dispatch automation', source:'Auto-dispatch',
+       category:'shift', eventType:'SHIFT_RETIMED',
+       summary:'Shift retimed — next stop pushed 40 min for traffic',
+       changes:[{field:'planned_end_time',old:'2026-07-25T22:20:00Z',new:'2026-07-25T23:00:00Z'}],
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_RETIMED',category:'shift',actor_type:'system',source:'auto_dispatch'}},
+      {time:'07/25/26 08:05 AM', actorType:'system', actorName:'Shift adjustment', source:'System task',
+       category:'shift', eventType:'SHIFT_RETIMED',
+       summary:'Next shift start adjusted to preserve rest window',
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_RETIMED',category:'shift',actor_type:'system',source:'system_task',note:'child event of the retime above, same correlation_id'}},
+      {time:'07/25/26 11:47 AM', actorType:'integration', actorName:'Samsara', source:'Samsara webhook',
+       category:'integration', eventType:'SAMSARA_ROUTE_SYNCED',
+       summary:'Route synced to Samsara for this shift',
+       raw:{entity_type:'driver_shift',event_type:'SAMSARA_ROUTE_SYNCED',category:'integration',actor_type:'integration',source:'samsara_webhook'}},
+      {time:'07/25/26 12:00 PM', actorType:'system', actorName:'ELD boundary resolver', source:'ELD boundary',
+       category:'operational', eventType:'SHIFT_BOUNDARY_RESOLVED',
+       summary:'Shift boundary resolved from ELD evidence',
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_BOUNDARY_RESOLVED',category:'operational',source:'eld_boundary'}},
+    ]
+  },
+  {
+    id:'shift-ttye', type:'shift', label:'Driver Shift — Tarus Tye',
+    sub:'Jul 25 · 06:00 – 18:00 CDT · Load 7671',
+    status:'Completed', statusClass:'p-completed',
+    events:[
+      {time:'07/25/26 06:00 AM', actorType:'driver', actorName:'Tarus Tye', source:'Driver app',
+       category:'shift', eventType:'SHIFT_ACTUAL_TIMES_UPDATED',
+       summary:'Shift actual start time changed to 06:00',
+       changes:[{field:'actual_start_time',old:'—',new:'2026-07-25T06:00:00Z'}],
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_ACTUAL_TIMES_UPDATED',category:'shift',actor_type:'driver',actor_label:'Tarus Tye',source:'driver_app'}},
+      {time:'07/25/26 06:05 AM', actorType:'integration', actorName:'Samsara', source:'Samsara webhook',
+       category:'integration', eventType:'SAMSARA_ROUTE_SYNCED',
+       summary:'Route synced to Samsara for this shift',
+       raw:{entity_type:'driver_shift',event_type:'SAMSARA_ROUTE_SYNCED',category:'integration',actor_type:'integration',source:'samsara_webhook'}},
+      {time:'07/25/26 06:08 AM', actorType:'system', actorName:'ELD boundary resolver', source:'ELD boundary',
+       category:'operational', eventType:'SHIFT_BOUNDARY_RESOLVED',
+       summary:'Shift boundary resolved from ELD evidence',
+       raw:{entity_type:'driver_shift',event_type:'SHIFT_BOUNDARY_RESOLVED',category:'operational',source:'eld_boundary'}},
+    ]
+  },
+];
+
+let SELECTED = null; // null = global "all entities" view; otherwise an ENTITIES[].id
+
+function toast(msg){
+  const t=document.getElementById('toastEl');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800);
+}
+function toggleLegend(){ document.getElementById('legend').classList.toggle('show'); }
+
+function fmtVal(v){
+  if(v==null || v==='—') return '—';
+  const m = String(v).match(/^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2})/);
+  return m ? m[1] : v;
+}
+
+// Sortable key for the "MM/DD/YY H:MM AM/PM" display strings used in the sample data — only needed to
+// interleave events from different entities chronologically in the global (all-entities) feed view.
+function parseTs(str){
+  const m = str.match(/(\d{2})\/(\d{2})\/(\d{2}) (\d{1,2}):(\d{2}) (AM|PM)/);
+  if(!m) return 0;
+  let [, mm, dd, yy, hh, min, ap] = m;
+  hh = +hh; if(ap==='PM' && hh<12) hh+=12; if(ap==='AM' && hh===12) hh=0;
+  return Number(yy+mm+dd)*10000 + hh*100 + Number(min);
+}
+
+function matchEntities(q){
+  q = (q||'').trim().toLowerCase();
+  if(!q) return ENTITIES;
+  return ENTITIES.filter(e =>
+    e.label.toLowerCase().includes(q) ||
+    e.sub.toLowerCase().includes(q) ||
+    e.id.toLowerCase().includes(q));
+}
+
+function renderResults(q){
+  const matches = matchEntities(q);
+  const box = document.getElementById('results');
+  if(!matches.length){
+    box.innerHTML = `<div class="resultempty">No loads, internal movements, or shifts match "${q}"</div>`;
+  } else {
+    box.innerHTML = matches.map(e => `
+      <div class="resultrow" onmousedown="selectEntity('${e.id}')">
+        <span class="resulttype">${TYPE_LABEL[e.type]}</span>
+        <span class="resultmain"><div class="rlabel">${e.label}</div><div class="rsub">${e.sub}</div></span>
+        <span class="pill ${e.statusClass}">${e.status}</span>
+      </div>`).join('');
+  }
+  box.classList.add('show');
+}
+function hideResults(){ document.getElementById('results').classList.remove('show'); }
+function onSearchInput(){ renderResults(document.getElementById('searchInput').value); }
+function onSearchFocus(){ renderResults(document.getElementById('searchInput').value); }
+function onSearchKey(e){
+  if(e.key === 'Escape'){ hideResults(); e.target.blur(); }
+  if(e.key === 'Enter'){
+    const matches = matchEntities(e.target.value);
+    if(matches.length) selectEntity(matches[0].id);
+  }
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('#searchwrap')) hideResults();
+});
+
+function selectEntity(id){
+  SELECTED = id;
+  const ent = ENTITIES.find(e => e.id === id);
+  document.getElementById('searchInput').value = ent.label;
+  document.getElementById('clearBtn').style.display = 'flex';
+  document.getElementById('opToggle').checked = false;
+  hideResults();
+  renderContext();
+  renderFeed();
+}
+function clearSelection(){
+  SELECTED = null;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('opToggle').checked = false;
+  hideResults();
+  renderContext();
+  renderFeed();
+}
+
+function renderContext(){
+  const card = document.getElementById('contextcard');
+  const desc = document.getElementById('feedDesc');
+  if(!SELECTED){
+    card.style.display = 'none';
+    desc.innerHTML = `Showing recent activity across <b>all loads, internal movements, and shifts</b>. Search above to focus on one — or click any entity reference in the feed below.`;
+    return;
+  }
+  const e = ENTITIES.find(x => x.id === SELECTED);
+  card.style.display = 'flex';
+  card.innerHTML = `
+    <span class="resulttype">${TYPE_LABEL[e.type]}</span>
+    <b>${e.label}</b>
+    <span class="pill ${e.statusClass}">${e.status}</span>
+    <span class="ctxsub">${e.sub}</span>
+    <button class="clearctx" onclick="clearSelection()">✕ Clear search</button>`;
+  desc.innerHTML = `History of who or what changed this <b>${TYPE_NOUN[e.type]}</b>, when, and why. This is an audit/history view — the stop-progress timeline and shift replay stay the home for live operational visualization.`;
+}
+
+function rowHtml(ev, idx, ref){
+  const catVar = CAT_VAR[ev.category];
+  let actorIcon;
+  if(ev.actorType==='user') actorIcon = ICON.user(ev.actorInit||'?');
+  else if(ev.actorType==='driver') actorIcon = ICON.driver();
+  else if(ev.actorType==='integration') actorIcon = ICON.integration();
+  else actorIcon = ICON.system();
+
+  let detail = '';
+  if(ev.changes && ev.changes.length){
+    detail += `<div class="dsec"><h5>Before → after</h5><table class="changetbl"><tbody>` +
+      ev.changes.map(c=>`<tr><td class="field">${c.field}</td><td class="diff"><span class="old">${fmtVal(c.old)}</span><span class="new">${fmtVal(c.new)}</span></td></tr>`).join('') +
+      `</tbody></table></div>`;
+  }
+  if(ev.document){
+    detail += `<div class="dsec linkrow"><span class="doclink" onclick="event.stopPropagation();toast('Would open ${ev.document} (prototype)')">
+      <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      ${ev.document}</span></div>`;
+  }
+  if(ev.stop){
+    detail += `<div class="dsec"><span class="stopchip">📍 ${ev.stop}</span></div>`;
+  }
+  if(ev.billing){
+    detail += `<div class="dsec billinglock">
+      <svg class="icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      Amounts hidden — requires billing permission</div>`;
+  }
+  const rawId = `raw-${idx}`;
+  detail += `<div class="dsec">
+      <button class="rawbtn" onclick="event.stopPropagation();toggleRaw('${rawId}')">
+        <svg class="icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m0 8v3a2 2 0 0 0 2 2h3m8-18h3a2 2 0 0 1 2 2v3m0 8v3a2 2 0 0 1-2 2h-3"/></svg>
+        View raw payload
+      </button>
+      <pre class="rawjson" id="${rawId}">${JSON.stringify(ev.raw||{}, null, 2)}</pre>
+    </div>`;
+
+  const entLink = ref ? `<div class="entlink" onclick="event.stopPropagation();selectEntity('${ref.id}')">${ref.label} ↗</div>` : '';
+
+  return `
+    <div class="frow" id="frow-${idx}">
+      <div class="fmain" onclick="toggleRow(${idx})">
+        <svg class="chev icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        <span class="actor">${actorIcon}<span class="actorlabel"><div class="name">${ev.actorName}</div><div class="type">${ev.source}</div>${entLink}</span></span>
+        <span class="catbadge" style="background:var(--cat-${catVar}-bg);color:var(--cat-${catVar}-fg)">${CAT_LABEL[ev.category]}</span>
+        <span class="time">${ev.time}</span>
+        <span class="summary" title="${ev.summary}">${ev.summary}</span>
+      </div>
+      <div class="fdetail">${detail}</div>
+    </div>`;
+}
+
+function renderFeed(){
+  const showOp = document.getElementById('opToggle').checked;
+  let rows;
+  if(SELECTED){
+    const ent = ENTITIES.find(e => e.id === SELECTED);
+    rows = ent.events
+      .filter(ev => showOp || ev.category !== 'operational')
+      .map(ev => ({ev, ref:null}));
+  } else {
+    rows = ENTITIES.flatMap(ent => ent.events
+      .filter(ev => showOp || ev.category !== 'operational')
+      .map(ev => ({ev, ref:{id:ent.id, label:ent.label}})));
+    rows.sort((a,b) => parseTs(a.ev.time) - parseTs(b.ev.time));
+  }
+  document.getElementById('feedbody').innerHTML = rows.map((r,i)=>rowHtml(r.ev, i, r.ref)).join('');
+}
+
+function toggleRow(idx){
+  document.getElementById(`frow-${idx}`).classList.toggle('open');
+}
+function toggleRaw(id){
+  document.getElementById(id).classList.toggle('show');
+}
+
+renderContext();
+renderFeed();
+</script>
+</body>
+</html>
