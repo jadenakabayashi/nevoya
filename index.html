@@ -181,7 +181,7 @@ let LANES={};
 function seedLanes(){LANES={
  'CC-001':{id:'CC-001',name:'Coca-Cola Waco–Houston Production Run',customer:'C.H. Robinson',bco:'Coca-Cola Consolidated',bcoUnknown:false,code:'CC-001',version:1,
   plannedStart:'2025-01-01',plannedEnd:'2026-12-31',actualStart:'2025-01-01',actualEnd:null,loadType:'Production (dedicated)',dropPickup:true,dropDelivery:true,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Waco - Envases',destination:'Houston - Coke'},
    {origin:'Sealy, TX',destination:'Houston - Coke'}],
   matched:[
@@ -194,7 +194,7 @@ function seedLanes(){LANES={
   ]},
  'AMZ-CPL-HOU':{id:'AMZ-CPL-HOU',name:'Amazon Coppell–Houston Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-CPL-HOU',version:1,
   plannedStart:'2025-03-01',plannedEnd:'2026-12-31',actualStart:'2025-03-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Amazon Coppell, TX',destination:'Amazon Houston, TX'},
    {origin:'Garland, TX',destination:'Amazon Houston, TX'},
    {origin:'Baytown, TX',destination:'Amazon Houston, TX'},
@@ -209,7 +209,7 @@ function seedLanes(){LANES={
   ]},
  'AMZ-LGB5-TCY5':{id:'AMZ-LGB5-TCY5',name:'Amazon Moreno Valley–Tracy Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB5-TCY5',version:1,
   plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Moreno Valley, CA',destination:'Tracy, CA'}],
   matched:[
    {date:'2026-07-13',apolloId:'NEVOV_R102886',externalId:'113FZ1CZF',driver:'Mauricio Palma → Joshua Sanchez',pu:'5:00 AM',del:'—',delivered:false},
@@ -219,7 +219,7 @@ function seedLanes(){LANES={
   ]},
  'AMZ-LGB7-TCY9':{id:'AMZ-LGB7-TCY9',name:'Amazon Eastvale–Stockton Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB7-TCY9',version:1,
   plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Eastvale, CA',destination:'Stockton, CA'}],
   matched:[
    {date:'2026-07-13',apolloId:'NEVOV_R102904',externalId:'113QNPZVX',driver:'Kuldeep Sandhu → Jagroop Man',pu:'7:45 AM',del:'—',delivered:false},
@@ -228,7 +228,7 @@ function seedLanes(){LANES={
   ]},
  'AMZ-LGB3-TCY5':{id:'AMZ-LGB3-TCY5',name:'Amazon Redlands–Tracy Relay',customer:'Amazon Relay',bco:'Amazon.com Services LLC',bcoUnknown:false,code:'AMZ-LGB3-TCY5',version:1,
   plannedStart:'2026-01-01',plannedEnd:'2026-12-31',actualStart:'2026-01-01',actualEnd:null,loadType:'Drayage relay',dropPickup:false,dropDelivery:false,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Redlands, CA',destination:'Tracy, CA'}],
   matched:[
    {date:'2026-07-14',apolloId:'NEVOV_R102922',externalId:'11141JMBR',driver:'Mauricio Palma → Joshua Sanchez',pu:'10:30 AM',del:'—',delivered:false},
@@ -236,19 +236,19 @@ function seedLanes(){LANES={
   ]},
  'UF-HOU-DAL':{id:'UF-HOU-DAL',name:'Uber Freight Houston–Dallas Dry Van',customer:'Uber Freight',bco:'Uber Freight LLC',bcoUnknown:false,code:'UF-HOU-DAL',version:1,
   plannedStart:'2025-08-01',plannedEnd:'2026-07-24',actualStart:'2025-08-01',actualEnd:null,loadType:'Truckload / Dry Van',dropPickup:true,dropDelivery:false,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Houston Parking',destination:'Dallas Parking'},
    {origin:'Houston Parking',destination:'Garland, TX'},
    {origin:'Waco Parking',destination:'Dallas Parking'}],
   matched:[]},
  'ITS-LGB-INLAND':{id:'ITS-LGB-INLAND',name:'Arrive Long Beach Inland Drayage',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND',version:1,
-  plannedStart:'2024-01-01',plannedEnd:'2025-06-30',actualStart:'2024-01-01',actualEnd:'2025-06-30',loadType:'Drayage',dropPickup:false,dropDelivery:false,
-  renewedFrom:null,renewedTo:'ITS-LGB-INLAND-V2',
+  plannedStart:'2024-01-01',plannedEnd:'2025-06-30',actualStart:'2024-01-01',actualEnd:null,loadType:'Drayage',dropPickup:false,dropDelivery:false,
+  renewedFrom:null,
   od:[{origin:'Long Beach Port',destination:'Redlands, CA'}],
   matched:[]},
  'ITS-LGB-INLAND-V2':{id:'ITS-LGB-INLAND-V2',name:'Arrive Long Beach Inland Drayage',customer:'Arrive Logistics',bco:null,bcoUnknown:true,code:'ITS-LGB-INLAND-V2',version:2,
   plannedStart:'2025-07-01',plannedEnd:'2026-12-31',actualStart:'2025-07-01',actualEnd:null,loadType:'Drayage',dropPickup:false,dropDelivery:false,
-  renewedFrom:'ITS-LGB-INLAND',renewedTo:null,
+  renewedFrom:'ITS-LGB-INLAND',
   od:[{origin:'Long Beach Port',destination:'Redlands, CA'},
    {origin:'Long Beach Port',destination:'Moreno Valley, CA'},
    {origin:'Long Beach Port',destination:'Eastvale, CA'},
@@ -257,7 +257,7 @@ function seedLanes(){LANES={
   matched:[]},
  'RXO-DAL-HOU-2027':{id:'RXO-DAL-HOU-2027',name:'RXO Dallas–Houston (2027 Award)',customer:'RXO',bco:null,bcoUnknown:true,code:'RXO-DAL-HOU-2027',version:1,
   plannedStart:'2027-01-01',plannedEnd:'2027-12-31',actualStart:null,actualEnd:null,loadType:null,dropPickup:false,dropDelivery:false,
-  renewedFrom:null,renewedTo:null,
+  renewedFrom:null,
   od:[{origin:'Dallas Parking',destination:'Houston Parking'},
    {origin:'Houston Parking',destination:'Dallas Parking'},
    {origin:'Dallas Parking',destination:'Garland, TX'},
@@ -321,7 +321,6 @@ function findConflict(customer,od,start,end,excludeIds){excludeIds=excludeIds||[
  return null;}
 function idFromCode(code){let base=(code||'LANE').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'LANE';let id=base,n=1;while(LANES[id]){n++;id=base+'-'+n;}return id;}
 function autoCode(customer){return (customer||'LANE').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()+'-'+Math.floor(Math.random()*900+100);}
-function prevDay(iso){if(!iso)return null;const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);}
 function suggestRenewCode(code){const m=code.match(/-V(\d+)$/i);if(m)return code.replace(/-V\d+$/i,'')+'-V'+(+m[1]+1);
  const m2=code.match(/(\d+)$/);if(m2){const n=(+m2[1]+1);return code.slice(0,-m2[1].length)+String(n).padStart(m2[1].length,'0');}
  return code+'-V2';}
@@ -331,7 +330,9 @@ function deriveStatus(l){
  if(l.plannedEnd&&TODAY>l.plannedEnd)return 'Expired';
  return 'Active';
 }
-function isExpiringSoon(l){if(deriveStatus(l)!=='Active'||!l.plannedEnd||l.renewedTo)return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
+function renewedToLane(id){return Object.values(LANES).find(x=>x.renewedFrom===id)||null;}
+function provVerb(endedLane){return(endedLane&&endedLane.cancelReason==='Renegotiation')?'Renegotiated':'Renewed';}
+function isExpiringSoon(l){if(deriveStatus(l)!=='Active'||!l.plannedEnd||renewedToLane(l.id))return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
 
 /* ---------- list ---------- */
 let GROUPBY=true,COLLAPSED={},CHIPFILTER='all',SELECTED=null;
@@ -380,21 +381,28 @@ function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfo
 function renderDrawerView(id){const l=LANES[id];if(!l)return;
  const status=deriveStatus(l);
  const open=status!=='Cancelled';
+ const hasSuccessor=!!renewedToLane(l.id);
+ const canRenew=open&&!hasSuccessor&&(status==='Expired'||isExpiringSoon(l));
+ const canRenegotiate=open&&!hasSuccessor&&status==='Active';
  $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
  '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
  '<div class="btns">'+(open
-   ?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">✎ Edit</button><button class="abtn" onclick="openRenewDrawer(\''+id+'\')">↻ Renew</button><button class="abtn" style="color:var(--red);border-color:#F3C6C6" onclick="openCancelModal(\''+id+'\')">Cancel lane</button>'
-   :'<span style="color:var(--gray);font-size:12.5px">Cancelled '+fmtDate(l.actualEnd)+' · new loads no longer match</span>')+
+   ?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">✎ Edit</button>'
+    +(canRenew?'<button class="abtn" onclick="openRenewDrawer(\''+id+'\')">↻ Renew</button>':'')
+    +(canRenegotiate?'<button class="abtn" onclick="openRenegotiateDrawer(\''+id+'\')">⇄ Renegotiate</button>':'')
+    +'<button class="abtn" style="color:var(--red);border-color:#F3C6C6" onclick="openCancelModal(\''+id+'\')">Cancel lane</button>'
+   :'<span style="color:var(--gray);font-size:12.5px">Cancelled '+fmtDate(l.actualEnd)+(l.cancelReason?' · '+esc(l.cancelReason):'')+' · new loads no longer match</span>')+
  '</div>';
  let html='';
  if(isExpiringSoon(l)){
   const days=Math.round((new Date(l.plannedEnd)-new Date(TODAY))/86400000);
   html+='<div class="conflictbanner"><div class="t">⚠️ Expiring soon</div><div class="d">Planned end is '+fmtDate(l.plannedEnd)+' — '+days+' day'+(days===1?'':'s')+' away with no renewal yet. Renew or extend to keep matching new loads.</div></div>';
  }
- if(l.renewedFrom||l.renewedTo){
+ const childLane=renewedToLane(l.id);
+ if(l.renewedFrom||childLane){
   html+='<div class="provbanner">';
-  if(l.renewedFrom){const p=LANES[l.renewedFrom];html+='Renewed from <span class="provlink" onclick="openLaneDrawer(\''+l.renewedFrom+'\')">'+esc(p?p.code:l.renewedFrom)+' (v'+(l.version-1)+')</span>. ';}
-  if(l.renewedTo){const n=LANES[l.renewedTo];html+='Renewed forward to <span class="provlink" onclick="openLaneDrawer(\''+l.renewedTo+'\')">'+esc(n?n.code:l.renewedTo)+' (v'+(l.version+1)+')</span>.';}
+  if(l.renewedFrom){const p=LANES[l.renewedFrom];html+=provVerb(p)+' from <span class="provlink" onclick="openLaneDrawer(\''+l.renewedFrom+'\')">'+esc(p?p.code:l.renewedFrom)+' (v'+(l.version-1)+')</span>. ';}
+  if(childLane){html+=provVerb(l)+' forward to <span class="provlink" onclick="openLaneDrawer(\''+childLane.id+'\')">'+esc(childLane.code)+' (v'+childLane.version+')</span>.';}
   html+='</div>';
  }
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
@@ -405,6 +413,7 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
    drow('Actual start',l.actualStart?fmtDate(l.actualStart):'— not started')+
    drow('Actual end',l.actualEnd?fmtDate(l.actualEnd):'—')+
    (l.actualEnd?drow('Cancellation reason',l.cancelReason?esc(l.cancelReason):'— not given'):'')+
+   (l.actualEnd&&l.liableParty?drow('Liable party',esc(l.liableParty)):'')+
    drow('Drop pickup',l.dropPickup?'Yes':'No — live')+
    drow('Drop delivery',l.dropDelivery?'Yes':'No — live')+
  '</div>';
@@ -472,11 +481,52 @@ function toggleBcoUnknown(){const cb=$('in_bcounknown').checked;$('in_bco').disa
 
 function openCreateDrawer(){SELECTED=null;renderForm('create',null);$('drawer').classList.add('open');}
 function openEditDrawer(id){renderForm('edit',id);$('drawer').classList.add('open');}
-function openRenewDrawer(id){renderForm('renew',id);$('drawer').classList.add('open');}
+function openRenewDrawer(id){renderForm('renew',id,false);$('drawer').classList.add('open');}
+function openRenegotiateDrawer(id){renderForm('renew',id,true);$('drawer').classList.add('open');}
 
-function formFieldsHTML(v,locked){
+let RENEW_OLD=null;
+function renewBannerHTML(l,renegotiate){
+ if(renegotiate){
+  return 'Renegotiating <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving ends '+esc(l.code)+' today (cancelled · reason "Renegotiation") and creates v'+(l.version+1)+' starting today with the new terms, linked back via <code>renewed_from_lane_id</code>. No gap.';
+ }
+ return 'Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). '+esc(l.code)+' is untouched and keeps running to its planned end ('+fmtDate(l.plannedEnd)+') — saving creates v'+(l.version+1)+' as a new lane linked back via <code>renewed_from_lane_id</code>. A gap between them is fine.';
+}
+function onRenegotiateToggle(){
+ const reneg=$('in_renegotiate').checked;
+ const startEl=$('in_start');
+ if(reneg){
+  if(!startEl.disabled)startEl.dataset.prev=startEl.value;
+  startEl.value=TODAY;startEl.disabled=true;
+  $('starthint').textContent='Locked — renegotiation takes effect today.';
+ } else {
+  startEl.disabled=false;startEl.value=startEl.dataset.prev||'';
+  $('starthint').textContent=RENEW_OLD?('Must be on/after '+fmtDate(RENEW_OLD.plannedEnd)+' — '+esc(RENEW_OLD.code)+"'s planned end. A gap is fine; it just can't overlap."):'';
+ }
+ $('f_liableparty').style.display=reneg?'':'none';
+ if(RENEW_OLD)$('renewbanner').innerHTML=renewBannerHTML(RENEW_OLD,reneg);
+ const btn=$('dfootSubmit');if(btn)btn.textContent=reneg?'Save renegotiation':'Renew lane';
+}
+
+function formFieldsHTML(v,locked,renewCtx){
+ renewCtx=renewCtx||null;
+ const startLocked=!!(renewCtx&&renewCtx.renegotiate);
+ const startVal=startLocked?TODAY:(v.plannedStart||'');
+ const startDisabled=!!v.actualStart||startLocked;
+ let startHint='';
+ if(startLocked)startHint='Locked — renegotiation takes effect today.';
+ else if(renewCtx)startHint='Must be on/after '+fmtDate(renewCtx.oldLane.plannedEnd)+' — '+esc(renewCtx.oldLane.code)+"'s planned end. A gap is fine; it just can't overlap.";
+ else if(v.actualStart)startHint='Locked — loads have already matched against this start date';
  return ''+
  '<div id="conflictzone"></div>'+
+ (renewCtx?(
+   '<div class="formsect" style="background:#FBFDFC;border:1px solid var(--line);border-radius:9px;padding:10px 12px">'+
+    '<label class="checkrow"><input type="checkbox" id="in_renegotiate" '+(renewCtx.renegotiate?'checked':'')+' onchange="onRenegotiateToggle()"> This is a renegotiation</label>'+
+    '<div class="hint" style="margin-top:4px">Terms changed mid-contract — ends '+esc(renewCtx.oldLane.code)+' today (cancelled) and starts the new terms today, no gap. Leave unchecked for a standard renewal, which lets '+esc(renewCtx.oldLane.code)+' run out its planned window untouched.</div>'+
+    '<div class="ffield" id="f_liableparty" style="margin-top:10px;'+(renewCtx.renegotiate?'':'display:none')+'"><label>Cancellation liable party *</label>'+
+     '<select id="in_liableparty"><option value="">— select —</option><option value="Carrier">Carrier</option><option value="Customer">Customer</option></select>'+
+     '<div class="hint">Who\'s liable for ending '+esc(renewCtx.oldLane.code)+' early.</div><div class="err" id="e_liableparty"></div></div>'+
+   '</div>'
+ ):'')+
  '<div class="ffield" id="f_customer"><label>Customer *</label><select id="in_customer" '+(locked?'disabled':'')+'>'+
    '<option value="">— select customer —</option>'+
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
@@ -490,7 +540,7 @@ function formFieldsHTML(v,locked){
    '<div class="err" id="e_bco"></div></div>'+
   '<div class="ffield"><label>Lane code</label><input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'" '+(locked?'disabled':'')+'><div class="hint">'+(locked?'Locked — code can\'t change on an existing lane':'Human-readable — blank auto-generates one')+'</div></div></div>'+
 
- '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+(v.plannedStart||'')+'" '+(v.actualStart?'disabled':'')+'>'+(v.actualStart?'<div class="hint">Locked — loads have already matched against this start date</div>':'')+'<div class="err" id="e_start"></div></div>'+
+ '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+startVal+'" '+(startDisabled?'disabled':'')+'><div class="hint" id="starthint">'+startHint+'</div><div class="err" id="e_start"></div></div>'+
   '<div class="ffield"><label>Planned end *</label><input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"><div class="err" id="e_end"></div></div></div>'+
 
  '<div class="formsect"><span class="lbl">OD PAIRS</span><div id="odlist"></div><div class="addod" onclick="addOD()">＋ Add OD pair</div></div>'+
@@ -501,19 +551,21 @@ function formFieldsHTML(v,locked){
  '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
 }
 
-function renderForm(mode,id){
+function renderForm(mode,id,renegotiate){
+ renegotiate=!!renegotiate;
  const l=id?LANES[id]:null;
- const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):'Renew lane — '+esc(l.code);
+ RENEW_OLD=(mode==='renew')?l:null;
+ const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):(renegotiate?'Renegotiate lane — '+esc(l.code):'Renew lane — '+esc(l.code));
  $('dhead').innerHTML='<div class="top"><b style="font-size:15px">'+title+'</b><span class="x" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">✕</span></div>'+
   (mode==='create'?'<div class="meta">Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.</div>':'');
 
  const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
-  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
  let html='';
- if(mode==='renew'){html+='<div class="provbanner">Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving closes '+esc(l.code)+' with an actual end date the day before the new planned start, and creates v'+(l.version+1)+' linked back via <code>renewed_from_lane_id</code>.</div>';}
- html+=formFieldsHTML(v,mode==='edit');
+ if(mode==='renew'){html+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
+ html+=formFieldsHTML(v,mode==='edit',mode==='renew'?{oldLane:l,renegotiate}:null);
  $('dtl').innerHTML=html;
 
  ODCOUNT=0;$('odlist').innerHTML='';
@@ -521,7 +573,7 @@ function renderForm(mode,id){
 
  $('dfoot').style.display='flex';
  $('dfoot').innerHTML='<button class="abtn" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">Cancel</button>'+
-  '<button class="abtn primary" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+(mode==='create'?'Create lane':mode==='edit'?'Save changes':'Renew lane')+'</button>';
+  '<button class="abtn primary" id="dfootSubmit" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+(mode==='create'?'Create lane':mode==='edit'?'Save changes':(renegotiate?'Save renegotiation':'Renew lane'))+'</button>';
 }
 
 function clearErrors(){document.querySelectorAll('.err').forEach(e=>e.textContent='');}
@@ -546,6 +598,11 @@ function submitForm(mode,id){
  if(!start){showErr('e_start','Planned start is required.');ok=false;}
  if(!end){showErr('e_end','Planned end is required.');ok=false;}
  if(start&&end&&end<start){showErr('e_end','End date can’t be before the start date.');ok=false;}
+ if(mode==='renew'){
+  const isReneg=$('in_renegotiate').checked;
+  if(!isReneg&&start&&start<LANES[id].plannedEnd){showErr('e_start',"Must be on/after "+fmtDate(LANES[id].plannedEnd)+" — "+esc(LANES[id].code)+"'s planned end, so a load can't match two lanes.");ok=false;}
+  if(isReneg&&!$('in_liableparty').value){showErr('e_liableparty','Pick who is liable — carrier or customer.');ok=false;}
+ }
  odRaw.forEach(p=>{const errEl=p._el.querySelector('.err');if(!p.origin&&!p.destination){errEl.textContent='Needs an origin or a destination — can’t wildcard both.';ok=false;}else errEl.textContent='';});
  if(!ok)return;
 
@@ -565,7 +622,7 @@ function submitForm(mode,id){
   const newId=idFromCode(code);
   LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:1,
    plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
-   loadType:null,dropPickup,dropDelivery,renewedFrom:null,renewedTo:null,od:cleanOd,matched:[]};
+   loadType:null,dropPickup,dropDelivery,renewedFrom:null,od:cleanOd,matched:[]};
   renderList();openLaneDrawer(newId);
   toast('Lane created — Apollo will begin auto-matching loads within this window.');
  } else if(mode==='edit'){
@@ -574,15 +631,23 @@ function submitForm(mode,id){
   toast('Saved — no new lane version created.');
  } else if(mode==='renew'){
   const old=LANES[id];
-  const closeDate=prevDay(start)||TODAY;
-  old.actualEnd=closeDate;
+  const isReneg=$('in_renegotiate').checked;
   const newId=idFromCode(code);
-  old.renewedTo=newId;
-  LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:old.version+1,
-   plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
-   loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,renewedTo:null,od:cleanOd,matched:[]};
-  renderList();openLaneDrawer(newId);
-  toast(esc(old.code)+' cancelled · renewed as '+esc(code)+' (v'+LANES[newId].version+') — history preserved.');
+  if(isReneg){
+   const liableParty=$('in_liableparty').value;
+   old.actualEnd=TODAY;old.cancelReason='Renegotiation';old.liableParty=liableParty;
+   LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:old.version+1,
+    plannedStart:TODAY,plannedEnd:end,actualStart:TODAY,actualEnd:null,
+    loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,od:cleanOd,matched:[]};
+   renderList();openLaneDrawer(newId);
+   toast(esc(old.code)+' cancelled (renegotiation) · new terms on '+esc(code)+' (v'+LANES[newId].version+') start today.');
+  } else {
+   LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:old.version+1,
+    plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
+    loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,od:cleanOd,matched:[]};
+   renderList();openLaneDrawer(newId);
+   toast(esc(code)+' created — renewed from '+esc(old.code)+' (v'+LANES[newId].version+'); '+esc(old.code)+' continues unchanged until it expires.');
+  }
  }
 }
 
