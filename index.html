@@ -59,9 +59,11 @@ button{font-family:inherit}
 .p-dispatched{background:var(--chip-dispatched-bg);color:var(--chip-dispatched-fg)}
 .p-completed{background:var(--chip-completed-bg);color:var(--chip-completed-fg)}
 
+.searchrow{display:flex;align-items:center;gap:16px;margin-top:12px}
+
 /* Search (131:2540): bg background/low #E6EFFA, min-h 40, padding 10/4, radius md(10), gap 8,
    20px icon, placeholder text Input label/Muted #45556C 14px medium — verified via get_design_context */
-.searchwrap{position:relative;margin-top:12px;max-width:440px}
+.searchwrap{position:relative;max-width:440px;flex:1 1 440px;min-width:0}
 .searchbox{background:var(--surface-low);display:flex;align-items:center;gap:8px;min-height:40px;padding:4px 10px;border-radius:10px}
 .searchbox svg{flex:none;color:var(--text-muted)}
 .searchbox input{border:none;outline:none;background:transparent;flex:1;font-size:14px;font-weight:500;font-family:inherit;color:var(--ink2);min-width:0}
@@ -90,7 +92,7 @@ button{font-family:inherit}
 .actheadrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .actheadrow .desc{font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--gray)}
 .actheadrow .desc .hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-muted);margin-left:4px}
-.toolbar{display:flex;align-items:center;gap:18px;flex:none}
+.toolbar{margin-left:auto;display:flex;align-items:center;gap:18px;flex:none}
 
 /* Switch (53:824): track 48x24 radius md(10), padding 2; thumb is a 27x20 rounded-sm(8) rect (not a circle);
    off track = Icon/Muted #99A1AF, on track = Icon/Primary #00786F — verified via get_design_context */
@@ -182,21 +184,16 @@ svg.icon{display:block}
       <h1>Audit Log</h1>
       <div class="pagedesc">A single history of who or what changed a load, internal movement, or shift — and why.</div>
 
-      <div class="searchwrap" id="searchwrap">
-        <div class="searchbox">
-          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input id="searchInput" placeholder="Search by load #, internal movement, or driver…" autocomplete="off" oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)">
-          <button class="clearbtn" id="clearBtn" onclick="clearSelection()">✕</button>
+      <div class="searchrow">
+        <div class="searchwrap" id="searchwrap">
+          <div class="searchbox">
+            <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="searchInput" placeholder="Search by load #, internal movement, or driver…" autocomplete="off" oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)">
+            <button class="clearbtn" id="clearBtn" onclick="clearSelection()">✕</button>
+          </div>
+          <div class="resultsdrop" id="results"></div>
         </div>
-        <div class="resultsdrop" id="results"></div>
-      </div>
 
-      <div class="contextcard" id="contextcard"></div>
-    </div>
-
-    <div id="activitywrap">
-      <div class="actheadrow">
-        <div class="desc" id="feedDesc"></div>
         <div class="toolbar">
           <button class="legendbtn" onclick="toggleLegend()">
             <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
@@ -210,6 +207,14 @@ svg.icon{display:block}
             Show operational events
           </label>
         </div>
+      </div>
+
+      <div class="contextcard" id="contextcard"></div>
+    </div>
+
+    <div id="activitywrap">
+      <div class="actheadrow">
+        <div class="desc" id="feedDesc"></div>
       </div>
 
       <div id="legend">
