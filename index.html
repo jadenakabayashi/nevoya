@@ -48,9 +48,9 @@ button{font-family:inherit}
 #rail .tip{position:absolute;left:52px;background:var(--ink);color:#fff;font-size:12px;letter-spacing:.3px;font-weight:500;padding:6px 8px;border-radius:8px;white-space:nowrap;display:none;z-index:50}
 #rail .ric:hover .tip{display:block}
 
-#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow-y:auto}
 
-/* page header */
+/* page header — scrolls away with the rest of the page; only .searchrow stays pinned */
 #pagehead{padding:20px 28px 0;flex:none}
 #pagehead h1{font-size:22px;font-weight:600;color:var(--ink2)}
 .pagedesc{color:var(--text-muted);font-size:13px;margin-top:6px;max-width:560px;line-height:1.5}
@@ -59,7 +59,9 @@ button{font-family:inherit}
 .p-dispatched{background:var(--chip-dispatched-bg);color:var(--chip-dispatched-fg)}
 .p-completed{background:var(--chip-completed-bg);color:var(--chip-completed-fg)}
 
-.searchrow{display:flex;align-items:center;gap:16px;margin-top:26px}
+/* sticky action bar: stays pinned to the top of #main's scroll area once the page-framing copy
+   above it scrolls out of view */
+.searchrow{position:sticky;top:0;z-index:10;background:var(--bg);display:flex;align-items:center;gap:16px;margin-top:26px;padding:14px 28px;border-bottom:1px solid transparent}
 
 /* Search (131:2540): bg background/low #E6EFFA, min-h 40, padding 10/4, radius md(10), gap 8,
    20px icon, placeholder text Input label/Muted #45556C 14px medium — verified via get_design_context */
@@ -82,13 +84,14 @@ button{font-family:inherit}
 .resultempty{padding:14px;font-size:13px;color:var(--gray);text-align:center}
 
 /* selected-entity context card, shown below search once an entity is chosen */
-.contextcard{display:none;align-items:center;gap:10px;margin-top:12px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:13.5px;flex-wrap:wrap}
+.contextwrap{padding:0 28px}
+.contextcard{display:none;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:13.5px;flex-wrap:wrap}
 .contextcard b{color:var(--ink2);font-weight:600}
 .ctxsub{color:var(--gray);font-size:12.5px}
 .clearctx{margin-left:auto;border:none;background:transparent;color:var(--teal);font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:6px}
 .clearctx:hover{background:var(--surface-lowest)}
 
-#activitywrap{flex:1;overflow-y:auto;padding:8px 28px 60px}
+#activitywrap{padding:12px 28px 60px}
 .actheadrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .actheadrow .desc{font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--gray)}
 .actheadrow .desc .hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-muted);margin-left:4px}
@@ -183,34 +186,34 @@ svg.icon{display:block}
     <div id="pagehead">
       <h1>Audit Log</h1>
       <div class="pagedesc">A single history of who or what changed a load, internal movement, or shift — and why.</div>
+    </div>
 
-      <div class="searchrow">
-        <div class="searchwrap" id="searchwrap">
-          <div class="searchbox">
-            <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input id="searchInput" placeholder="Search by load #, internal movement, or driver…" autocomplete="off" oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)">
-            <button class="clearbtn" id="clearBtn" onclick="clearSelection()">✕</button>
-          </div>
-          <div class="resultsdrop" id="results"></div>
+    <div class="searchrow">
+      <div class="searchwrap" id="searchwrap">
+        <div class="searchbox">
+          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="searchInput" placeholder="Search by load #, internal movement, or driver…" autocomplete="off" oninput="onSearchInput()" onfocus="onSearchFocus()" onkeydown="onSearchKey(event)">
+          <button class="clearbtn" id="clearBtn" onclick="clearSelection()">✕</button>
         </div>
-
-        <div class="toolbar">
-          <button class="legendbtn" onclick="toggleLegend()">
-            <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
-            Badge key
-          </button>
-          <label class="swrow">
-            <span class="switch">
-              <input type="checkbox" id="opToggle" onchange="renderFeed()">
-              <span class="track"><span class="thumb"></span></span>
-            </span>
-            Show operational events
-          </label>
-        </div>
+        <div class="resultsdrop" id="results"></div>
       </div>
 
-      <div class="contextcard" id="contextcard"></div>
+      <div class="toolbar">
+        <button class="legendbtn" onclick="toggleLegend()">
+          <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+          Badge key
+        </button>
+        <label class="swrow">
+          <span class="switch">
+            <input type="checkbox" id="opToggle" onchange="renderFeed()">
+            <span class="track"><span class="thumb"></span></span>
+          </span>
+          Show operational events
+        </label>
+      </div>
     </div>
+
+    <div class="contextwrap"><div class="contextcard" id="contextcard"></div></div>
 
     <div id="activitywrap">
       <div class="actheadrow">
