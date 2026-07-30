@@ -6,7 +6,7 @@
 <title>Lanes · Create a Lane — Apollo by Nevoya</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--teal:#1B4E4C;--teal-soft:#DCEFE9;--ink:#0F172A;--gray:#64748B;--line:#E2E8F0;--bg:#F7F7F8;
+:root{--teal:#00786F;--teal-soft:#DCEFE9;--ink:#0F172A;--gray:#64748B;--line:#E2E8F0;--bg:#F7F7F8;
 --yellow:#F5E077;--purple:#E4DDF7;--red:#DC2626;--redsoft:#FDECEC;--orange:#E67E22;--green:#27AE60;--greensoft:#E7F6EC;--warnbg:#FCF6DE;--blue:#1D4ED8;--bluesoft:#E0EAFB}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var(--bg);height:100vh;overflow:hidden;font-size:14px}
@@ -50,6 +50,7 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .lanerow:hover{background:#F8FAFC}
 .lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flagexp{background:var(--warnbg);color:#92400E;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none}
+.provbadge{background:#F1F5F9;color:var(--gray);font-size:10.5px;font-weight:500;padding:1px 8px;border-radius:10px;white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:3px}
 .lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .od{color:#334155;overflow:hidden}
 .lanerow .od .odcell{display:flex;align-items:center;gap:5px;min-width:0}
@@ -78,14 +79,13 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 #dtl{flex:1;overflow-y:auto;padding:14px 18px 24px}
 #dtl .sect{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:10px;display:flex}
 #dtl .sect span:last-child{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none}
-#dfoot{flex:none;border-top:1px solid var(--line);padding:12px 18px;display:none;gap:8px;justify-content:flex-end;background:#fff}
 .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin-bottom:6px}
 .dr{display:flex;flex-direction:column;gap:2px;font-size:13px}
 .dr .k{font-size:11px;color:var(--gray);letter-spacing:.3px}
 .dr .v{color:var(--ink)}
 .odview{padding:9px 11px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:13.5px;background:#FBFDFC}
 .odview i{color:#94A3B8;font-style:normal;font-size:12px}
-.provbanner{background:#F1F5F9;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#334155;margin-bottom:14px;line-height:1.5}
+.provbanner{background:#F6F8FB;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#334155;line-height:1.5}
 .provlink{color:var(--teal);cursor:pointer;font-weight:500}
 .provlink:hover{text-decoration:underline}
 .mrow{display:grid;grid-template-columns:64px 96px 84px 1fr 64px 64px;gap:8px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
@@ -95,38 +95,74 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .mweekhead{padding:10px 0 4px;font-size:11.5px;font-weight:500;color:#334155}
 .mweekhead .n{color:var(--gray);font-weight:400;margin-left:6px}
 /* form */
-.formsect{margin-bottom:16px}
-.formsect>.lbl{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:500;margin-bottom:8px;display:block}
-.frow{display:flex;gap:10px;margin-bottom:14px}
-.ffield{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
-.frow .ffield{margin-bottom:0}
-.ffield label{font-size:12px;color:#475569;font-weight:500}
-.ffield input[type=text],.ffield input[type=date],.ffield select,.ffield textarea{border:1px solid #CBD5E1;border-radius:7px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%}
-.ffield input:focus,.ffield select:focus{border-color:var(--teal)}
-.ffield input:disabled{background:#F1F5F9;color:var(--gray);cursor:not-allowed}
-.ffield .err{color:var(--red);font-size:11.5px;min-height:14px}
-.ffield .hint{font-size:11px;color:#94A3B8}
-.checkrow{display:flex;align-items:center;gap:6px;font-size:13px;color:#334155}
-.odrow{border:1px solid var(--line);border-radius:9px;padding:10px 12px 4px;margin-bottom:8px;position:relative;background:#FBFDFC}
-.odrow .odgrid{display:flex;align-items:center;gap:8px}
-.odrow .arrow{color:var(--gray);margin-top:16px}
-.odrow .rm{position:absolute;top:8px;right:8px;color:var(--gray);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:5px}
-.odrow .rm:hover{background:#F1F5F9;color:var(--red)}
-.odrow .hint{font-size:11px;color:#94A3B8;margin-top:4px}
-.addod{border:1px dashed #CBD5E1;border-radius:8px;padding:8px;text-align:center;font-size:12.5px;color:var(--teal);cursor:pointer;background:#fff}
-.addod:hover{background:#F4FAF7}
-.conflictbanner{background:var(--warnbg);border:1px solid #E8C34A;border-radius:9px;padding:12px 14px;margin-bottom:16px}
+.hint{font-size:10px;line-height:12px;font-weight:500;letter-spacing:.3px;color:#45556C}
+.err{color:var(--red);font-size:11.5px;min-height:14px}
+.conflictbanner{background:var(--warnbg);border:1px solid #E8C34A;border-radius:9px;padding:12px 14px}
 .conflictbanner .t{font-weight:500;font-size:13.5px;display:flex;align-items:center;gap:6px}
 .conflictbanner .d{font-size:12.5px;color:#7C5A00;margin-top:5px;line-height:1.5}
 .conflictbanner .btns{margin-top:9px}
-/* modal + toast */
+
+/* ---- Figma Dialog component (Lanes — Edit lane / Cancel lane / Remove OD pair, node 15119:7583 etc.) ---- */
+.dlg{background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+.dlg .dhd{padding:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:none}
+.dlg .dhd .tw{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dlg .dhd .ttl{font-size:20px;line-height:28px;font-weight:600;color:#0F172B}
+.dlg .dhd .sub{font-size:14px;line-height:20px;font-weight:500;color:#45556C}
+.dlg .dhd .x{cursor:pointer;color:#45556C;min-width:32px;min-height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}
+.dlg .dhd .x:hover{background:#F6F8FB}
+.dlg .dbd{padding:12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.dlg .dft{padding:12px;display:flex;gap:8px;flex:none}
+.dlg .dft .grp{flex:1;display:flex;gap:16px;justify-content:flex-end}
 #ovl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:100}
 #ovl.show{display:flex}
-.modal{background:#fff;border-radius:12px;width:440px;max-width:92vw;max-height:86vh;overflow-y:auto}
-.modal .mh{display:flex;padding:16px 20px 4px;align-items:center}
-.modal .mh b{font-size:16px}
-.modal .mh .x{margin-left:auto;cursor:pointer;color:var(--gray)}
-.modal .mb{padding:10px 20px 18px}
+#ovl .dlg{width:444px;max-width:92vw;max-height:88vh}
+#formOvl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:90}
+#formOvl.show{display:flex}
+#formOvl .dlg{width:600px;max-width:92vw;max-height:88vh}
+
+/* Button (Button/16, node 71:95) */
+.fbtn{border-radius:10px;padding:10px 16px;font-size:16px;line-height:20px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.fbtn.primary{background:var(--teal);color:#fff;border:none}
+.fbtn.primary:hover{opacity:.9}
+.fbtn.disruptive{background:#E7000B;color:#fff;border:none}
+.fbtn.disruptive:hover{opacity:.9}
+.fbtn.outline{background:#fff;color:#1D293D;border:1px solid #CAD5E2}
+.fbtn.outline:hover{background:#F6F8FB}
+.fbtn.full{width:100%}
+
+/* Text input (node 54:68) */
+.ti{display:flex;flex-direction:column;gap:2px;width:100%}
+.ti.disabled{opacity:.5}
+.ti .row{background:#E6EFFA;border-radius:10px;min-height:40px;display:flex;align-items:center;gap:8px;padding:4px 10px}
+.ti .txt{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.ti label{font-size:12px;line-height:14px;font-weight:500;letter-spacing:.1px;color:#314158}
+.ti select,.ti input{border:none;background:transparent;outline:none;font-size:14px;line-height:18px;font-weight:500;color:#1D293D;padding:0;width:100%;font-family:inherit;min-width:0}
+.ti select{appearance:none;-webkit-appearance:none;cursor:pointer}
+.ti input[type=date]::-webkit-calendar-picker-indicator{position:absolute;right:0;width:34px;height:34px;opacity:0;cursor:pointer}
+.ti input[type=date]{position:relative}
+.ti .icon{flex:none;color:#1D293D;width:20px;height:20px}
+.trow2{display:flex;gap:8px;width:100%;align-items:flex-start}
+.trow2>.ti{flex:1;min-width:0}
+
+/* OD pair row + Icon button (trash, node 81:663) */
+.odrow{display:flex;flex-direction:column;gap:4px;width:100%}
+.odrow .trow2{align-items:center}
+.trashbtn{border:1px solid #CAD5E2;background:#fff;border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;color:#1D293D}
+.trashbtn:hover{background:#F6F8FB}
+
+/* Checkbox (node 53:112) */
+.cb2{display:flex;align-items:center;gap:8px;height:32px;cursor:pointer}
+.cb2 input{appearance:none;-webkit-appearance:none;width:24px;height:24px;border:2px solid #CAD5E2;border-radius:6px;background:#fff;cursor:pointer;flex:none;position:relative;margin:0}
+.cb2 input:checked{background:var(--teal);border-color:var(--teal)}
+.cb2 input:checked::after{content:'';position:absolute;left:7px;top:3px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.cb2 span{font-size:14px;line-height:20px;font-weight:500;color:#314158}
+.cb2 input:checked+span{font-weight:600;color:var(--teal)}
+
+/* dialog body section titles (Title/Medium 16px) */
+.fsect{display:flex;flex-direction:column;gap:10px;width:100%}
+.fsect>.ttl2{font-size:16px;line-height:20px;font-weight:600;color:#0F172B}
+.fgroup{display:flex;flex-direction:column;gap:16px;width:100%}
+
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
 </style>
 </head>
@@ -148,7 +184,7 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
           <h1>Lanes</h1>
           <div class="sub" id="lanesub">— lanes</div>
         </div>
-        <button class="abtn primary" style="margin-left:auto" onclick="openCreateDrawer()">＋ Create lane</button>
+        <button class="abtn primary" style="margin-left:auto" onclick="openCreateModal()">＋ Create lane</button>
       </div>
     </div>
     <div class="toolbar">
@@ -160,17 +196,28 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
   <div id="drawer">
     <div id="dhead"></div>
     <div id="dtl"></div>
-    <div id="dfoot"></div>
   </div>
 </div>
 
-<div id="ovl"><div class="modal" id="modalbox"></div></div>
+<div id="formOvl"><div class="dlg" id="formModalBox"></div></div>
+<div id="ovl"><div class="dlg" id="modalbox"></div></div>
 
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
+const ICON_X='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+const ICON_CHEVRON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const ICON_CALENDAR='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+const ICON_TRASH='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>';
+const ICON_PLUS='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+function dlgHead(title,subtitle,closeId){
+ return '<div class="dhd"><div class="tw"><div class="ttl">'+title+'</div>'+(subtitle?'<div class="sub">'+subtitle+'</div>':'')+'</div><span class="x" id="'+(closeId||'dlgx')+'">'+ICON_X+'</span></div>';
+}
+function dlgFoot(buttonsHtml){
+ return '<div class="dft"><div class="grp">'+buttonsHtml+'</div></div>';
+}
 const TODAY='2026-07-14';
 const CUSTOMERS=['Coca-Cola','Amazon Relay','C.H. Robinson','ITS Logistics','Uber Freight','RXO','Arrive Logistics','ECHO','Wayfair','APEX'];
 const LOCATIONS=['Waco - Envases','Houston - Coke','Houston Parking','Waco Parking','Dallas Parking','Garland, TX','Sealy, TX','Amazon Coppell, TX','Amazon Houston, TX','Redlands, CA','Moreno Valley, CA','Eastvale, CA','Tracy, CA','Stockton, CA','Long Beach Port','Victorville, CA','Phoenix, AZ','Baytown, TX','Pasadena, TX'];
@@ -321,9 +368,6 @@ function findConflict(customer,od,start,end,excludeIds){excludeIds=excludeIds||[
  return null;}
 function idFromCode(code){let base=(code||'LANE').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'LANE';let id=base,n=1;while(LANES[id]){n++;id=base+'-'+n;}return id;}
 function autoCode(customer){return (customer||'LANE').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()+'-'+Math.floor(Math.random()*900+100);}
-function suggestRenewCode(code){const m=code.match(/-V(\d+)$/i);if(m)return code.replace(/-V\d+$/i,'')+'-V'+(+m[1]+1);
- const m2=code.match(/(\d+)$/);if(m2){const n=(+m2[1]+1);return code.slice(0,-m2[1].length)+String(n).padStart(m2[1].length,'0');}
- return code+'-V2';}
 function deriveStatus(l){
  if(l.actualEnd)return 'Cancelled';
  if(!l.actualStart)return 'Scheduled';
@@ -332,6 +376,13 @@ function deriveStatus(l){
 }
 function renewedToLane(id){return Object.values(LANES).find(x=>x.renewedFrom===id)||null;}
 function provVerb(endedLane){return(endedLane&&endedLane.cancelReason==='Renegotiation')?'Renegotiated':'Renewed';}
+function renewalBadge(l,compact){
+ if(!l.renewedFrom)return '';
+ const parent=LANES[l.renewedFrom];
+ const verb=provVerb(parent);
+ const icon=verb==='Renegotiated'?'⇄':'↻';
+ return '<span class="provbadge" title="'+verb+' from '+esc(parent?parent.code:l.renewedFrom)+'">'+(compact?icon:icon+' '+verb)+'</span>';
+}
 function isExpiringSoon(l){if(deriveStatus(l)!=='Active'||!l.plannedEnd||renewedToLane(l.id))return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
 
 /* ---------- list ---------- */
@@ -346,7 +397,7 @@ function statusPill(l){const st=deriveStatus(l);const cls='p-'+st.toLowerCase();
 function pickupDropLabel(l){if(l.dropPickup&&l.dropDelivery)return 'Pick-up & Delivery';if(l.dropPickup)return 'Pick-up';if(l.dropDelivery)return 'Delivery';return '—';}
 function rowHTML(id,showCust){const l=LANES[id];
  return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
- '<div class="code">'+esc(l.code)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+
+ '<div class="code">'+esc(l.code)+renewalBadge(l,true)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+
  '<div>'+statusPill(l)+'</div>'+
  (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
  '<div class="od">'+odSummary(l)+'</div>'+
@@ -376,20 +427,20 @@ function renderList(){renderChips();updateSub();
 }
 
 /* ---------- drawer: view mode ---------- */
-function openLaneDrawer(id){SELECTED=id;$('dfoot').style.display='none';renderDrawerView(id);$('drawer').classList.add('open');}
-function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfoot').style.display='none';renderList();}
+function openLaneDrawer(id){SELECTED=id;renderDrawerView(id);$('drawer').classList.add('open');}
+function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;renderList();}
 function renderDrawerView(id){const l=LANES[id];if(!l)return;
  const status=deriveStatus(l);
  const open=status!=='Cancelled';
  const hasSuccessor=!!renewedToLane(l.id);
  const canRenew=open&&!hasSuccessor&&(status==='Expired'||isExpiringSoon(l));
  const canRenegotiate=open&&!hasSuccessor&&status==='Active';
- $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
+ $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+renewalBadge(l)+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
  '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
  '<div class="btns">'+(open
-   ?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">✎ Edit</button>'
-    +(canRenew?'<button class="abtn" onclick="openRenewDrawer(\''+id+'\')">↻ Renew</button>':'')
-    +(canRenegotiate?'<button class="abtn" onclick="openRenegotiateDrawer(\''+id+'\')">⇄ Renegotiate</button>':'')
+   ?'<button class="abtn" onclick="openEditModal(\''+id+'\')">✎ Edit</button>'
+    +(canRenew?'<button class="abtn" onclick="openRenewModal(\''+id+'\')">↻ Renew</button>':'')
+    +(canRenegotiate?'<button class="abtn" onclick="openRenegotiateModal(\''+id+'\')">⇄ Renegotiate</button>':'')
     +'<button class="abtn" style="color:var(--red);border-color:#F3C6C6" onclick="openCancelModal(\''+id+'\')">Cancel lane</button>'
    :'<span style="color:var(--gray);font-size:12.5px">Cancelled '+fmtDate(l.actualEnd)+(l.cancelReason?' · '+esc(l.cancelReason):'')+' · new loads no longer match</span>')+
  '</div>';
@@ -436,53 +487,62 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
 }
 function drow(k,v){return '<div class="dr"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
 
-/* ---------- drawer: form mode (create / edit / renew) ---------- */
+/* ---------- form modal (create / edit / renew / renegotiate) ---------- */
 function odRowHTML(idx,origin,destination,existing){
  const oAttrs=existing?' data-orig="'+esc(origin||'')+'" onchange="confirmEditOD(this)"':'';
  const dAttrs=existing?' data-orig="'+esc(destination||'')+'" onchange="confirmEditOD(this)"':'';
- return '<div class="odrow" data-idx="'+idx+'" data-existing="'+(existing?'1':'0')+'"><span class="rm" onclick="removeOD('+idx+')" title="Remove">✕</span>'+
- '<div class="odgrid"><div class="ffield" style="margin-bottom:0"><label>Origin</label><input type="text" list="loclist" data-role="origin" placeholder="— any origin (wildcard) —" value="'+esc(origin||'')+'"'+oAttrs+'></div>'+
- '<span class="arrow">→</span>'+
- '<div class="ffield" style="margin-bottom:0"><label>Destination</label><input type="text" list="loclist" data-role="destination" placeholder="— any destination (wildcard) —" value="'+esc(destination||'')+'"'+dAttrs+'></div></div>'+
+ return '<div class="odrow" data-idx="'+idx+'" data-existing="'+(existing?'1':'0')+'">'+
+ '<div class="trow2">'+
+  '<div class="ti"><div class="row"><div class="txt"><label>Origin*</label>'+
+   '<input type="text" list="loclist" data-role="origin" placeholder="— any origin (wildcard) —" value="'+esc(origin||'')+'"'+oAttrs+'></div>'+
+   '<span class="icon">'+ICON_CHEVRON+'</span></div></div>'+
+  '<div class="ti"><div class="row"><div class="txt"><label>Destination*</label>'+
+   '<input type="text" list="loclist" data-role="destination" placeholder="— any destination (wildcard) —" value="'+esc(destination||'')+'"'+dAttrs+'></div>'+
+   '<span class="icon">'+ICON_CHEVRON+'</span></div></div>'+
+  '<span class="trashbtn" onclick="removeOD('+idx+')" title="Remove">'+ICON_TRASH+'</span>'+
+ '</div>'+
  '<div class="hint">Leave one side blank for a wildcard (e.g. Waco → anywhere). Not both.</div>'+
  '<div class="err" id="oderr'+idx+'"></div></div>';
 }
 let ODCOUNT=0;
-function addOD(origin,destination,existing){ODCOUNT++;$('odlist').insertAdjacentHTML('beforeend',odRowHTML(ODCOUNT,origin,destination,existing));}
+function updateOdCount(){const el=$('odcount');if(el)el.textContent=document.querySelectorAll('.odrow').length;}
+function addOD(origin,destination,existing){ODCOUNT++;$('odlist').insertAdjacentHTML('beforeend',odRowHTML(ODCOUNT,origin,destination,existing));updateOdCount();}
 function removeOD(idx){
  const el=document.querySelector('.odrow[data-idx="'+idx+'"]');
  if(!el)return;
  if(document.querySelectorAll('.odrow').length<=1){toast('A lane needs at least one OD pair.');return;}
  if(el.dataset.existing==='1'){confirmRemoveOD(idx);return;}
- el.remove();
+ el.remove();updateOdCount();
 }
 function confirmRemoveOD(idx){
- $('modalbox').innerHTML='<div class="mh"><b>Remove OD pair?</b><span class="x" onclick="closeModal()">✕</span></div>'+
- '<div class="mb"><div style="font-size:13px;color:#475569;margin-bottom:12px">This OD pair is already part of the saved lane. Removing it can change which loads auto-match going forward.</div>'+
- '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" style="background:var(--red);border-color:var(--red)" onclick="doRemoveOD('+idx+')">Remove OD pair</button></div></div>';
+ $('modalbox').innerHTML=dlgHead('Remove OD pair?')+
+ '<div class="dbd"><p style="font-size:14px;line-height:20px;color:#1D293D;font-weight:500">This OD pair is already part of the saved lane. Removing it can change which loads auto-match going forward.</p></div>'+
+ dlgFoot('<button class="fbtn disruptive" onclick="doRemoveOD('+idx+')">Remove OD pair</button>');
  $('ovl').classList.add('show');
+ $('dlgx').onclick=closeModal;
 }
-function doRemoveOD(idx){closeModal();const el=document.querySelector('.odrow[data-idx="'+idx+'"]');if(el)el.remove();}
+function doRemoveOD(idx){closeModal();const el=document.querySelector('.odrow[data-idx="'+idx+'"]');if(el)el.remove();updateOdCount();}
 function confirmEditOD(inputEl){
  const orig=inputEl.dataset.orig||'';
  const newVal=inputEl.value.trim();
  if(newVal===orig)return;
  const role=inputEl.dataset.role;
- $('modalbox').innerHTML='<div class="mh"><b>Change OD pair?</b><span class="x" id="odeditx">✕</span></div>'+
- '<div class="mb"><div style="font-size:13px;color:#475569;margin-bottom:12px">This OD pair is already part of the saved lane. Changing the '+role+' can change which loads auto-match going forward.</div>'+
- '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="abtn" id="odeditcancel">Cancel</button><button class="abtn primary" id="odeditconfirm">Confirm change</button></div></div>';
+ $('modalbox').innerHTML=dlgHead('Change OD pair?')+
+ '<div class="dbd"><p style="font-size:14px;line-height:20px;color:#1D293D;font-weight:500">This OD pair is already part of the saved lane. Changing the '+role+' can change which loads auto-match going forward.</p></div>'+
+ dlgFoot('<button class="fbtn primary" id="odeditconfirm">Change OD pair</button>');
  $('ovl').classList.add('show');
  const revert=()=>{inputEl.value=orig;closeModal();};
- $('odeditx').onclick=revert;
- $('odeditcancel').onclick=revert;
+ $('dlgx').onclick=revert;
  $('odeditconfirm').onclick=()=>{inputEl.dataset.orig=newVal;closeModal();};
 }
 function toggleBcoUnknown(){const cb=$('in_bcounknown').checked;$('in_bco').disabled=cb;if(cb)$('in_bco').value='';}
 
-function openCreateDrawer(){SELECTED=null;renderForm('create',null);$('drawer').classList.add('open');}
-function openEditDrawer(id){renderForm('edit',id);$('drawer').classList.add('open');}
-function openRenewDrawer(id){renderForm('renew',id,false);$('drawer').classList.add('open');}
-function openRenegotiateDrawer(id){renderForm('renew',id,true);$('drawer').classList.add('open');}
+function openFormModal(){$('formOvl').classList.add('show');}
+function closeFormModal(){$('formOvl').classList.remove('show');}
+function openCreateModal(){SELECTED=null;renderForm('create',null);openFormModal();}
+function openEditModal(id){renderForm('edit',id);openFormModal();}
+function openRenewModal(id){renderForm('renew',id,false);openFormModal();}
+function openRenegotiateModal(id){renderForm('renew',id,true);openFormModal();}
 
 let RENEW_OLD=null;
 function renewBannerHTML(l,renegotiate){
@@ -516,37 +576,57 @@ function formFieldsHTML(v,locked,renewCtx){
  if(startLocked)startHint='Locked — renegotiation takes effect today.';
  else if(renewCtx)startHint='Must be on/after '+fmtDate(renewCtx.oldLane.plannedEnd)+' — '+esc(renewCtx.oldLane.code)+"'s planned end. A gap is fine; it just can't overlap.";
  else if(v.actualStart)startHint='Locked — loads have already matched against this start date';
+ const odCount=(v.od&&v.od.length)?v.od.length:1;
  return ''+
  '<div id="conflictzone"></div>'+
+ '<div class="fsect"><div class="ttl2">Lane details</div><div class="fgroup">'+
  (renewCtx?(
-   '<div class="formsect" style="background:#FBFDFC;border:1px solid var(--line);border-radius:9px;padding:10px 12px">'+
-    '<label class="checkrow"><input type="checkbox" id="in_renegotiate" '+(renewCtx.renegotiate?'checked':'')+' onchange="onRenegotiateToggle()"> This is a renegotiation</label>'+
-    '<div class="hint" style="margin-top:4px">Terms changed mid-contract — ends '+esc(renewCtx.oldLane.code)+' today (cancelled) and starts the new terms today, no gap. Leave unchecked for a standard renewal, which lets '+esc(renewCtx.oldLane.code)+' run out its planned window untouched.</div>'+
-    '<div class="ffield" id="f_liableparty" style="margin-top:10px;'+(renewCtx.renegotiate?'':'display:none')+'"><label>Cancellation liable party *</label>'+
-     '<select id="in_liableparty"><option value="">— select —</option><option value="Carrier">Carrier</option><option value="Customer">Customer</option></select>'+
+   '<div style="background:#F6F8FB;border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:8px">'+
+    '<label class="cb2"><input type="checkbox" id="in_renegotiate" '+(renewCtx.renegotiate?'checked':'')+' onchange="onRenegotiateToggle()"><span>This is a renegotiation</span></label>'+
+    '<div class="hint" style="font-size:11px;line-height:1.5">Terms changed mid-contract — ends '+esc(renewCtx.oldLane.code)+' today (cancelled) and starts the new terms today, no gap. Leave unchecked for a standard renewal, which lets '+esc(renewCtx.oldLane.code)+' run out its planned window untouched.</div>'+
+    '<div class="ti" id="f_liableparty" style="'+(renewCtx.renegotiate?'':'display:none')+'"><div class="row"><div class="txt"><label>Cancellation liable party*</label>'+
+     '<select id="in_liableparty"><option value="">— select —</option><option value="Carrier">Carrier</option><option value="Customer">Customer</option></select></div>'+
+     '<span class="icon">'+ICON_CHEVRON+'</span></div>'+
      '<div class="hint">Who\'s liable for ending '+esc(renewCtx.oldLane.code)+' early.</div><div class="err" id="e_liableparty"></div></div>'+
    '</div>'
  ):'')+
- '<div class="ffield" id="f_customer"><label>Customer *</label><select id="in_customer" '+(locked?'disabled':'')+'>'+
+ '<div class="ti'+(locked?' disabled':'')+'" id="f_customer"><div class="row"><div class="txt"><label>Customer*</label>'+
+   '<select id="in_customer" '+(locked?'disabled':'')+'>'+
    '<option value="">— select customer —</option>'+
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
- '</select>'+(locked?'<div class="hint">Locked — customer can\'t change on an existing lane. Renew or create a new lane instead.</div>':'')+'<div class="err" id="e_customer"></div></div>'+
+   '</select></div><span class="icon">'+ICON_CHEVRON+'</span></div>'+
+   (locked?'<div class="hint">Locked — customer can\'t change on an existing lane. Renew or create a new lane instead.</div>':'')+'<div class="err" id="e_customer"></div></div>'+
 
- '<div class="ffield"><label>Customer lane name</label><input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"><div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
+ '<div class="ti"><div class="row"><div class="txt"><label>Customer lane name</label>'+
+   '<input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"></div></div>'+
+   '<div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
 
- '<div class="frow"><div class="ffield" style="flex:2"><label>BCO (beneficial cargo owner)</label>'+
-   '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'>'+
-   '<label class="checkrow" style="margin-top:4px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"> Unknown / broker withheld</label>'+
-   '<div class="err" id="e_bco"></div></div>'+
-  '<div class="ffield"><label>Lane code</label><input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'" '+(locked?'disabled':'')+'><div class="hint">'+(locked?'Locked — code can\'t change on an existing lane':'Human-readable — blank auto-generates one')+'</div></div></div>'+
+ '<div class="trow2"><div class="ti"><div class="row"><div class="txt"><label>BCO (beneficial cargo owner)</label>'+
+   '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'></div>'+
+   '<span class="icon">'+ICON_CHEVRON+'</span></div><div class="err" id="e_bco"></div></div>'+
+  '<div class="ti'+(locked?' disabled':'')+'"><div class="row"><div class="txt"><label>Lane code</label>'+
+   '<input type="text" id="in_code" placeholder="e.g. CC-001" value="'+esc(v.code||'')+'" '+(locked?'disabled':'')+'></div></div>'+
+   '<div class="hint">'+(locked?'Locked — code can\'t change on an existing lane':'Human-readable — blank auto-generates one')+'</div></div></div>'+
+ '<label class="cb2" style="margin-top:-8px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"><span>Unknown / broker withheld</span></label>'+
 
- '<div class="frow"><div class="ffield"><label>Planned start *</label><input type="date" id="in_start" value="'+startVal+'" '+(startDisabled?'disabled':'')+'><div class="hint" id="starthint">'+startHint+'</div><div class="err" id="e_start"></div></div>'+
-  '<div class="ffield"><label>Planned end *</label><input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"><div class="err" id="e_end"></div></div></div>'+
+ '<div class="trow2"><div class="ti'+(startDisabled?' disabled':'')+'"><div class="row"><div class="txt"><label>Planned start*</label>'+
+   '<input type="date" id="in_start" value="'+startVal+'" '+(startDisabled?'disabled':'')+'></div><span class="icon">'+ICON_CALENDAR+'</span></div>'+
+   '<div class="hint" id="starthint">'+startHint+'</div><div class="err" id="e_start"></div></div>'+
+  '<div class="ti"><div class="row"><div class="txt"><label>Planned end*</label>'+
+   '<input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"></div><span class="icon">'+ICON_CALENDAR+'</span></div>'+
+   '<div class="err" id="e_end"></div></div></div>'+
+ '</div></div>'+
 
- '<div class="formsect"><span class="lbl">OD PAIRS</span><div id="odlist"></div><div class="addod" onclick="addOD()">＋ Add OD pair</div></div>'+
+ '<div class="fsect"><div class="ttl2">OD pairs (<span id="odcount">'+odCount+'</span>)</div>'+
+  '<div class="fgroup" id="odlist"></div>'+
+  '<button type="button" class="fbtn outline full" onclick="addOD()">'+ICON_PLUS+' Add OD pair</button>'+
+ '</div>'+
 
- '<div class="formsect"><span class="lbl">PICK-UP/DELIVERY</span><div class="frow"><label class="checkrow"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'> Drop pickup</label>'+
-  '<label class="checkrow"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'> Drop delivery</label></div></div>'+
+ '<div class="fsect"><div class="ttl2">Pick-up/Delivery</div>'+
+  '<div style="display:flex;gap:16px;align-items:center">'+
+   '<label class="cb2"><input type="checkbox" id="in_droppu" '+(v.dropPickup?'checked':'')+'><span>Drop pickup</span></label>'+
+   '<label class="cb2"><input type="checkbox" id="in_dropdel" '+(v.dropDelivery?'checked':'')+'><span>Drop delivery</span></label>'+
+  '</div></div>'+
  '<datalist id="loclist">'+LOCATIONS.map(l=>'<option value="'+l+'">').join('')+'</datalist>'+
  '<datalist id="bcolist">'+BCOS.map(b=>'<option value="'+b+'">').join('')+'</datalist>';
 }
@@ -556,24 +636,24 @@ function renderForm(mode,id,renegotiate){
  const l=id?LANES[id]:null;
  RENEW_OLD=(mode==='renew')?l:null;
  const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):(renegotiate?'Renegotiate lane — '+esc(l.code):'Renew lane — '+esc(l.code));
- $('dhead').innerHTML='<div class="top"><b style="font-size:15px">'+title+'</b><span class="x" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">✕</span></div>'+
-  (mode==='create'?'<div class="meta">Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.</div>':'');
+ const subtitle=mode==='create'?'Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.':null;
 
  const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
-  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:'',plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
- let html='';
- if(mode==='renew'){html+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
- html+=formFieldsHTML(v,mode==='edit',mode==='renew'?{oldLane:l,renegotiate}:null);
- $('dtl').innerHTML=html;
+ let body='';
+ if(mode==='renew'){body+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
+ body+=formFieldsHTML(v,mode==='edit',mode==='renew'?{oldLane:l,renegotiate}:null);
+
+ const submitLabel=mode==='create'?'Create lane':mode==='edit'?'Save changes':(renegotiate?'Save renegotiation':'Renew lane');
+ $('formModalBox').innerHTML=dlgHead(title,subtitle,'fdlgx')+
+  '<div class="dbd">'+body+'</div>'+
+  dlgFoot('<button class="fbtn primary" id="dfootSubmit" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+submitLabel+'</button>');
+ $('fdlgx').onclick=closeFormModal;
 
  ODCOUNT=0;$('odlist').innerHTML='';
  (v.od&&v.od.length?v.od:[{origin:'',destination:''}]).forEach(p=>addOD(p.origin,p.destination,mode==='edit'));
-
- $('dfoot').style.display='flex';
- $('dfoot').innerHTML='<button class="abtn" onclick="'+(mode==='create'?'closeDrawer()':'renderDrawerView(\''+id+'\')')+'">Cancel</button>'+
-  '<button class="abtn primary" id="dfootSubmit" onclick="submitForm(\''+mode+'\',\''+(id||'')+'\')">'+(mode==='create'?'Create lane':mode==='edit'?'Save changes':(renegotiate?'Save renegotiation':'Renew lane'))+'</button>';
 }
 
 function clearErrors(){document.querySelectorAll('.err').forEach(e=>e.textContent='');}
@@ -612,7 +692,7 @@ function submitForm(mode,id){
  if(conflict){
   $('conflictzone').innerHTML='<div class="conflictbanner"><div class="t">⚠️ Conflicts with an existing lane</div>'+
    '<div class="d"><b>'+esc(conflict.lane.code)+'</b> ('+esc(conflict.lane.customer)+') already covers <b>'+esc(odLabel(conflict.lp))+'</b> for '+windowText(conflict.lane)+'. Two active lanes can’t claim the same load — adjust the dates/OD or view the existing lane.</div>'+
-   '<div class="btns"><button class="abtn" onclick="openLaneDrawer(\''+conflict.lane.id+'\')">View '+esc(conflict.lane.code)+'</button></div></div>';
+   '<div class="btns"><button class="abtn" onclick="closeFormModal();openLaneDrawer(\''+conflict.lane.id+'\')">View '+esc(conflict.lane.code)+'</button></div></div>';
   $('conflictzone').scrollIntoView({behavior:'smooth',block:'start'});
   return;
  }
@@ -623,11 +703,11 @@ function submitForm(mode,id){
   LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:1,
    plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
    loadType:null,dropPickup,dropDelivery,renewedFrom:null,od:cleanOd,matched:[]};
-  renderList();openLaneDrawer(newId);
+  closeFormModal();renderList();openLaneDrawer(newId);
   toast('Lane created — Apollo will begin auto-matching loads within this window.');
  } else if(mode==='edit'){
   Object.assign(LANES[id],{customer,name:name||null,bco,bcoUnknown,code,plannedStart:start,plannedEnd:end,dropPickup,dropDelivery,od:cleanOd});
-  renderList();renderDrawerView(id);
+  closeFormModal();renderList();renderDrawerView(id);
   toast('Saved — no new lane version created.');
  } else if(mode==='renew'){
   const old=LANES[id];
@@ -639,13 +719,13 @@ function submitForm(mode,id){
    LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:old.version+1,
     plannedStart:TODAY,plannedEnd:end,actualStart:TODAY,actualEnd:null,
     loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,od:cleanOd,matched:[]};
-   renderList();openLaneDrawer(newId);
+   closeFormModal();renderList();openLaneDrawer(newId);
    toast(esc(old.code)+' cancelled (renegotiation) · new terms on '+esc(code)+' (v'+LANES[newId].version+') start today.');
   } else {
    LANES[newId]={id:newId,customer,name:name||null,bco,bcoUnknown,code,version:old.version+1,
     plannedStart:start,plannedEnd:end,actualStart:(start>TODAY?null:start),actualEnd:null,
     loadType:old.loadType,dropPickup,dropDelivery,renewedFrom:id,od:cleanOd,matched:[]};
-   renderList();openLaneDrawer(newId);
+   closeFormModal();renderList();openLaneDrawer(newId);
    toast(esc(code)+' created — renewed from '+esc(old.code)+' (v'+LANES[newId].version+'); '+esc(old.code)+' continues unchanged until it expires.');
   }
  }
@@ -653,12 +733,17 @@ function submitForm(mode,id){
 
 /* ---------- cancel lane modal ---------- */
 function openCancelModal(id){const l=LANES[id];
- $('modalbox').innerHTML='<div class="mh"><b>Cancel lane '+esc(l.code)+'</b><span class="x" onclick="closeModal()">✕</span></div>'+
- '<div class="mb"><div style="font-size:13px;color:#475569;margin-bottom:12px">New loads after this date won’t auto-match to '+esc(l.code)+'. Everything already logged stays intact.</div>'+
- '<div class="ffield"><label>Actual end date</label><input type="date" id="in_canceldate" value="'+TODAY+'"></div>'+
- '<div class="ffield"><label>Reason for cancellation</label><textarea id="in_cancelreason" rows="3" placeholder="e.g. Customer paused shipments, lane consolidated into another lane, rate renegotiation fell through"></textarea><div class="hint">Optional — shown on the lane\'s detail view</div></div>'+
- '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end"><button class="abtn" onclick="closeModal()">Back</button><button class="abtn primary" style="background:var(--red);border-color:var(--red)" onclick="confirmCancel(\''+id+'\')">Cancel lane</button></div></div>';
- $('ovl').classList.add('show');}
+ $('modalbox').innerHTML=dlgHead('Cancel lane '+esc(l.code),"New loads after this date won't auto-match to "+esc(l.code)+'. Everything already logged stays intact.')+
+ '<div class="dbd">'+
+  '<div class="ti"><div class="row"><div class="txt"><label>Actual end date*</label>'+
+   '<input type="date" id="in_canceldate" value="'+TODAY+'"></div><span class="icon">'+ICON_CALENDAR+'</span></div></div>'+
+  '<div class="ti"><div class="row"><div class="txt"><label>Reason for cancellation</label>'+
+   '<input type="text" id="in_cancelreason" placeholder="e.g. Customer paused shipments, lane consolidated into another lane, rate renegotiation fell through"></div></div>'+
+   '<div class="hint">Optional — shown on the lane\'s detail view</div></div>'+
+ '</div>'+
+ dlgFoot('<button class="fbtn disruptive" onclick="confirmCancel(\''+id+'\')">Cancel lane</button>');
+ $('ovl').classList.add('show');
+ $('dlgx').onclick=closeModal;}
 function confirmCancel(id){const d=$('in_canceldate').value||TODAY;const r=$('in_cancelreason').value.trim();
  LANES[id].actualEnd=d;LANES[id].cancelReason=r||null;closeModal();renderList();
  if(SELECTED===id)renderDrawerView(id);
