@@ -549,7 +549,7 @@ function renderContext(){
   const desc = document.getElementById('feedDesc');
   if(!SELECTED){
     card.style.display = 'none';
-    desc.innerHTML = `All activity<span class="hint">· click any entity below to focus on one</span>`;
+    desc.innerHTML = '';
     return;
   }
   const e = ENTITIES.find(x => x.id === SELECTED);
