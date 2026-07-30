@@ -48,7 +48,9 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .grouphead .n{color:var(--gray);font-weight:400}
 .lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
 .lanerow:hover{background:#F8FAFC}
-.lanerow .code{font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .code{font-weight:500;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.lanerow .codeline{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanerow .renline{font-size:10.5px;font-weight:400;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flagexp{background:var(--warnbg);color:#92400E;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none}
 .lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .od{color:#334155;overflow:hidden}
@@ -93,6 +95,11 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .mrow .late{color:var(--red);font-weight:500}
 .mweekhead{padding:10px 0 4px;font-size:11.5px;font-weight:500;color:#334155}
 .mweekhead .n{color:var(--gray);font-weight:400;margin-left:6px}
+.tlwrap{margin-bottom:14px}
+.tlrow{display:grid;grid-template-columns:1.3fr 1.7fr 0.9fr 1fr;gap:10px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;align-items:center}
+.tlrow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:500;border-bottom:1px solid var(--line)}
+.tlrow.current{background:var(--teal-soft)}
+.tlnow{color:var(--teal);font-weight:500;font-size:11px}
 /* form */
 .hint{font-size:10px;line-height:12px;font-weight:500;letter-spacing:.3px;color:#45556C}
 .err{color:var(--red);font-size:11.5px;min-height:14px}
@@ -137,8 +144,23 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .ti label{font-size:12px;line-height:14px;font-weight:500;letter-spacing:.1px;color:#314158}
 .ti select,.ti input{border:none;background:transparent;outline:none;font-size:14px;line-height:18px;font-weight:500;color:#1D293D;padding:0;width:100%;font-family:inherit;min-width:0}
 .ti select{appearance:none;-webkit-appearance:none;cursor:pointer}
-.ti input[type=date]::-webkit-calendar-picker-indicator{position:absolute;right:0;width:34px;height:34px;opacity:0;cursor:pointer}
-.ti input[type=date]{position:relative}
+.ti input[type=date]::-webkit-calendar-picker-indicator{display:none}
+
+/* custom calendar popover (matches app tokens instead of the native OS picker) */
+.datepop{position:fixed;display:none;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.16);padding:10px;width:224px;z-index:200}
+.datepop.show{display:block}
+.dphead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.dpmonth{font-size:13px;font-weight:600;color:#0F172B}
+.dpnav{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:#45556C;flex:none}
+.dpnav:hover{background:#F6F8FB}
+.dpdow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:10.5px;font-weight:600;color:var(--gray);margin-bottom:2px}
+.dpgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dpday{height:28px;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#1D293D;border-radius:8px;cursor:pointer}
+.dpday:hover{background:#F6F8FB}
+.dpday.muted{color:#CAD5E2;cursor:default}
+.dpday.muted:hover{background:none}
+.dpday.today{font-weight:600;color:var(--teal)}
+.dpday.sel{background:var(--teal);color:#fff;font-weight:600}
 .ti .icon{flex:none;color:#1D293D;width:20px;height:20px}
 .trow2{display:flex;gap:8px;width:100%;align-items:flex-start}
 .trow2>.ti{flex:1;min-width:0}
@@ -200,6 +222,7 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 
 <div id="formOvl"><div class="dlg" id="formModalBox"></div></div>
 <div id="ovl"><div class="dlg" id="modalbox"></div></div>
+<div id="datepop" class="datepop"></div>
 
 <script>
 'use strict';
@@ -211,12 +234,55 @@ const ICON_CHEVRON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" 
 const ICON_CALENDAR='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
 const ICON_TRASH='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>';
 const ICON_PLUS='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+const ICON_CHEV_L='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+const ICON_CHEV_R='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
 function dlgHead(title,subtitle,closeId){
  return '<div class="dhd"><div class="tw"><div class="ttl">'+title+'</div>'+(subtitle?'<div class="sub">'+subtitle+'</div>':'')+'</div><span class="x" id="'+(closeId||'dlgx')+'">'+ICON_X+'</span></div>';
 }
 function dlgFoot(buttonsHtml){
  return '<div class="dft"><div class="grp">'+buttonsHtml+'</div></div>';
 }
+/* ---------- custom calendar popover (on-brand replacement for the native date picker) ---------- */
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_LABELS=['S','M','T','W','T','F','S'];
+let DPOP_TARGET=null,CAL_VIEW=null;
+function pad2(n){return String(n).padStart(2,'0');}
+function ymd(y,m,d){return y+'-'+pad2(m+1)+'-'+pad2(d);}
+function closeDatePicker(){$('datepop').classList.remove('show');DPOP_TARGET=null;CAL_VIEW=null;}
+function openDatePicker(el){
+ const input=el.closest('.row').querySelector('input[type=date]');
+ if(!input||input.disabled)return;
+ DPOP_TARGET=input;
+ const base=input.value||TODAY;
+ const d=new Date(base+'T00:00:00');
+ renderCalendarPopover(d.getFullYear(),d.getMonth(),el);
+}
+function calNav(dir){let m=CAL_VIEW.m+dir,y=CAL_VIEW.y;if(m<0){m=11;y--;}if(m>11){m=0;y++;}renderCalendarPopover(y,m,CAL_VIEW.anchorEl);}
+function pickDate(val){if(DPOP_TARGET){DPOP_TARGET.value=val;DPOP_TARGET.dispatchEvent(new Event('change',{bubbles:true}));}closeDatePicker();}
+function renderCalendarPopover(y,m,anchorEl){
+ CAL_VIEW={y,m,anchorEl};
+ const pop=$('datepop');
+ const selVal=DPOP_TARGET.value;
+ const firstDow=new Date(y,m,1).getDay();
+ const daysInMonth=new Date(y,m+1,0).getDate();
+ const daysInPrevMonth=new Date(y,m,0).getDate();
+ let cells='';
+ for(let i=0;i<firstDow;i++){cells+='<div class="dpday muted">'+(daysInPrevMonth-firstDow+1+i)+'</div>';}
+ for(let d=1;d<=daysInMonth;d++){
+  const val=ymd(y,m,d);
+  cells+='<div class="dpday'+(val===selVal?' sel':val===TODAY?' today':'')+'" onclick="pickDate(\''+val+'\')">'+d+'</div>';
+ }
+ const trailing=(7-((firstDow+daysInMonth)%7))%7;
+ for(let i=1;i<=trailing;i++){cells+='<div class="dpday muted">'+i+'</div>';}
+ pop.innerHTML='<div class="dphead"><span class="dpnav" onclick="calNav(-1)">'+ICON_CHEV_L+'</span><span class="dpmonth">'+MONTH_NAMES[m]+' '+y+'</span><span class="dpnav" onclick="calNav(1)">'+ICON_CHEV_R+'</span></div>'+
+  '<div class="dpdow">'+DOW_LABELS.map(x=>'<div>'+x+'</div>').join('')+'</div>'+
+  '<div class="dpgrid">'+cells+'</div>';
+ const rect=anchorEl.closest('.row').getBoundingClientRect();
+ pop.style.top=(rect.bottom+6)+'px';
+ pop.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-232))+'px';
+ pop.classList.add('show');
+}
+document.addEventListener('click',e=>{if(DPOP_TARGET&&!e.target.closest('#datepop')&&!e.target.closest('.icon'))closeDatePicker();});
 const TODAY='2026-07-14';
 const CUSTOMERS=['Coca-Cola','Amazon Relay','C.H. Robinson','ITS Logistics','Uber Freight','RXO','Arrive Logistics','ECHO','Wayfair','APEX'];
 const LOCATIONS=['Waco - Envases','Houston - Coke','Houston Parking','Waco Parking','Dallas Parking','Garland, TX','Sealy, TX','Amazon Coppell, TX','Amazon Houston, TX','Redlands, CA','Moreno Valley, CA','Eastvale, CA','Tracy, CA','Stockton, CA','Long Beach Port','Victorville, CA','Phoenix, AZ','Baytown, TX','Pasadena, TX'];
@@ -367,9 +433,8 @@ function findConflict(customer,od,start,end,excludeIds){excludeIds=excludeIds||[
  return null;}
 function idFromCode(code){let base=(code||'LANE').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'LANE';let id=base,n=1;while(LANES[id]){n++;id=base+'-'+n;}return id;}
 function autoCode(customer){return (customer||'LANE').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()+'-'+Math.floor(Math.random()*900+100);}
-function suggestRenewCode(code){const m=code.match(/-V(\d+)$/i);if(m)return code.replace(/-V\d+$/i,'')+'-V'+(+m[1]+1);
- const m2=code.match(/(\d+)$/);if(m2){const n=(+m2[1]+1);return code.slice(0,-m2[1].length)+String(n).padStart(m2[1].length,'0');}
- return code+'-V2';}
+function rootLane(l){let cur=l;while(cur.renewedFrom&&LANES[cur.renewedFrom])cur=LANES[cur.renewedFrom];return cur;}
+function suggestRenewCode(l){return rootLane(l).code+'-'+(l.version+1);}
 function deriveStatus(l){
  if(l.actualEnd)return 'Cancelled';
  if(!l.actualStart)return 'Scheduled';
@@ -378,11 +443,19 @@ function deriveStatus(l){
 }
 function renewedToLane(id){return Object.values(LANES).find(x=>x.renewedFrom===id)||null;}
 function provVerb(endedLane){return(endedLane&&endedLane.cancelReason==='Renegotiation')?'Renegotiated':'Renewed';}
+function chainOf(l){
+ let root=l;
+ while(root.renewedFrom&&LANES[root.renewedFrom])root=LANES[root.renewedFrom];
+ const chain=[root];
+ let cur=root;
+ while(true){const next=renewedToLane(cur.id);if(!next)break;chain.push(next);cur=next;}
+ return chain;
+}
 function isExpiringSoon(l){if(deriveStatus(l)!=='Active'||!l.plannedEnd||renewedToLane(l.id))return false;const days=(new Date(l.plannedEnd)-new Date(TODAY))/86400000;return days>=0&&days<=21;}
 
 /* ---------- list ---------- */
 let GROUPBY=true,COLLAPSED={},CHIPFILTER='all',SELECTED=null;
-function chipCounts(){const vals=Object.values(LANES);
+function chipCounts(){const vals=Object.values(LANES).filter(l=>!renewedToLane(l.id));
  return{all:vals.length,scheduled:vals.filter(l=>deriveStatus(l)==='Scheduled').length,active:vals.filter(l=>deriveStatus(l)==='Active').length,expired:vals.filter(l=>deriveStatus(l)==='Expired').length,cancelled:vals.filter(l=>deriveStatus(l)==='Cancelled').length,exp:vals.filter(isExpiringSoon).length};}
 function renderChips(){const c=chipCounts();
  const defs=[['all','All lanes',c.all],['scheduled','Scheduled',c.scheduled],['active','Active',c.active],['exp','Expiring soon',c.exp],['expired','Expired',c.expired],['cancelled','Cancelled',c.cancelled]];
@@ -391,8 +464,11 @@ function passFilter(l){if(CHIPFILTER==='all')return true;if(CHIPFILTER==='exp')r
 function statusPill(l){const st=deriveStatus(l);const cls='p-'+st.toLowerCase();return '<span class="pill '+cls+'">'+st+'</span>';}
 function pickupDropLabel(l){if(l.dropPickup&&l.dropDelivery)return 'Pick-up & Delivery';if(l.dropPickup)return 'Pick-up';if(l.dropDelivery)return 'Delivery';return '—';}
 function rowHTML(id,showCust){const l=LANES[id];
+ const parent=l.renewedFrom?LANES[l.renewedFrom]:null;
+ const verb=parent?provVerb(parent):null;
+ const cue=parent?'<div class="renline">'+(verb==='Renegotiated'?'⇄':'↻')+' '+verb+' from '+esc(parent.code)+' · since '+fmtDate(l.actualStart||l.plannedStart)+'</div>':'';
  return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
- '<div class="code">'+esc(l.code)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+
+ '<div class="code"><div class="codeline">'+esc(l.code)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+cue+'</div>'+
  '<div>'+statusPill(l)+'</div>'+
  (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
  '<div class="od">'+odSummary(l)+'</div>'+
@@ -404,7 +480,7 @@ function colHead(showCust){return '<div class="colhead'+(showCust?'':' grouped')
 function toggleGroup(c){COLLAPSED[c]=!COLLAPSED[c];renderList();}
 function updateSub(){const c=chipCounts();$('lanesub').textContent=c.all+' lanes · '+c.active+' active · '+c.exp+' expiring soon';}
 function renderList(){renderChips();updateSub();
- const ids=Object.keys(LANES).filter(id=>passFilter(LANES[id]));
+ const ids=Object.keys(LANES).filter(id=>!renewedToLane(id)).filter(id=>passFilter(LANES[id]));
  const wrap=$('listwrap');
  if(!ids.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray);font-size:13.5px">No lanes match this filter.</div>';return;}
  if(GROUPBY){
@@ -424,6 +500,22 @@ function renderList(){renderChips();updateSub();
 /* ---------- drawer: view mode ---------- */
 function openLaneDrawer(id){SELECTED=id;renderDrawerView(id);$('drawer').classList.add('open');}
 function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;renderList();}
+function timelineHTML(l){
+ const chain=chainOf(l);
+ if(chain.length<2)return '';
+ const rows=chain.map((p,i)=>{
+  const isCurrent=p.id===l.id;
+  const awardType=i===0?'New award':(provVerb(chain[i-1])==='Renegotiated'?'Renegotiation':'Renewal');
+  return '<div class="tlrow'+(isCurrent?' current':'')+'">'+
+   '<div><span class="provlink" onclick="openLaneDrawer(\''+p.id+'\')">'+esc(p.code)+'</span>'+(isCurrent?' <span class="tlnow">· viewing</span>':'')+'</div>'+
+   '<div>'+windowText(p)+'</div>'+
+   '<div>'+statusPill(p)+'</div>'+
+   '<div>'+awardType+'</div>'+
+  '</div>';
+ }).join('');
+ return '<div class="sect"><span>RENEWAL TIMELINE</span><span>'+chain.length+' periods</span></div>'+
+  '<div class="tlwrap"><div class="tlrow head"><div>Code</div><div>Planned window</div><div>Status</div><div>Award type</div></div>'+rows+'</div>';
+}
 function renderDrawerView(id){const l=LANES[id];if(!l)return;
  const status=deriveStatus(l);
  const open=status!=='Cancelled';
@@ -444,13 +536,7 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
   const days=Math.round((new Date(l.plannedEnd)-new Date(TODAY))/86400000);
   html+='<div class="conflictbanner"><div class="t">⚠️ Expiring soon</div><div class="d">Planned end is '+fmtDate(l.plannedEnd)+' — '+days+' day'+(days===1?'':'s')+' away with no renewal yet. Renew or extend to keep matching new loads.</div></div>';
  }
- const childLane=renewedToLane(l.id);
- if(l.renewedFrom||childLane){
-  html+='<div class="provbanner">';
-  if(l.renewedFrom){const p=LANES[l.renewedFrom];html+=provVerb(p)+' from <span class="provlink" onclick="openLaneDrawer(\''+l.renewedFrom+'\')">'+esc(p?p.code:l.renewedFrom)+' (v'+(l.version-1)+')</span>. ';}
-  if(childLane){html+=provVerb(l)+' forward to <span class="provlink" onclick="openLaneDrawer(\''+childLane.id+'\')">'+esc(childLane.code)+' (v'+childLane.version+')</span>.';}
-  html+='</div>';
- }
+ html+=timelineHTML(l);
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
    drow('Customer lane name',esc(l.name||'— not set'))+
    drow('Customer',esc(l.customer))+
@@ -564,6 +650,8 @@ function onRenegotiateToggle(){
 
 function formFieldsHTML(v,locked,renewCtx){
  renewCtx=renewCtx||null;
+ const customerLocked=locked||!!renewCtx;
+ const customerHint=locked?'Locked — customer can\'t change on an existing lane. Renew or create a new lane instead.':(renewCtx?'Locked — same customer as '+esc(renewCtx.oldLane.code)+'; it\'s half the lane\'s unique key.':'');
  const startLocked=!!(renewCtx&&renewCtx.renegotiate);
  const startVal=startLocked?TODAY:(v.plannedStart||'');
  const startDisabled=!!v.actualStart||startLocked;
@@ -585,16 +673,16 @@ function formFieldsHTML(v,locked,renewCtx){
      '<div class="hint">Who\'s liable for ending '+esc(renewCtx.oldLane.code)+' early.</div><div class="err" id="e_liableparty"></div></div>'+
    '</div>'
  ):'')+
- '<div class="ti'+(locked?' disabled':'')+'" id="f_customer"><div class="row"><div class="txt"><label>Customer*</label>'+
-   '<select id="in_customer" '+(locked?'disabled':'')+'>'+
+ '<div class="ti'+(customerLocked?' disabled':'')+'" id="f_customer"><div class="row"><div class="txt"><label>Customer*</label>'+
+   '<select id="in_customer" '+(customerLocked?'disabled':'')+'>'+
    '<option value="">— select customer —</option>'+
    CUSTOMERS.map(c=>'<option value="'+c+'"'+(v.customer===c?' selected':'')+'>'+c+'</option>').join('')+
    '</select></div><span class="icon">'+ICON_CHEVRON+'</span></div>'+
-   (locked?'<div class="hint">Locked — customer can\'t change on an existing lane. Renew or create a new lane instead.</div>':'')+'<div class="err" id="e_customer"></div></div>'+
+   (customerHint?'<div class="hint">'+customerHint+'</div>':'')+'<div class="err" id="e_customer"></div></div>'+
 
- '<div class="ti"><div class="row"><div class="txt"><label>Customer lane name</label>'+
-   '<input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'"></div></div>'+
-   '<div class="hint">Optional — a free-text label, separate from the lane code</div></div>'+
+ '<div class="ti'+(renewCtx?' disabled':'')+'"><div class="row"><div class="txt"><label>Customer lane name</label>'+
+   '<input type="text" id="in_name" placeholder="e.g. Coca-Cola Waco–Houston Production Run" value="'+esc(v.name||'')+'" '+(renewCtx?'disabled':'')+'></div></div>'+
+   '<div class="hint">'+(renewCtx?'Locked — stays identical across the whole renewal chain.':'Optional — a free-text label, separate from the lane code')+'</div></div>'+
 
  '<div class="trow2"><div class="ti"><div class="row"><div class="txt"><label>BCO (beneficial cargo owner)</label>'+
    '<input type="text" id="in_bco" list="bcolist" placeholder="e.g. Niagara Bottling" value="'+esc(v.bcoUnknown?'':(v.bco||''))+'" '+(v.bcoUnknown?'disabled':'')+'></div>'+
@@ -605,10 +693,10 @@ function formFieldsHTML(v,locked,renewCtx){
  '<label class="cb2" style="margin-top:-8px"><input type="checkbox" id="in_bcounknown" '+(v.bcoUnknown?'checked':'')+' onchange="toggleBcoUnknown()"><span>Unknown / broker withheld</span></label>'+
 
  '<div class="trow2"><div class="ti'+(startDisabled?' disabled':'')+'"><div class="row"><div class="txt"><label>Planned start*</label>'+
-   '<input type="date" id="in_start" value="'+startVal+'" '+(startDisabled?'disabled':'')+'></div><span class="icon">'+ICON_CALENDAR+'</span></div>'+
+   '<input type="date" id="in_start" value="'+startVal+'" '+(startDisabled?'disabled':'')+'></div><span class="icon" style="cursor:pointer" onclick="openDatePicker(this)">'+ICON_CALENDAR+'</span></div>'+
    '<div class="hint" id="starthint">'+startHint+'</div><div class="err" id="e_start"></div></div>'+
   '<div class="ti"><div class="row"><div class="txt"><label>Planned end*</label>'+
-   '<input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"></div><span class="icon">'+ICON_CALENDAR+'</span></div>'+
+   '<input type="date" id="in_end" value="'+(v.plannedEnd||'')+'"></div><span class="icon" style="cursor:pointer" onclick="openDatePicker(this)">'+ICON_CALENDAR+'</span></div>'+
    '<div class="err" id="e_end"></div></div></div>'+
  '</div></div>'+
 
@@ -635,7 +723,7 @@ function renderForm(mode,id,renegotiate){
 
  const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
-  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l.code),plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
+  :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l),plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
  let body='';
  if(mode==='renew'){body+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
@@ -731,7 +819,7 @@ function openCancelModal(id){const l=LANES[id];
  $('modalbox').innerHTML=dlgHead('Cancel lane '+esc(l.code),"New loads after this date won't auto-match to "+esc(l.code)+'. Everything already logged stays intact.')+
  '<div class="dbd">'+
   '<div class="ti"><div class="row"><div class="txt"><label>Actual end date*</label>'+
-   '<input type="date" id="in_canceldate" value="'+TODAY+'"></div><span class="icon">'+ICON_CALENDAR+'</span></div></div>'+
+   '<input type="date" id="in_canceldate" value="'+TODAY+'"></div><span class="icon" style="cursor:pointer" onclick="openDatePicker(this)">'+ICON_CALENDAR+'</span></div></div>'+
   '<div class="ti"><div class="row"><div class="txt"><label>Reason for cancellation</label>'+
    '<input type="text" id="in_cancelreason" placeholder="e.g. Customer paused shipments, lane consolidated into another lane, rate renegotiation fell through"></div></div>'+
    '<div class="hint">Optional — shown on the lane\'s detail view</div></div>'+
