@@ -61,7 +61,7 @@ button{font-family:inherit}
 
 /* Search (131:2540): bg background/low #E6EFFA, min-h 40, padding 10/4, radius md(10), gap 8,
    20px icon, placeholder text Input label/Muted #45556C 14px medium — verified via get_design_context */
-.searchwrap{position:relative;margin-top:14px;max-width:440px}
+.searchwrap{position:relative;margin-top:12px;max-width:440px}
 .searchbox{background:var(--surface-low);display:flex;align-items:center;gap:8px;min-height:40px;padding:4px 10px;border-radius:10px}
 .searchbox svg{flex:none;color:var(--text-muted)}
 .searchbox input{border:none;outline:none;background:transparent;flex:1;font-size:14px;font-weight:500;font-family:inherit;color:var(--ink2);min-width:0}
@@ -86,10 +86,10 @@ button{font-family:inherit}
 .clearctx{margin-left:auto;border:none;background:transparent;color:var(--teal);font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:6px}
 .clearctx:hover{background:var(--surface-lowest)}
 
-#activitywrap{flex:1;overflow-y:auto;padding:16px 28px 60px}
-.actheadrow{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px;flex-wrap:wrap}
-.actheadrow .desc{font-size:13px;color:var(--text-muted);max-width:520px;line-height:1.5}
-.actheadrow .desc b{color:var(--ink2);font-weight:600}
+#activitywrap{flex:1;overflow-y:auto;padding:8px 28px 60px}
+.actheadrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.actheadrow .desc{font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--gray)}
+.actheadrow .desc .hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-muted);margin-left:4px}
 .toolbar{margin-left:auto;display:flex;align-items:center;gap:18px;flex:none}
 
 /* Switch (53:824): track 48x24 radius md(10), padding 2; thumb is a 27x20 rounded-sm(8) rect (not a circle);
@@ -109,6 +109,7 @@ button{font-family:inherit}
 #legend .lgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
 #legend h4{font-size:11px;letter-spacing:.6px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:6px}
 #legend .lrow{display:flex;align-items:center;gap:7px;margin-top:5px}
+.legendfoot{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);color:var(--gray);font-size:12px;line-height:1.5}
 
 /* Table (120:2365): container bg background/lowest #F6F8FB, padding lg(12), radius xl(16); header text
    Table header/Default #62748E semibold 14 (not small-caps); body text Table body/Default #1D293D medium 14;
@@ -179,7 +180,7 @@ svg.icon{display:block}
   <div id="main">
     <div id="pagehead">
       <h1>Audit Log</h1>
-      <div class="pagedesc">Search any load, internal movement, or driver shift to pull up its full activity history — who or what changed it, when, and why.</div>
+      <div class="pagedesc">A single history of who or what changed a load, internal movement, or shift — and why.</div>
 
       <div class="searchwrap" id="searchwrap">
         <div class="searchbox">
@@ -230,6 +231,7 @@ svg.icon{display:block}
             <div class="lrow"><span class="catbadge" style="background:var(--cat-operational-bg);color:var(--cat-operational-fg)">Operational</span> <span style="color:var(--gray)">— hidden by default, toggle above</span></div>
           </div>
         </div>
+        <div class="legendfoot">This is an audit/history view — the stop-progress timeline and shift replay stay the home for live operational visualization.</div>
       </div>
 
       <div id="feed">
@@ -547,7 +549,7 @@ function renderContext(){
   const desc = document.getElementById('feedDesc');
   if(!SELECTED){
     card.style.display = 'none';
-    desc.innerHTML = `Showing recent activity across <b>all loads, internal movements, and shifts</b>. Search above to focus on one — or click any entity reference in the feed below.`;
+    desc.innerHTML = `All activity<span class="hint">· click any entity below to focus on one</span>`;
     return;
   }
   const e = ENTITIES.find(x => x.id === SELECTED);
@@ -558,7 +560,7 @@ function renderContext(){
     <span class="pill ${e.statusClass}">${e.status}</span>
     <span class="ctxsub">${e.sub}</span>
     <button class="clearctx" onclick="clearSelection()">✕ Clear search</button>`;
-  desc.innerHTML = `History of who or what changed this <b>${TYPE_NOUN[e.type]}</b>, when, and why. This is an audit/history view — the stop-progress timeline and shift replay stay the home for live operational visualization.`;
+  desc.innerHTML = `Activity for this ${TYPE_NOUN[e.type]}`;
 }
 
 function rowHtml(ev, idx, ref){
