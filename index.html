@@ -92,6 +92,14 @@ button{font-family:inherit}
 .clearctx:hover{background:var(--surface-lowest)}
 
 #activitywrap{padding:12px 28px 60px}
+
+/* Filter chip (234:95): default border Border/Default #CAD5E2, bg white, text #314158 medium 14;
+   selected border/text #00786F, bg Teal-soft #F0FDFA, semibold — verified via nevoya-library.md cache */
+.filterrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fchip{border:1px solid var(--border-default);background:#fff;color:var(--text-default);font-size:13px;font-weight:500;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
+.fchip:hover{background:var(--surface-lowest)}
+.fchip.on{border-color:var(--teal);background:var(--teal-soft);color:var(--teal);font-weight:600}
+
 .actheadrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .actheadrow .desc{font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--gray)}
 .actheadrow .desc .hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-muted);margin-left:4px}
@@ -122,6 +130,9 @@ button{font-family:inherit}
    via get_design_context/get_variable_defs */
 #feed{background:var(--surface-lowest);border:1px solid var(--border-muted);border-radius:16px;padding:12px;overflow:hidden}
 .frow-head{display:grid;grid-template-columns:26px 1.3fr 1fr 0.85fr 2.2fr;gap:10px;padding:10px 14px;font-size:14px;color:var(--table-header-fg);font-weight:600;border-bottom:1px solid var(--border-muted)}
+.frow-head .sortable{cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px}
+.frow-head .sortable:hover{color:var(--ink2)}
+.sortarrow{font-size:9px;color:var(--teal)}
 .frow{border-bottom:1px solid var(--border-muted)}
 .frow:last-child{border-bottom:none}
 .frow .fmain{display:grid;grid-template-columns:26px 1.3fr 1fr 0.85fr 2.2fr;gap:10px;align-items:center;padding:11px 14px;cursor:pointer}
@@ -165,6 +176,7 @@ button{font-family:inherit}
 .rawbtn{border:none;background:transparent;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:4px}
 pre.rawjson{display:none;margin-top:8px;background:var(--ink2);color:#D1FAE5;font-size:11.5px;line-height:1.5;padding:12px 14px;border-radius:8px;overflow-x:auto;font-family:'SF Mono',Menlo,monospace}
 pre.rawjson.show{display:block}
+.emptyfeed{padding:28px 14px;text-align:center;color:var(--gray);font-size:13px}
 
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .toast.show{opacity:1}
@@ -216,6 +228,8 @@ svg.icon{display:block}
     <div class="contextwrap"><div class="contextcard" id="contextcard"></div></div>
 
     <div id="activitywrap">
+      <div class="filterrow" id="filterrow"></div>
+
       <div class="actheadrow">
         <div class="desc" id="feedDesc"></div>
       </div>
@@ -244,7 +258,11 @@ svg.icon{display:block}
 
       <div id="feed">
         <div class="frow-head">
-          <span></span><span>Actor / Source</span><span>Category</span><span>Time</span><span>Activity</span>
+          <span></span>
+          <span class="sortable" id="sh-actor" onclick="setSort('actor')">Actor / Source</span>
+          <span class="sortable" id="sh-category" onclick="setSort('category')">Category</span>
+          <span class="sortable" id="sh-time" onclick="setSort('time')">Time</span>
+          <span class="sortable" id="sh-activity" onclick="setSort('activity')">Activity</span>
         </div>
         <div id="feedbody"></div>
       </div>
@@ -470,6 +488,10 @@ const ENTITIES = [
 ];
 
 let SELECTED = null; // null = global "all entities" view; otherwise an ENTITIES[].id
+let FILTER_CATEGORY = null; // null = all categories; otherwise one of CAT_LABEL's keys
+let SORT_KEY = null; // null = default chronological order; otherwise 'actor'|'category'|'time'|'activity'
+let SORT_DIR = 'asc';
+const FILTER_CATS = ['lifecycle','dispatch','shift','stops_and_appointments','documents','billing','tags_and_exceptions','integration'];
 
 function toast(msg){
   const t=document.getElementById('toastEl');
@@ -538,8 +560,10 @@ function selectEntity(id){
   document.getElementById('searchInput').value = ent.label;
   document.getElementById('clearBtn').style.display = 'flex';
   document.getElementById('opToggle').checked = false;
+  FILTER_CATEGORY = null;
   hideResults();
   renderContext();
+  renderFilterChips();
   renderFeed();
 }
 function clearSelection(){
@@ -547,9 +571,53 @@ function clearSelection(){
   document.getElementById('searchInput').value = '';
   document.getElementById('clearBtn').style.display = 'none';
   document.getElementById('opToggle').checked = false;
+  FILTER_CATEGORY = null;
   hideResults();
   renderContext();
+  renderFilterChips();
   renderFeed();
+}
+
+function renderFilterChips(){
+  const box = document.getElementById('filterrow');
+  const opts = [{key:'', label:'All'}, ...FILTER_CATS.map(c => ({key:c, label:CAT_LABEL[c]}))];
+  box.innerHTML = opts.map(o => {
+    const on = (o.key === '' && !FILTER_CATEGORY) || o.key === FILTER_CATEGORY;
+    return `<button class="fchip ${on?'on':''}" onclick="setFilter('${o.key}')">${o.label}</button>`;
+  }).join('');
+}
+function setFilter(cat){
+  FILTER_CATEGORY = cat || null;
+  renderFilterChips();
+  renderFeed();
+}
+
+function getSortValue(ev, key){
+  switch(key){
+    case 'actor': return (ev.actorName || '').toLowerCase();
+    case 'category': return (CAT_LABEL[ev.category] || '').toLowerCase();
+    case 'time': return parseTs(ev.time);
+    case 'activity': return (ev.summary || '').toLowerCase();
+    default: return '';
+  }
+}
+function setSort(key){
+  if(SORT_KEY === key){
+    SORT_DIR = SORT_DIR === 'asc' ? 'desc' : 'asc';
+  } else {
+    SORT_KEY = key;
+    SORT_DIR = 'asc';
+  }
+  renderSortHeader();
+  renderFeed();
+}
+function renderSortHeader(){
+  const labels = {actor:'Actor / Source', category:'Category', time:'Time', activity:'Activity'};
+  Object.keys(labels).forEach(k => {
+    const el = document.getElementById('sh-' + k);
+    const arrow = SORT_KEY === k ? `<span class="sortarrow">${SORT_DIR === 'asc' ? '▲' : '▼'}</span>` : '';
+    el.innerHTML = `${labels[k]}${arrow}`;
+  });
 }
 
 function renderContext(){
@@ -624,19 +692,29 @@ function rowHtml(ev, idx, ref){
 
 function renderFeed(){
   const showOp = document.getElementById('opToggle').checked;
+  const passesFilters = ev => (showOp || ev.category !== 'operational') && (!FILTER_CATEGORY || ev.category === FILTER_CATEGORY);
   let rows;
   if(SELECTED){
     const ent = ENTITIES.find(e => e.id === SELECTED);
     rows = ent.events
-      .filter(ev => showOp || ev.category !== 'operational')
+      .filter(passesFilters)
       .map(ev => ({ev, ref:null}));
   } else {
     rows = ENTITIES.flatMap(ent => ent.events
-      .filter(ev => showOp || ev.category !== 'operational')
+      .filter(passesFilters)
       .map(ev => ({ev, ref:{id:ent.id, label:ent.label}})));
     rows.sort((a,b) => parseTs(a.ev.time) - parseTs(b.ev.time));
   }
-  document.getElementById('feedbody').innerHTML = rows.map((r,i)=>rowHtml(r.ev, i, r.ref)).join('');
+  if(SORT_KEY){
+    rows.sort((a,b) => {
+      const va = getSortValue(a.ev, SORT_KEY), vb = getSortValue(b.ev, SORT_KEY);
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return SORT_DIR === 'asc' ? cmp : -cmp;
+    });
+  }
+  document.getElementById('feedbody').innerHTML = rows.length
+    ? rows.map((r,i)=>rowHtml(r.ev, i, r.ref)).join('')
+    : `<div class="emptyfeed">No activity matches the current filter.</div>`;
 }
 
 function toggleRow(idx){
@@ -647,6 +725,7 @@ function toggleRaw(id){
 }
 
 renderContext();
+renderFilterChips();
 renderFeed();
 </script>
 </body>
