@@ -53,10 +53,13 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .grouphead .n{color:var(--gray);font-weight:400}
 .lanerow{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.8fr 1.3fr .9fr 20px;gap:18px;align-items:center;padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13.5px}
 .lanerow:hover{background:#F8FAFC}
-.lanerow .code{font-weight:500;display:flex;flex-direction:column;gap:1px;overflow:hidden}
-.lanerow .codeline{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lanerow .renline{font-size:10.5px;font-weight:400;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.flagexp{background:var(--warnbg);color:#92400E;font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none}
+.lanerow .code{font-weight:500;display:flex;align-items:center;gap:8px;min-width:0}
+.lanerow .codetext{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 1 auto}
+.flagexp,.renewtag{font-size:10.5px;font-weight:500;padding:1px 7px;border-radius:10px;white-space:nowrap;flex:none;cursor:default}
+.flagexp{background:var(--warnbg);color:#92400E}
+.renewtag{background:#F1F5F9;color:var(--gray)}
+.hovertip{position:fixed;display:none;background:var(--ink);color:#fff;font-size:11px;font-weight:400;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:250;pointer-events:none}
+.hovertip.show{display:block}
 .lanerow .cust{color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lanerow .od{color:#334155;overflow:hidden}
 .lanerow .od .odcell{display:flex;align-items:center;gap:5px;min-width:0}
@@ -228,6 +231,7 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 <div id="formOvl"><div class="dlg" id="formModalBox"></div></div>
 <div id="ovl"><div class="dlg" id="modalbox"></div></div>
 <div id="datepop" class="datepop"></div>
+<div id="hovertip" class="hovertip"></div>
 
 <script>
 'use strict';
@@ -247,6 +251,16 @@ function dlgHead(title,subtitle,closeId){
 function dlgFoot(buttonsHtml){
  return '<div class="dft"><div class="grp">'+buttonsHtml+'</div></div>';
 }
+/* ---------- shared hover tooltip (fixed to body — escapes #listwrap's scroll clipping) ---------- */
+function showTip(el,text){
+ const t=$('hovertip');
+ t.textContent=text;
+ t.classList.add('show');
+ const r=el.getBoundingClientRect();
+ t.style.top=(r.bottom+6)+'px';
+ t.style.left=Math.max(8,Math.min(r.left,window.innerWidth-t.offsetWidth-8))+'px';
+}
+function hideTip(){$('hovertip').classList.remove('show');}
 /* ---------- custom calendar popover (on-brand replacement for the native date picker) ---------- */
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW_LABELS=['S','M','T','W','T','F','S'];
@@ -471,9 +485,10 @@ function pickupDropLabel(l){if(l.dropPickup&&l.dropDelivery)return 'Pick-up & De
 function rowHTML(id,showCust){const l=LANES[id];
  const parent=l.renewedFrom?LANES[l.renewedFrom]:null;
  const verb=parent?provVerb(parent):null;
- const cue=parent?'<div class="renline">'+(verb==='Renegotiated'?'⇄':'↻')+' '+verb+' from '+esc(parent.code)+' · since '+fmtDate(l.actualStart||l.plannedStart)+'</div>':'';
+ const renewTipText=parent?esc(verb+' from '+parent.code+' · since '+fmtDate(l.actualStart||l.plannedStart)).replace(/'/g,"\\'"):'';
+ const renewTag=parent?'<span class="renewtag" onmouseenter="showTip(this,\''+renewTipText+'\')" onmouseleave="hideTip()">'+(verb==='Renegotiated'?'⇄':'↻')+' '+verb+'</span>':'';
  return '<div class="lanerow'+(showCust?'':' grouped')+'" onclick="openLaneDrawer(\''+id+'\')">'+
- '<div class="code"><div class="codeline">'+esc(l.code)+(isExpiringSoon(l)?'<span class="flagexp" title="Planned end within 3 weeks — no renewal yet">Expiring soon</span>':'')+'</div>'+cue+'</div>'+
+ '<div class="code"><span class="codetext">'+esc(l.code)+'</span>'+renewTag+(isExpiringSoon(l)?'<span class="flagexp" onmouseenter="showTip(this,\'Planned end within 3 weeks — no renewal yet\')" onmouseleave="hideTip()">Expiring soon</span>':'')+'</div>'+
  '<div>'+statusPill(l)+'</div>'+
  (showCust?'<div class="cust">'+esc(l.customer)+'</div>':'')+
  '<div class="od">'+odSummary(l)+'</div>'+
