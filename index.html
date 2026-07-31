@@ -645,27 +645,12 @@ function openEditModal(id){renderForm('edit',id);openFormModal();}
 function openRenewModal(id){renderForm('renew',id,false);openFormModal();}
 function openRenegotiateModal(id){renderForm('renew',id,true);openFormModal();}
 
-let RENEW_OLD=null;
+let RENEW_OLD=null,RENEW_RENEGOTIATE=false;
 function renewBannerHTML(l,renegotiate){
  if(renegotiate){
   return 'Renegotiating <b>'+esc(l.code)+'</b> (v'+l.version+'). Saving ends '+esc(l.code)+' today (cancelled · reason "Renegotiation") and creates v'+(l.version+1)+' starting today with the new terms, linked back via <code>renewed_from_lane_id</code>. No gap.';
  }
  return 'Renewing <b>'+esc(l.code)+'</b> (v'+l.version+'). '+esc(l.code)+' is untouched and keeps running to its planned end ('+fmtDate(l.plannedEnd)+') — saving creates v'+(l.version+1)+' as a new lane linked back via <code>renewed_from_lane_id</code>. A gap between them is fine.';
-}
-function onRenegotiateToggle(){
- const reneg=$('in_renegotiate').checked;
- const startEl=$('in_start');
- if(reneg){
-  if(!startEl.disabled)startEl.dataset.prev=startEl.value;
-  startEl.value=TODAY;startEl.disabled=true;
-  $('starthint').textContent='Locked — renegotiation takes effect today.';
- } else {
-  startEl.disabled=false;startEl.value=startEl.dataset.prev||'';
-  $('starthint').textContent=RENEW_OLD?('Must be on/after '+fmtDate(RENEW_OLD.plannedEnd)+' — '+esc(RENEW_OLD.code)+"'s planned end. A gap is fine; it just can't overlap."):'';
- }
- $('f_liableparty').style.display=reneg?'':'none';
- if(RENEW_OLD)$('renewbanner').innerHTML=renewBannerHTML(RENEW_OLD,reneg);
- const btn=$('dfootSubmit');if(btn)btn.textContent=reneg?'Save renegotiation':'Renew lane';
 }
 
 function formFieldsHTML(v,locked,renewCtx){
@@ -683,15 +668,11 @@ function formFieldsHTML(v,locked,renewCtx){
  return ''+
  '<div id="conflictzone"></div>'+
  '<div class="fsect"><div class="ttl2">Lane details</div><div class="fgroup">'+
- (renewCtx?(
-   '<div style="background:#F6F8FB;border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:8px">'+
-    '<label class="cb2"><input type="checkbox" id="in_renegotiate" '+(renewCtx.renegotiate?'checked':'')+' onchange="onRenegotiateToggle()"><span>This is a renegotiation</span></label>'+
-    '<div class="hint" style="font-size:11px;line-height:1.5">Terms changed mid-contract — ends '+esc(renewCtx.oldLane.code)+' today (cancelled) and starts the new terms today, no gap. Leave unchecked for a standard renewal, which lets '+esc(renewCtx.oldLane.code)+' run out its planned window untouched.</div>'+
-    '<div class="ti" id="f_liableparty" style="'+(renewCtx.renegotiate?'':'display:none')+'"><div class="row"><div class="txt"><label>Cancellation liable party*</label>'+
+ (renewCtx&&renewCtx.renegotiate?(
+    '<div class="ti" id="f_liableparty"><div class="row"><div class="txt"><label>Cancellation liable party*</label>'+
      '<select id="in_liableparty"><option value="">— select —</option><option value="Carrier">Carrier</option><option value="Customer">Customer</option></select></div>'+
      '<span class="icon">'+ICON_CHEVRON+'</span></div>'+
-     '<div class="hint">Who\'s liable for ending '+esc(renewCtx.oldLane.code)+' early.</div><div class="err" id="e_liableparty"></div></div>'+
-   '</div>'
+     '<div class="hint">Who\'s liable for ending '+esc(renewCtx.oldLane.code)+' early.</div><div class="err" id="e_liableparty"></div></div>'
  ):'')+
  '<div class="ti'+(customerLocked?' disabled':'')+'" id="f_customer"><div class="row"><div class="txt"><label>Customer*</label>'+
    '<select id="in_customer" '+(customerLocked?'disabled':'')+'>'+
@@ -738,15 +719,21 @@ function renderForm(mode,id,renegotiate){
  renegotiate=!!renegotiate;
  const l=id?LANES[id]:null;
  RENEW_OLD=(mode==='renew')?l:null;
+ RENEW_RENEGOTIATE=(mode==='renew')?renegotiate:false;
  const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):(renegotiate?'Renegotiate lane — '+esc(l.code):'Renew lane — '+esc(l.code));
- const subtitle=mode==='create'?'Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.':null;
+ const eligibleToRenegotiate=mode==='renew'&&!renegotiate&&deriveStatus(l)==='Active';
+ const eligibleToRenew=mode==='renew'&&renegotiate&&isExpiringSoon(l);
+ const subtitle=mode==='create'?'Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.'
+  :eligibleToRenegotiate?'This lane will not be touched and a new one will be created right after it expires.<br><span class="provlink" onclick="openRenegotiateModal(\''+id+'\')">Want to renegotiate instead?</span>'
+  :eligibleToRenew?'This lane will be cancelled and a new one, with updated terms, will be created in its stead.<br><span class="provlink" onclick="openRenewModal(\''+id+'\')">Want to renew instead?</span>'
+  :null;
 
  const v=mode==='create'?{customer:'',name:'',bco:'',bcoUnknown:false,code:'',plannedStart:'',plannedEnd:'',dropPickup:false,dropDelivery:false,od:[{origin:'',destination:''}]}
   :mode==='edit'?l
   :{customer:l.customer,name:l.name,bco:l.bco,bcoUnknown:l.bcoUnknown,code:suggestRenewCode(l),plannedStart:renegotiate?TODAY:'',plannedEnd:'',dropPickup:l.dropPickup,dropDelivery:l.dropDelivery,od:l.od};
 
  let body='';
- if(mode==='renew'){body+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
+ if(mode==='renew'&&!eligibleToRenegotiate&&!eligibleToRenew){body+='<div class="provbanner" id="renewbanner">'+renewBannerHTML(l,renegotiate)+'</div>';}
  body+=formFieldsHTML(v,mode==='edit',mode==='renew'?{oldLane:l,renegotiate}:null);
 
  const submitLabel=mode==='create'?'Create lane':mode==='edit'?'Save changes':(renegotiate?'Save renegotiation':'Renew lane');
@@ -782,7 +769,7 @@ function submitForm(mode,id){
  if(!end){showErr('e_end','Planned end is required.');ok=false;}
  if(start&&end&&end<start){showErr('e_end','End date can’t be before the start date.');ok=false;}
  if(mode==='renew'){
-  const isReneg=$('in_renegotiate').checked;
+  const isReneg=RENEW_RENEGOTIATE;
   if(!isReneg&&start&&start<LANES[id].plannedEnd){showErr('e_start',"Must be on/after "+fmtDate(LANES[id].plannedEnd)+" — "+esc(LANES[id].code)+"'s planned end, so a load can't match two lanes.");ok=false;}
   if(isReneg&&!$('in_liableparty').value){showErr('e_liableparty','Pick who is liable — carrier or customer.');ok=false;}
  }
@@ -814,7 +801,7 @@ function submitForm(mode,id){
   toast('Saved — no new lane version created.');
  } else if(mode==='renew'){
   const old=LANES[id];
-  const isReneg=$('in_renegotiate').checked;
+  const isReneg=RENEW_RENEGOTIATE;
   const newId=idFromCode(code);
   if(isReneg){
    const liableParty=$('in_liableparty').value;
