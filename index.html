@@ -35,8 +35,13 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
 .toolbar{display:flex;align-items:center;gap:8px;padding:14px 26px 4px;flex-wrap:wrap}
 .chip{border:1px solid #CBD5E1;border-radius:16px;padding:4px 13px;font-size:12.5px;cursor:pointer;background:#fff;color:#334155}
 .chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
-.gtoggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#334155;margin-left:auto;cursor:pointer;user-select:none;white-space:nowrap}
-.gtoggle input{accent-color:var(--teal)}
+.gtoggle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#334155;margin-left:auto;cursor:pointer;user-select:none;white-space:nowrap}
+.switch{position:relative;width:40px;height:20px;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch .track{position:absolute;inset:0;background:#99A1AF;border-radius:8px;transition:background .15s ease;cursor:pointer}
+.switch .thumb{position:absolute;top:2px;left:2px;width:22px;height:16px;background:#fff;border-radius:6px;transition:transform .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
+.switch input:checked+.track{background:var(--teal)}
+.switch input:checked+.track .thumb{transform:translateX(14px)}
 #listwrap{flex:1;overflow:auto;padding:10px 26px 90px}
 .listcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 /* Load type column temporarily removed (was 1.15fr before the trailing chev track in both rules below) — restore by adding it back in .colhead/.lanerow and .colhead.grouped/.lanerow.grouped */
@@ -210,7 +215,7 @@ body{font-family:Roboto,-apple-system,sans-serif;color:var(--ink);background:var
     </div>
     <div class="toolbar">
       <div id="lanechips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-      <label class="gtoggle"><input type="checkbox" id="groupToggle" checked> Group by customer</label>
+      <label class="gtoggle"><span class="switch"><input type="checkbox" id="groupToggle" checked><span class="track"><span class="thumb"></span></span></span>Group by customer</label>
     </div>
     <div id="listwrap"></div>
   </div>
