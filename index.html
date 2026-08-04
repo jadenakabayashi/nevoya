@@ -155,6 +155,8 @@ button{font-family:inherit}
 .catbadge{display:inline-block;justify-self:start;border-radius:16px;padding:2px 7px;font-size:10.5px;font-weight:600;letter-spacing:.15px;line-height:14px;white-space:nowrap}
 .time{font-size:12px;color:var(--gray);white-space:nowrap;font-variant-numeric:tabular-nums}
 .summary{font-size:14px;font-weight:500;color:var(--table-body-fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.summary .actlead{font-weight:600;color:var(--ink2)}
+.summary .actsep{color:var(--gray);font-weight:400;margin:0 6px}
 
 /* expanded detail panel */
 .fdetail{display:none;padding:4px 14px 18px 50px;background:var(--surface-lowest);border-top:1px dashed var(--border-default)}
@@ -292,6 +294,36 @@ const CAT_VAR = {
 };
 const TYPE_LABEL = { load:'LOAD', im:'INTERNAL MOVEMENT', shift:'SHIFT' };
 const TYPE_NOUN = { load:'load', im:'internal movement', shift:'shift' };
+
+// Activity-type callout — a bold lead-in label prefixed to the plain-language summary, so the
+// specific event type reads at a glance without needing a whole separate column. Full taxonomy
+// kept here even though a few (marked below) have no sample event yet in ENTITIES.
+const ACT_LABEL = {
+  LOAD_CREATED:'New load created', // unused — no sample event yet
+  LOAD_STATUS_CHANGED:'Load status updated',
+  LOAD_CANCELLED:'Load cancelled', // unused — no sample event yet
+  LOAD_COMPLETED:'Load completed', // unused — no sample event yet
+  LOAD_MARKED_INCOMPLETE:'Load marked incomplete', // unused — no sample event yet
+  LOAD_APPOINTMENT_CHANGED:'Appointment schedule changed',
+  LOAD_STOP_REJECTED:'Load stop rejected', // unused — no sample event yet
+  LOAD_DISPATCHED:'Load dispatched to driver',
+  DRIVER_UNASSIGNED_FROM_LOAD:'Driver unassigned from load', // unused — no sample event yet
+  INTERNAL_MOVEMENT_CREATED:'Internal movement created',
+  INTERNAL_MOVEMENT_STATUS_CHANGED:'Internal movement status updated',
+  SHIFT_CREATED:'New shift created', // unused — no sample event yet
+  SHIFT_RETIMED:'Shift schedule adjusted',
+  SHIFT_ACTUAL_TIMES_UPDATED:'Actual shift times updated',
+  DOCUMENT_UPLOADED:'Document uploaded', // unused — no sample event yet
+  POD_UPLOADED:'Proof of Delivery (POD) uploaded',
+  BILLING_LINE_ITEM_ADDED:'Billing line item added', // unused — no sample event yet
+  INVOICE_GENERATED:'Invoice generated',
+  TAG_RESOLVED:'Tag resolved',
+  GEOFENCE_EVENT_MATCHED:'Geofence location triggered',
+  SHIFT_BOUNDARY_RESOLVED:'Shift boundary resolved',
+  ARRIVED_AT_STOP:'Arrival recorded',
+  LOAD_UPDATED_FROM_CHR:'Load updated from CH Robinson',
+  SAMSARA_ROUTE_SYNCED:'Samsara route synced',
+};
 
 // Searchable index of entities. Load 7671 / IM-1619 / Andrew Garcia's shift carry the rich event sets
 // (nearly verbatim from the addendum's example table + the TRD's event-type catalog, covering every
@@ -597,7 +629,7 @@ function getSortValue(ev, key){
     case 'actor': return (ev.actorName || '').toLowerCase();
     case 'category': return (CAT_LABEL[ev.category] || '').toLowerCase();
     case 'time': return parseTs(ev.time);
-    case 'activity': return (ev.summary || '').toLowerCase();
+    case 'activity': return ((ACT_LABEL[ev.eventType] ? ACT_LABEL[ev.eventType] + ' ' : '') + (ev.summary || '')).toLowerCase();
     default: return '';
   }
 }
@@ -675,7 +707,11 @@ function rowHtml(ev, idx, ref){
       <pre class="rawjson" id="${rawId}">${JSON.stringify(ev.raw||{}, null, 2)}</pre>
     </div>`;
 
-  const entLink = ref ? `<div class="entlink" onclick="event.stopPropagation();selectEntity('${ref.id}')">${ref.label} ↗</div>` : '';
+  const entLink = ref ? `<div class="entlink" onclick="event.stopPropagation();toast('Would open ${ref.label} detail view (prototype)')">${ref.label} ↗</div>` : '';
+
+  const actLabel = ACT_LABEL[ev.eventType];
+  const summaryHtml = actLabel ? `<b class="actlead">${actLabel}</b><span class="actsep">—</span>${ev.summary}` : ev.summary;
+  const summaryTitle = actLabel ? `${actLabel} — ${ev.summary}` : ev.summary;
 
   return `
     <div class="frow" id="frow-${idx}">
@@ -684,7 +720,7 @@ function rowHtml(ev, idx, ref){
         <span class="actor">${actorIcon}<span class="actorlabel"><div class="name">${ev.actorName}</div><div class="type">${ev.source}</div>${entLink}</span></span>
         <span class="catbadge" style="background:var(--cat-${catVar}-bg);color:var(--cat-${catVar}-fg)">${CAT_LABEL[ev.category]}</span>
         <span class="time">${ev.time}</span>
-        <span class="summary" title="${ev.summary}">${ev.summary}</span>
+        <span class="summary" title="${summaryTitle}">${summaryHtml}</span>
       </div>
       <div class="fdetail">${detail}</div>
     </div>`;
