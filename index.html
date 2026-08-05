@@ -540,7 +540,7 @@ function renderDrawerView(id){const l=LANES[id];if(!l)return;
  const status=deriveStatus(l);
  const open=status!=='Cancelled';
  const hasSuccessor=!!renewedToLane(l.id);
- const canRenew=open&&!hasSuccessor&&(status==='Expired'||isExpiringSoon(l));
+ const canRenew=open&&!hasSuccessor&&(status==='Expired'||status==='Active');
  const canRenegotiate=open&&!hasSuccessor&&status==='Active';
  $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.code)+'</span>'+statusPill(l)+'<span class="x" onclick="closeDrawer()">✕</span></div>'+
  '<h2>'+esc(l.customer)+'</h2><div class="meta">'+(l.bcoUnknown?'BCO unknown — broker withheld':esc(l.bco||'—'))+'</div>'+
@@ -722,7 +722,7 @@ function renderForm(mode,id,renegotiate){
  RENEW_RENEGOTIATE=(mode==='renew')?renegotiate:false;
  const title=mode==='create'?'Create lane':mode==='edit'?'Edit lane — '+esc(l.code):(renegotiate?'Renegotiate lane — '+esc(l.code):'Renew lane — '+esc(l.code));
  const eligibleToRenegotiate=mode==='renew'&&!renegotiate&&deriveStatus(l)==='Active';
- const eligibleToRenew=mode==='renew'&&renegotiate&&isExpiringSoon(l);
+ const eligibleToRenew=mode==='renew'&&renegotiate&&deriveStatus(l)==='Active';
  const subtitle=mode==='create'?'Customer, OD pair(s) and planned dates create a valid lane — no engineering needed.'
   :eligibleToRenegotiate?'This lane will not be touched and a new one will be created right after it expires.<br><span class="provlink" onclick="openRenegotiateModal(\''+id+'\')">Want to renegotiate instead?</span>'
   :eligibleToRenew?'This lane will be cancelled and a new one, with updated terms, will be created in its stead.<br><span class="provlink" onclick="openRenewModal(\''+id+'\')">Want to renew instead?</span>'
