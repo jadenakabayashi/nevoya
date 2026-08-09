@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apollo (short) Horizon Options — Nevoya deck template</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-deep:#21504E;
+    --cream:#F0EBD9;
+    --near-white:#EBEBEF;
+    --neutral-900:#111113;
+
+    --teal-primary:#00786F;
+    --surface-lowest:#F6F8FB;
+    --surface-low:#E6EFFA;
+    --surface-default:#E1EAF5;
+    --surface-high:#DAE3ED;
+    --text-heading:#1D293D;
+    --text-body:#314158;
+    --text-muted:#45556C;
+    --border:#CAD5E2;
+    --disruptive-red:#E7000B;
+
+    --chart-violet:#7F22FE;
+    --chart-blue:#155DFC;
+    --chart-fuschia:#C800DE;
+    --chart-emerald:#007A55;
+    --chart-amber:#E17100;
+    --chart-red:#E7000B;
+    --chart-cyan:#007595;
+    --chart-slate:#1D293D;
+
+    --motif-sage:#8BA78E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#0c1211;height:100%;overflow:hidden;}
+  body{font-family:"Inter",system-ui,sans-serif;}
+
+  #viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  #stage{position:relative;width:1920px;height:1080px;flex:none;transform-origin:center center;box-shadow:0 40px 120px rgba(0,0,0,.5);}
+
+  .slide{position:absolute;inset:0;width:1920px;height:1080px;display:none;flex-direction:column;padding:96px;padding-bottom:104px;overflow:hidden;}
+  .slide.active{display:flex;}
+
+  .slide.dark{background:var(--teal-deep);color:var(--near-white);}
+  .slide.cream{background:var(--cream);color:var(--teal-deep);}
+  .slide.light{background:var(--surface-lowest);color:var(--text-heading);}
+
+  /* ---- shared chrome ---- */
+  .grid-overlay{position:absolute;inset:0;pointer-events:none;}
+  .nmark{position:absolute;pointer-events:none;}
+  .truck-motif{position:absolute;pointer-events:none;user-select:none;}
+  .wordmark{position:absolute;top:96px;left:96px;font-weight:700;font-size:15px;letter-spacing:.08em;}
+
+  .footer{position:absolute;left:96px;right:96px;bottom:32px;display:flex;justify-content:space-between;
+    font-size:13px;font-weight:500;padding-top:14px;}
+  .slide.dark .footer{border-top:1px solid rgba(235,235,239,.22);color:rgba(235,235,239,.75);}
+  .slide.cream .footer{border-top:1px solid rgba(33,80,78,.18);color:rgba(33,80,78,.65);}
+  .slide.light .footer{border-top:1px solid var(--border);color:var(--text-muted);}
+
+  .kicker{font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px;opacity:.85;}
+  .slide.light .kicker{color:var(--teal-primary);opacity:1;}
+  h1.title{font-weight:600;font-size:44px;line-height:1.15;margin:0 0 12px;letter-spacing:-0.01em;}
+  h1.cover-title{font-weight:600;font-size:64px;line-height:1.08;margin:0;letter-spacing:-0.01em;}
+  .subtitle{font-size:18px;line-height:1.55;font-weight:400;max-width:1100px;opacity:.85;margin:0;}
+  .rule{width:56px;height:3px;background:currentColor;opacity:.6;margin-bottom:16px;border-radius:2px;}
+
+  .content{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0;}
+  .body-area{margin-top:56px;flex:1;min-height:0;}
+
+  /* ---- tags ---- */
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;}
+  .tag--emerald{background:var(--chart-emerald);color:#fff;}
+  .tag--amber{background:rgba(225,113,0,.14);color:var(--chart-amber);}
+  .tag--blue{background:rgba(21,93,252,.12);color:var(--chart-blue);}
+  .tag--slate{background:rgba(29,41,61,.10);color:var(--text-muted);}
+  .tag--cyan{background:rgba(0,117,149,.12);color:var(--chart-cyan);}
+  .tag--violet{background:rgba(127,34,254,.12);color:var(--chart-violet);}
+  .tag--outline{background:transparent;border:1px solid currentColor;color:inherit;opacity:.8;}
+
+  /* ---- cards ---- */
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);}
+  .card-pad{padding:28px;}
+
+  /* ---- pill button (brand) ---- */
+  .pill-btn{display:inline-flex;align-items:center;gap:10px;padding:12px 20px 12px 24px;border-radius:999px;border:1px solid currentColor;font-size:14px;font-weight:600;background:transparent;color:inherit;}
+  .pill-btn .arrow{width:20px;height:20px;border:1px solid currentColor;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+
+  /* ---- agenda ---- */
+  .agenda-list{display:flex;flex-direction:column;}
+  .agenda-row{display:flex;align-items:baseline;gap:40px;padding:20px 0;border-bottom:1px solid var(--border);}
+  .agenda-num{font-size:20px;font-weight:600;color:var(--teal-primary);width:44px;flex-shrink:0;}
+  .agenda-label{font-size:22px;font-weight:500;color:var(--text-heading);}
+  .agenda-sub{font-size:14px;color:var(--text-muted);margin-top:2px;}
+
+  /* ---- 3-lens columns ---- */
+  .lens-row{display:flex;gap:40px;height:100%;}
+  .lens-col{flex:1;background:var(--surface-default);border-radius:16px;padding:28px;display:flex;flex-direction:column;}
+  .lens-col .lens-kicker{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-primary);margin-bottom:6px;}
+  .lens-col h3{font-size:20px;font-weight:600;margin:0 0 20px;color:var(--text-heading);line-height:1.3;}
+  .lens-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+  .lens-col li{background:#fff;border-radius:10px;padding:12px 14px;font-size:15px;color:var(--text-body);border:1px solid var(--border);}
+
+  /* ---- roadmap chain ---- */
+  .chain{display:flex;flex-direction:column;gap:14px;}
+  .chain-row{display:flex;gap:24px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 24px;box-shadow:0 1px 2px rgba(16,24,40,.04);}
+  .chain-num{width:36px;height:36px;border-radius:999px;background:var(--teal-primary);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .chain-body{flex:1;}
+  .chain-head{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .chain-title{font-size:17px;font-weight:600;color:var(--text-heading);}
+  .chain-desc{font-size:14px;color:var(--text-muted);line-height:1.5;}
+
+  /* ---- generic bullet list ---- */
+  .ul-clean{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  .ul-clean li{position:relative;padding-left:22px;font-size:16px;line-height:1.55;}
+  .ul-clean li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:999px;background:currentColor;opacity:.7;}
+
+  .two-col{display:flex;gap:80px;height:100%;}
+  .two-col > div{flex:1;min-width:0;}
+
+  .stat-strip{display:flex;gap:24px;margin-top:20px;}
+  .stat-tile{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 24px;flex:1;}
+  .stat-num{font-size:30px;font-weight:600;color:var(--disruptive-red);line-height:1;}
+  .stat-label{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  .quote-block{font-size:26px;font-weight:600;line-height:1.4;color:var(--teal-deep);}
+  .quote-block .attrib{display:block;font-size:14px;font-weight:500;opacity:.6;margin-top:16px;}
+
+  .option-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px;flex:1;display:flex;flex-direction:column;}
+  .option-card h3{font-size:19px;margin:0 0 10px;color:var(--text-heading);}
+  .option-card p{font-size:14.5px;color:var(--text-muted);line-height:1.55;margin:0 0 12px;}
+
+  .ladder{display:flex;align-items:flex-start;gap:0;margin-top:12px;}
+  .ladder-step{flex:1;text-align:center;padding:16px 10px 0;border-top:4px solid var(--border);position:relative;font-size:13px;color:var(--text-muted);}
+  .ladder-step.done{border-top-color:var(--teal-primary);color:var(--text-heading);font-weight:600;}
+  .ladder-step.current{border-top-color:var(--chart-amber);color:var(--text-heading);font-weight:700;}
+
+  .phase-row{display:flex;gap:16px;margin-top:20px;}
+  .phase{flex:1;background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;font-size:13.5px;color:var(--text-body);position:relative;}
+  .phase-num{font-size:12px;font-weight:700;color:var(--teal-primary);margin-bottom:6px;display:block;}
+
+  .nav-btn{position:fixed;bottom:28px;width:52px;height:52px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
+    background:rgba(20,20,20,.35);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    font-size:18px;z-index:1000;backdrop-filter:blur(6px);user-select:none;}
+  .nav-btn:hover{background:rgba(20,20,20,.55);}
+  #prevBtn{right:96px;}
+  #nextBtn{right:32px;}
+  #counter{position:fixed;bottom:44px;left:32px;color:rgba(255,255,255,.55);font-size:12px;font-family:"Inter";z-index:1000;letter-spacing:.04em;}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <pattern id="grid-pattern" width="160" height="1080" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="1080" stroke="#8BA78E" stroke-width="0.5" stroke-dasharray="6 6" opacity="0.28"/>
+    </pattern>
+    <path id="nmark-path" d="M228.559 285.85C217.056 262.233 226.312 233.472 249.26 221.611C272.192 209.765 300.121 219.298 311.637 242.93L493.43 616.073C507.48 644.924 535.61 663.663 566.935 665.056C598.246 666.436 627.83 650.246 644.242 622.745L868.011 247.541C897.254 198.513 899.106 137.195 872.877 86.3879C846.648 35.5807 796.266 2.86078 740.435 0.399744C684.608 -2.06129 631.689 26.0775 601.328 74.3939C570.966 122.71 567.713 183.954 592.776 235.384L663.057 379.651C674.56 403.268 665.303 432.029 642.355 443.89C619.423 455.735 591.495 446.203 579.978 422.571L398.2 49.4129C384.15 20.5624 356.02 1.82302 324.694 0.429425C293.383 -0.949348 263.799 15.2401 247.389 42.7414L23.6319 417.96C-5.6063 466.988 -7.46334 528.306 18.7661 579.113C44.9955 629.92 95.3816 662.64 151.209 665.102C207.036 667.562 259.956 639.424 290.317 591.107C320.678 542.791 323.932 481.547 298.868 430.117L228.559 285.85Z"/>
+  </defs>
+</svg>
+
+<div id="viewport">
+  <div id="stage">
+
+    <!-- ============ 01 COVER ============ -->
+    <section class="slide dark active" data-idx="1">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <svg class="nmark" viewBox="0 0 892 666" width="1400" height="1046" style="right:-260px;top:-280px;transform:rotate(-18deg);">
+        <use href="#nmark-path" fill="#F0EBD9" opacity="0.14"/>
+      </svg>
+      <div class="wordmark">NEVOYA</div>
+      <div class="content" style="justify-content:flex-end;">
+        <div class="rule"></div>
+        <div class="kicker" style="opacity:.85;">Product strategy · prioritization memo</div>
+        <h1 class="cover-title">Apollo (short)<br>Horizon Options</h1>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>01 / 15</span></div>
+    </section>
+
+    <!-- ============ 02 AGENDA ============ -->
+    <section class="slide light" data-idx="2">
+      <div class="content">
+        <div class="kicker">Agenda</div>
+        <h1 class="title">What we'll cover</h1>
+        <div class="body-area agenda-list">
+          <div class="agenda-row"><div class="agenda-num">01</div><div><div class="agenda-label">Three ways to look at this</div><div class="agenda-sub">Workflows · pain points · business objectives</div></div></div>
+          <div class="agenda-row"><div class="agenda-num">02</div><div><div class="agenda-label">Option 1 — make Apollo's data live and trustworthy</div><div class="agenda-sub">The 5-piece dependency chain, and what it unlocks</div></div></div>
+          <div class="agenda-row"><div class="agenda-num">03</div><div><div class="agenda-label">Checkpoint — does this actually fix the ETA?</div><div class="agenda-sub">Not completely — here's the honest read</div></div></div>
+          <div class="agenda-row"><div class="agenda-num">04</div><div><div class="agenda-label">Option 2 — driver shift constraints first</div><div class="agenda-sub">The best leverage-per-effort item on the board</div></div></div>
+          <div class="agenda-row"><div class="agenda-num">05</div><div><div class="agenda-label">Option 3 — mature the optimizer we already have</div><div class="agenda-sub">From reviewed-CP-SAT toward automated planning</div></div></div>
+          <div class="agenda-row" style="border-bottom:none;"><div class="agenda-num">06</div><div><div class="agenda-label">The ask</div><div class="agenda-sub">What we need a decision on</div></div></div>
+        </div>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>02 / 15</span></div>
+    </section>
+
+    <!-- ============ 03 SECTION DIVIDER: three lenses ============ -->
+    <section class="slide dark" data-idx="3">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <svg class="nmark" viewBox="0 0 892 666" width="1100" height="820" style="right:-200px;top:-180px;transform:rotate(10deg);">
+        <use href="#nmark-path" fill="#F0EBD9" opacity="0.16"/>
+      </svg>
+      <div class="content" style="justify-content:center;">
+        <div class="kicker">Section 01</div>
+        <h1 class="title" style="font-size:52px;">Three ways to look at this</h1>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>03 / 15</span></div>
+    </section>
+
+    <!-- ============ 04 THREE LENSES ============ -->
+    <section class="slide light" data-idx="4">
+      <div class="content">
+        <div class="kicker">Framing</div>
+        <h1 class="title">Three ways to prioritize the same roadmap</h1>
+        <div class="body-area lens-row">
+          <div class="lens-col">
+            <div class="lens-kicker">Workflows</div>
+            <h3>Which workflow is most valuable to start with?</h3>
+            <ul>
+              <li>Building the plan</li>
+              <li>Dispatching the load</li>
+              <li>Re-dispatching the load</li>
+              <li>Sharing the data</li>
+              <li>Winning lanes</li>
+            </ul>
+          </div>
+          <div class="lens-col">
+            <div class="lens-kicker">Pain points</div>
+            <h3>Which big pain point do we solve first?</h3>
+            <ul>
+              <li>Planning doesn't happen in Apollo</li>
+              <li>Dispatching is full of friction — no one wants to keep data current</li>
+              <li>Tracking assets is difficult</li>
+              <li>Apollo frontend data is stale</li>
+            </ul>
+          </div>
+          <div class="lens-col">
+            <div class="lens-kicker">Business objective</div>
+            <h3>What's the business's highest priority right now?</h3>
+            <ul>
+              <li>Building the data pipes for agents and automation</li>
+              <li>Being able to scale by EOY</li>
+              <li>Getting as agentic as possible by Q1 2027</li>
+              <li>Revenue increase by Q1 2027</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>In parallel: identify every input a world-class trucking operation needs that Apollo doesn't have today and isn't on the near-term roadmap (Tom's callout)</span><span>04 / 15</span></div>
+    </section>
+
+    <!-- ============ 05 SECTION DIVIDER: Option 1 ============ -->
+    <section class="slide dark" data-idx="5">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <svg class="nmark" viewBox="0 0 892 666" width="1300" height="970" style="right:-320px;bottom:-360px;transform:rotate(-15deg);">
+        <use href="#nmark-path" fill="#F0EBD9" opacity="0.14"/>
+      </svg>
+      <div class="content" style="justify-content:center;">
+        <div class="kicker">Option 1</div>
+        <h1 class="title" style="font-size:52px;">Make Apollo's operational<br>data live and trustworthy</h1>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>05 / 15</span></div>
+    </section>
+
+    <!-- ============ 06 OPTION 1 THESIS (cream) ============ -->
+    <section class="slide cream" data-idx="6">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <div class="content">
+        <div class="kicker">The thesis</div>
+        <h1 class="title">One root cause, three unlocks</h1>
+        <div class="body-area two-col" style="margin-top:64px;">
+          <div>
+            <p style="font-size:19px;line-height:1.6;max-width:640px;">
+              Three separate objectives on the roadmap all trace back to the same root cause:
+              <strong>our operational data isn't true or live.</strong> Fix that, and three things
+              unlock at once.
+            </p>
+          </div>
+          <div class="ul-clean" style="font-size:17px;">
+            <li><strong>Planning/Tracking UI becomes a revenue feature</strong> — not just a facelift. It catches legitimate detention-chargeable dwell, improves loaded-miles utilization, and protects value we already have (Amazon).</li>
+            <li><strong>California can confidently migrate to Apollo</strong> — though we're likely going for it regardless.</li>
+            <li><strong>We can start capturing what GMA's ZETc program needs.</strong></li>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Leads with data-trust work — the dependency under the planning/tracking tool, and already has work in the hopper</span><span>06 / 15</span></div>
+    </section>
+
+    <!-- ============ 07 OPTION 1 DEPENDENCY CHAIN ============ -->
+    <section class="slide light" data-idx="7">
+      <div class="content">
+        <div class="kicker">Option 1 · the sequence</div>
+        <h1 class="title">Five pieces, in order — Re-dispatch Agent needs 3 of 4</h1>
+        <div class="body-area chain" style="margin-top:40px;">
+          <div class="chain-row">
+            <div class="chain-num">1</div>
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Truck-mismatch reconciliation</span><span class="tag tag--emerald">Released</span></div>
+              <div class="chain-desc">Samsara login is treated as source of truth — when a driver logs into a different truck than dispatched, Apollo auto-updates that driver's dispatches for the shift and flags the dispatch.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-num">2</div>
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Late / dwell detection</span><span class="tag tag--amber">PR stalled — ready to go</span></div>
+              <div class="chain-desc">Flags when a stop's dwell crosses a threshold — directly answers the "dwell extends past X mins" case dispatchers currently have to notice manually.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-num">3</div>
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Cross-leg ETA composition</span><span class="tag tag--blue">Scoring candidate · committed</span></div>
+              <div class="chain-desc">Load-delivery ETA truth. Today a late leg doesn't propagate to the next driver's ETA — each driver-shift ETA is naive of the leg before it.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-num">4</div>
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Delay attribution</span><span class="tag tag--slate">Needs tech doc / scoping</span></div>
+              <div class="chain-desc">The connective layer across 1–3 — generalizes the existing Detention flag into a tag any dispatcher can apply when the plan breaks. Two cause codes are already automatable (WRONG-ASSIGN from #1, PRIOR-LEG from #3). Also the retention half of "make the plan live": what keeps dispatchers logging in Apollo instead of Slack or a Google doc.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-num">5</div>
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Shift Doctor v2</span><span class="tag tag--cyan">New · in scoring</span></div>
+              <div class="chain-desc">Shift Doctor is reactive today — it only runs when a human asks "what happened." v2 wires it to fire on #2's detection events automatically. Blocked on #2 landing first.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Also want to pull in: more granular load statuses for the new Planning/Tracking UI</span><span>07 / 15</span></div>
+    </section>
+
+    <!-- ============ 08 PLANNING TOOL REDESIGN ============ -->
+    <section class="slide light" data-idx="8">
+      <div class="content">
+        <div class="kicker">Option 1 · the payoff</div>
+        <h1 class="title">Planning Tool Redesign — the consumer, not a parallel project</h1>
+        <div class="body-area" style="margin-top:36px;display:flex;gap:56px;">
+          <div style="flex:0 0 380px;">
+            <p style="font-size:16px;color:var(--text-muted);line-height:1.6;">
+              Today the planning page builds a schedule from data that's usually stale by the time
+              a dispatcher looks at it. This redesign isn't a nicer UI in parallel — it's <strong
+              style="color:var(--text-heading)">the thing that makes items 1–5 worth doing in the
+              first place</strong>, by surfacing all of it inline.
+            </p>
+          </div>
+          <div class="ul-clean" style="flex:1;font-size:16px;">
+            <li><strong>#1</strong> — the corrected truck/driver assignment, instead of a schedule showing the wrong driver</li>
+            <li><strong>#2</strong> — a dwell-exceeded flag with time-below-target the moment it fires, instead of a dispatcher happening to notice</li>
+            <li><strong>#3</strong> — a load-level ETA that already accounts for the prior leg's delay, instead of a naive per-shift number</li>
+            <li><strong>#4</strong> — a one-click way to log what happened and what a dispatcher did about it, instead of that response leaking into Slack or a spreadsheet</li>
+            <li><strong>#5</strong> — Shift Doctor's diagnosis surfaced automatically, instead of someone having to ask for it</li>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Planning viability needs scoring — but it's what gets users to love Apollo, capture the data, and grow revenue</span><span>08 / 15</span></div>
+    </section>
+
+    <!-- ============ 09 TRAILER POOL + DRIVER SHIFT REDESIGN ============ -->
+    <section class="slide light" data-idx="9">
+      <div class="content">
+        <div class="kicker">Option 1 · same infrastructure, two more consumers</div>
+        <h1 class="title">Trailer Pool Management &amp; Driver Shift redesign</h1>
+        <div class="body-area" style="margin-top:36px;display:flex;gap:32px;">
+          <div class="option-card">
+            <h3>Trailer Pool Management</h3>
+            <p>A standing page for trailer counts vs. target per location, reconciled against real telemetry instead of a manual Slack ritual.</p>
+            <p>Rides on the same Alerting Service v1 infra behind #1 and #2, and exposes pool state through the same agent-facing MCP pattern Shift Doctor v2 and a future Trailer Repositioning Agent both need.</p>
+            <p>Same underlying problem as dwell detection: raw geofence telemetry isn't trustworthy alone — a live pull found enter events with no exit timestamp up to nine months old.</p>
+            <div class="stat-strip" style="margin-top:auto;">
+              <div class="stat-tile">
+                <div class="stat-num">0 / 4</div>
+                <div class="stat-label">trailers at a P&amp;G location for 6 days, 19 hours</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-num">11 min</div>
+                <div class="stat-label">away sat three of our own idle trailers</div>
+              </div>
+            </div>
+          </div>
+          <div class="option-card">
+            <h3>Driver Shift redesign / shift constraints</h3>
+            <p><strong>Honest callout:</strong> the redesign idea is thin and will need real design time.</p>
+            <p>It's about getting shifts out of the dispatch view — the natural surface for showing #1's corrected assignment at the shift level, and eventually Shift Doctor's shift-level diagnosis, somewhere dispatchers already look.</p>
+            <p>We'd use this redesign to capture <strong>driver shift constraints</strong> — the same data item Option 2 leads with.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>09 / 15</span></div>
+    </section>
+
+    <!-- ============ 10 CHECKPOINT (cream) ============ -->
+    <section class="slide cream" data-idx="10">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <img class="truck-motif" src="assets/truck-lineart.svg" style="width:1500px;left:280px;bottom:-140px;opacity:.4;">
+      <div class="content">
+        <div class="kicker">Checkpoint</div>
+        <h1 class="title">Does this make the ETA correct? Not completely.</h1>
+        <div class="body-area" style="margin-top:48px;max-width:1180px;">
+          <p class="quote-block" style="font-size:22px;">
+            Dwell detection, delay attribution, and Shift Doctor v2 are all "give humans better
+            tools to investigate and surface when something's wrong" — not "make the number so
+            good nobody needs to look twice."
+          </p>
+          <div class="card" style="margin-top:36px;background:rgba(255,255,255,.6);border-color:rgba(33,80,78,.2);">
+            <div class="card-pad">
+              <strong style="font-size:16px;">Recommendation</strong>
+              <p style="margin:8px 0 0;font-size:16px;line-height:1.6;">
+                Ship two-click dispatch and display the ETA first — then observe whether that alone
+                fixes trust before investing in any reconciliation or surfacing layer. Three of the
+                five items above would support that layer if it's still needed.
+              </p>
+            </div>
+          </div>
+          <p style="margin-top:28px;font-size:15px;line-height:1.6;max-width:820px;">
+            <strong>Also worth building:</strong> a relay swap-point evaluation tool that scores
+            existing swap-point options — decision support for a human or an agent. It's a named
+            dependency for Re-dispatch Agent, and gives Delay Attribution's <code>relay_handoff</code>
+            code a reason to split into a sub-code for "wrong swap point chosen" vs. generic handoff
+            overhead.
+          </p>
+        </div>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>10 / 15</span></div>
+    </section>
+
+    <!-- ============ 11 SECTION DIVIDER: Option 2 & 3 ============ -->
+    <section class="slide dark" data-idx="11">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <svg class="nmark" viewBox="0 0 892 666" width="1200" height="895" style="left:-260px;top:-220px;transform:rotate(24deg);">
+        <use href="#nmark-path" fill="#F0EBD9" opacity="0.14"/>
+      </svg>
+      <div class="content" style="justify-content:center;align-items:flex-end;text-align:right;">
+        <div class="kicker">Two more paths</div>
+        <h1 class="title" style="font-size:52px;">Option 2 &amp; Option 3</h1>
+        <p class="subtitle" style="text-align:right;">Driver shift constraints first — or mature the optimizer we already have</p>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>11 / 15</span></div>
+    </section>
+
+    <!-- ============ 12 OPTION 2 ============ -->
+    <section class="slide light" data-idx="12">
+      <div class="content">
+        <div class="kicker">Option 2</div>
+        <h1 class="title">Driver shift constraints and Driver shift redesign first</h1>
+        <div class="body-area" style="margin-top:36px;display:flex;gap:56px;">
+          <div style="flex:1;">
+            <p style="font-size:17px;line-height:1.6;color:var(--text-body);">
+              Driver shift constraints is the highest-leverage single item on the board: it's a
+              dependency for <strong>both</strong> the Re-dispatch Agent and the Planning Agent —
+              two of the four decision agents.
+            </p>
+            <div class="ul-clean" style="margin-top:24px;font-size:15.5px;">
+              <li><strong>Best leverage-per-effort.</strong> No other idea unlocks two of the four named decision agents at once. Load weights, charging sessions, and SOC data are each needed by only one agent or tool.</li>
+              <li>Would better support California moving to Apollo.</li>
+              <li>Doesn't depend on unblocking anything first.</li>
+            </div>
+            <div class="card" style="margin-top:24px;border-color:rgba(225,113,0,.35);background:rgba(225,113,0,.06);">
+              <div class="card-pad" style="padding:18px 22px;">
+                <strong style="font-size:14px;color:var(--chart-amber);">Honest callout</strong>
+                <p style="margin:6px 0 0;font-size:14.5px;color:var(--text-body);">Won't move revenue or agentify planning the way stop-duration quantiles or resuming dwell detection will — and it needs real design work.</p>
+              </div>
+            </div>
+          </div>
+          <div style="flex:0 0 420px;">
+            <div class="option-card" style="height:100%;">
+              <h3>Foundational-data items</h3>
+              <p style="margin-bottom:18px;">For the Planning Agent, and agentifying planning more broadly:</p>
+              <div class="ul-clean" style="font-size:15px;">
+                <li>Driver shifts data model migration</li>
+                <li>Load weights from rate confirmation</li>
+                <li>Charging sessions as first-class data</li>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>12 / 15</span></div>
+    </section>
+
+    <!-- ============ 13 OPTION 3 (ladder + roadmap) ============ -->
+    <section class="slide light" data-idx="13">
+      <div class="content">
+        <div class="kicker">Option 3</div>
+        <h1 class="title">Mature the optimizer that's already running</h1>
+        <div class="body-area" style="margin-top:32px;">
+          <p style="font-size:16px;color:var(--text-body);max-width:1300px;line-height:1.6;">
+            Already past "rung 1," really mid-rung 2 on the autonomy ladder: the system proposes via
+            CP-SAT, a human stays fully in the loop reviewing before trusting it. The running
+            optimizer already handles unassigned-leg penalties, deadhead, idle time, appointment
+            windows, HOS, shift windows, no-overlap, and return-to-base constraints.
+          </p>
+          <div class="ladder">
+            <div class="ladder-step done">Rung 1<br>Manual</div>
+            <div class="ladder-step current">Rung 2 (mid)<br>CP-SAT proposes, human reviews</div>
+            <div class="ladder-step">Rung 3<br>Less oversight</div>
+            <div class="ladder-step">Rung 4<br>Automated planning</div>
+          </div>
+          <p style="font-size:16px;color:var(--text-body);max-width:1300px;line-height:1.6;margin-top:28px;">
+            The optimizer's own doc calls out its biggest blind spot: <strong>stop duration is fed
+            into CP-SAT as a single deterministic number today</strong> — "we are already making a
+            risk decision, but we make it implicitly." A 4-phase fix is already scoped in Notion:
+          </p>
+          <div class="phase-row">
+            <div class="phase"><span class="phase-num">Phase 1</span>Quantile model</div>
+            <div class="phase"><span class="phase-num">Phase 2</span>Risk-aware reservation policy</div>
+            <div class="phase"><span class="phase-num">Phase 3</span>Pooled slack</div>
+            <div class="phase"><span class="phase-num">Phase 4</span>Route-level probability</div>
+          </div>
+          <p style="font-size:14.5px;color:var(--text-muted);max-width:1300px;line-height:1.6;margin-top:18px;">
+            The quantile model needs real historical actual-vs-planned stop-duration data to
+            calibrate against — resuming Late/Dwell Detection (Option 1, #2) provides exactly that
+            feed. Driver shift constraints still matters here too: the optimizer models HOS and
+            shift start/end, but nothing about driver availability or preference.
+          </p>
+        </div>
+      </div>
+      <div class="footer"><span>An older "Greedy Optimizer" doc (Feb 2025) already covers driver/truck/load matching, EV range, and charging-insertion feasibility</span><span>13 / 15</span></div>
+    </section>
+
+    <!-- ============ 14 OPTION 3 DATA DEPENDENCIES ============ -->
+    <section class="slide light" data-idx="14">
+      <div class="content">
+        <div class="kicker">Option 3 · what the optimizer is waiting on</div>
+        <h1 class="title">Data work that supports the optimizer</h1>
+        <div class="body-area" style="margin-top:32px;display:flex;flex-direction:column;gap:14px;">
+          <div class="chain-row">
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">SOC / range reliability</span></div>
+              <div class="chain-desc">The optimizer's feasibility check — <code>current_SOC − energy needed ≥ min_safe_SOC</code>. Blocked by the odometer cache; Rohan's Kafka work will provide trustworthy data.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Dynamic charger availability integration</span></div>
+              <div class="chain-desc">The optimizer assumes a charger is reachable and available today — there's no live feed of occupancy or outages yet.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Trailer Pool Management</span></div>
+              <div class="chain-desc">The optimizer has an <code>empty_trailer_pickup</code> stop type and assumes the trailer will be there — this makes it a precondition for one of the optimizer's own stop types, not just a dispatcher UI tool.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Appointment / time-window data integrity</span></div>
+              <div class="chain-desc">The optimizer's hard time-window constraint is only as good as whether "planned time" and the real appointment line up.</div>
+            </div>
+          </div>
+          <div class="chain-row">
+            <div class="chain-body">
+              <div class="chain-head"><span class="chain-title">Location-naming consistency</span></div>
+              <div class="chain-desc">The optimizer matches on Location records — duplicate or inconsistent naming risks route matching, not just lane matching.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>14 / 15</span></div>
+    </section>
+
+    <!-- ============ 15 THE ASK (dark) ============ -->
+    <section class="slide dark" data-idx="15">
+      <svg class="grid-overlay" width="1920" height="1080"><rect width="1920" height="1080" fill="url(#grid-pattern)"/></svg>
+      <svg class="nmark" viewBox="0 0 892 666" width="1300" height="970" style="right:-300px;bottom:-380px;transform:rotate(-12deg);">
+        <use href="#nmark-path" fill="#F0EBD9" opacity="0.14"/>
+      </svg>
+      <div class="content">
+        <div class="kicker">The ask</div>
+        <h1 class="title" style="max-width:1300px;">Pick the sequencing — and let us start the data-trust chain now</h1>
+        <div class="body-area ul-clean" style="margin-top:40px;font-size:18px;max-width:1200px;">
+          <li>Confirm <strong>Option 1</strong> (data-trust chain) as the lead — it has momentum, a released first piece, and a stalled-but-ready second piece.</li>
+          <li>Decide whether <strong>driver shift constraints</strong> (Option 2) gets pulled forward in parallel, given it unlocks two of four decision agents at once.</li>
+          <li>Sign off on shipping <strong>two-click dispatch + ETA display</strong> first, before committing to the fuller reconciliation/surfacing layer.</li>
+          <li>Greenlight scoring for <strong>Delay Attribution</strong> and <strong>Shift Doctor v2</strong> so the chain doesn't stall after #2 lands.</li>
+        </div>
+      </div>
+      <div class="footer"><span>Nevoya — Confidential, internal use only</span><span>15 / 15</span></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="nav-btn" id="prevBtn">‹</div>
+<div class="nav-btn" id="nextBtn">›</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let current = 0;
+
+  function render(){
+    slides.forEach((s,i)=>s.classList.toggle('active', i===current));
+  }
+  function go(delta){
+    current = Math.min(slides.length-1, Math.max(0, current+delta));
+    render();
+  }
+  document.getElementById('prevBtn').addEventListener('click', ()=>go(-1));
+  document.getElementById('nextBtn').addEventListener('click', ()=>go(1));
+  window.addEventListener('keydown', (e)=>{
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){ e.preventDefault(); go(1); }
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); go(-1); }
+  });
+
+  function scaleStage(){
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const scale = Math.min(vw/1920, vh/1080);
+    document.getElementById('stage').style.transform = 'scale('+scale+')';
+  }
+  window.addEventListener('resize', scaleStage);
+  scaleStage();
+  render();
+</script>
+</body>
+</html>
