@@ -59,7 +59,13 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    container, white selected segment, Selector/Dark text — not a teal tint. */
 .viewtogglerow{display:flex;align-items:center;gap:12px;margin-top:14px}
 .viewtoggle{display:inline-flex;background:var(--surface-default);padding:3px;border-radius:10px;gap:0}
-#regionFilter{border:1px solid var(--border-default);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff}
+/* Custom chevron over an appearance:none select — matches height with the
+   segmented toggle beside it and swaps the native OS arrow for our icon set. */
+.selectwrap{position:relative;display:inline-flex;align-items:center}
+.selectwrap .chev{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray)}
+#regionFilter{appearance:none;-webkit-appearance:none;height:39px;border:1px solid var(--border-default);border-radius:8px;padding:0 32px 0 12px;font-size:13px;font-weight:500;font-family:inherit;color:var(--text-dark);background:#fff;cursor:pointer}
+#regionFilter:hover{background:var(--surface-lowest)}
+#regionFilter:focus{outline:none;border-color:var(--teal)}
 .viewtoggle button{border:none;background:transparent;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text-default);cursor:pointer;font-family:inherit}
 .viewtoggle button.active{background:#fff;color:var(--ink);font-weight:600}
 .toolbar{display:flex;align-items:center;gap:8px;padding:0 0 10px;flex-wrap:wrap;flex:none}
@@ -284,12 +290,15 @@ svg.ic{display:block}
           <button type="button" class="active" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
           <button type="button" data-view="all" onclick="setPageView('all')">All Trailers</button>
         </div>
-        <select id="regionFilter" onchange="setRegionFilter(this.value)">
-          <option value="all">All Regions</option>
-          <option value="AZ">Arizona</option>
-          <option value="CA">California</option>
-          <option value="TX">Texas</option>
-        </select>
+        <div class="selectwrap">
+          <select id="regionFilter" onchange="setRegionFilter(this.value)">
+            <option value="all">All Regions</option>
+            <option value="AZ">Arizona</option>
+            <option value="CA">California</option>
+            <option value="TX">Texas</option>
+          </select>
+          <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
       </div>
     </div>
     <div id="content">
@@ -304,10 +313,6 @@ svg.ic{display:block}
       <div id="tablecol">
         <div class="searchrow">
           <input type="text" id="searchInput" placeholder="Search trailers or locations…" oninput="setSearchText(this.value)">
-          <label class="gtoggle" id="archivedToggleWrap" style="display:none">
-            <span class="switch"><input type="checkbox" id="archivedToggle" onchange="setIncludeArchived(this.checked)"><span class="track"><span class="thumb"></span></span></span>
-            Include Archived
-          </label>
         </div>
         <div class="toolbar" id="poolToolbar">
           <div id="poolchips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
@@ -745,12 +750,10 @@ function setPageView(view){
  });
  $('poolToolbar').classList.toggle('hidden',view!=='pools');
  $('atFilters').style.display=view==='all'?'block':'none';
- $('archivedToggleWrap').style.display=view==='all'?'':'none';
  $('listwrap').style.display=view==='pools'?'':'none';
  $('allTrailersList').style.display=view==='all'?'':'none';
  if(view==='all'){
   renderTypeChips();
-  $('archivedToggle').checked=INCLUDEARCHIVED;
  }
  closeFilterDropdown();
  closeDrawer();
@@ -827,7 +830,10 @@ function renderTypeChips(){
     '<div class="atf-types">'+MORE_TYPES.map(typeChipHTML).join('')+'</div>'+
    '</div>'+
   '</div>';
- $('atfRow').innerHTML=primaryHTML+moreHTML;
+ const archivedHTML='<label class="gtoggle">'+
+   '<span class="switch"><input type="checkbox" id="archivedToggle"'+(INCLUDEARCHIVED?' checked':'')+' onchange="setIncludeArchived(this.checked)"><span class="track"><span class="thumb"></span></span></span>'+
+   'Include Archived</label>';
+ $('atfRow').innerHTML=primaryHTML+moreHTML+archivedHTML;
 }
 function toggleTypeFilter(ty){
  if(TYPEFILTER.has(ty))TYPEFILTER.delete(ty);else TYPEFILTER.add(ty);
