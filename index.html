@@ -568,7 +568,8 @@ function renderMap(){
     const dotClass='trailerdot td-'+t.source+(t.pmDue?' pmdue':'')+(t.loaded?' loadedflag':'');
     const icon=L.divIcon({className:'',html:'<div class="'+dotClass+'">'+ICON.trailerbox+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
     const marker=L.marker([lat,lng],{icon}).addTo(MAP);
-    marker.bindTooltip(trailerCardHTML(t),{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
+    marker._cardHTML=trailerCardHTML(t);
+    marker.bindTooltip(marker._cardHTML,{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
     marker.on('click',(e)=>{
      L.DomEvent.stopPropagation(e);
      flashTableRow(l.id);
@@ -611,18 +612,31 @@ function highlightRow(id){
  flashPin(id);
 }
 /* Click-to-pin trailer card: stays open (ignores mouseout) until the map is
-   panned/zoomed or the user clicks elsewhere on the map. */
+   panned/zoomed or the user clicks elsewhere on the map.
+   Leaflet only wires up its mouseover/mouseout auto show/hide listeners once,
+   at bindTooltip() time, based on the permanent option at THAT moment —
+   flipping tooltip.options.permanent afterward doesn't remove them, so the
+   old hover-close listener was still firing on mouseout and closing the
+   "pinned" tooltip. Rebinding the tooltip fresh with permanent:true/false
+   re-runs that wiring so pin/unpin actually takes effect. */
 let PINNED_TRAILER=null;
 function pinTrailerTooltip(marker){
  unpinTrailerTooltip();
- const tooltip=marker.getTooltip();
- if(tooltip){tooltip.options.permanent=true;marker.openTooltip();}
+ if(marker._cardHTML){
+  marker.unbindTooltip();
+  marker.bindTooltip(marker._cardHTML,{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true,permanent:true});
+ }
+ marker.openTooltip();
  PINNED_TRAILER=marker;
 }
 function unpinTrailerTooltip(){
  if(!PINNED_TRAILER)return;
- const tooltip=PINNED_TRAILER.getTooltip&&PINNED_TRAILER.getTooltip();
- if(tooltip){tooltip.options.permanent=false;PINNED_TRAILER.closeTooltip();}
+ if(PINNED_TRAILER._cardHTML){
+  PINNED_TRAILER.unbindTooltip();
+  PINNED_TRAILER.bindTooltip(PINNED_TRAILER._cardHTML,{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
+ } else {
+  PINNED_TRAILER.closeTooltip();
+ }
  PINNED_TRAILER=null;
 }
 /* Selecting a trailer from the All Trailers list (or anywhere else, later)
