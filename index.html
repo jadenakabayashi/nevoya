@@ -198,6 +198,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .atrow:hover{background:var(--surface-low)}
 .atrow.archived{opacity:.6}
 .atrow .tid{font-weight:500;color:var(--ink)}
+/* Trailer name reads as a link — same affordance as lanes' .provlink — even
+   though it doesn't navigate anywhere yet (no detail view to send it to). */
+.atrow .tidlink:hover{text-decoration:underline}
 .atrow .loc2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .atrow .days2{color:var(--gray);font-size:12.5px;white-space:nowrap}
 .atrow .src2{display:inline-flex;align-items:center;color:var(--text-default);font-size:12.5px}
@@ -228,7 +231,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
 .critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
-.trow{display:grid;grid-template-columns:1.2fr .75fr .95fr .7fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center}
+.trow{display:grid;grid-template-columns:1.2fr .75fr .95fr .7fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}
+.trow:not(.head):hover{background:var(--surface-low)}
+.trow.head{cursor:default}
 .trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
 .trow .healthind{display:inline-flex;align-items:center;gap:5px}
 .trow .healthind .dot{width:6px;height:6px;border-radius:50%}
@@ -864,7 +869,7 @@ function renderAllTrailers(){
   const statusClass=r.archived?'p-notarget':(r.t.source==='manual'?'p-unknown':'p-available');
   const days=pseudoDays(r.t.tid);
   return '<div class="atrow'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
-   '<div class="tid">'+esc(r.t.tid)+'</div>'+
+   '<div class="tid"><span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span></div>'+
    '<div><span class="pill '+statusClass+'">'+status+'</span></div>'+
    '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
    '<div class="days2">'+days+' day'+(days===1?'':'s')+'</div>'+
@@ -912,7 +917,7 @@ function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
   html+='<div class="trow head"><div>Trailer</div><div title="'+DVIR_TIP+'">DVIR <span class="infoq">ⓘ</span></div><div>Last Serviced</div><div>Loaded</div></div>'+
    l.trailers.map(t=>{
     const flagged=t.dvir==='flagged';
-    return '<div class="trow">'+
+    return '<div class="trow" onclick="selectTrailerFromList(\''+t.tid+'\',\''+l.id+'\')">'+
      '<div>'+esc(t.tid)+(t.pmDue?' <span class="pmflag" onmouseenter="showTip(this,\'Due for preventative maintenance\')" onmouseleave="hideTip()">'+ICON.pmAlert+'</span>':'')+'</div>'+
      '<div><span class="healthind '+(flagged?'flagged':'gps')+'"><span class="dot"></span>'+(flagged?'Flagged':'OK')+'</span></div>'+
      '<div>'+pseudoLastServiced(t)+'</div>'+
