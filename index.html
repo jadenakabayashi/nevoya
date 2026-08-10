@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trailer Pool — Apollo by Nevoya</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+/* Tokens — mirrors shared/tokens.css + confirmed Figma pulls in
+   .claude/skills/nevoya-prototype/references/nevoya-library.md (Button, Status chip,
+   Filter chip, Table, Navigation, Dialog). Don't hand-tune hexes here without
+   checking that reference first. */
+:root{
+  --teal:#00786F;--teal-soft:#F0FDFA;
+  --ink:#0F172B;--text-dark:#1D293D;--text-default:#314158;--text-muted:#45556C;--gray:#62748E;
+  --bg:#F7F7F8;--surface-lowest:#F6F8FB;--surface-low:#E6EFFA;--surface-default:#E1EAF5;--surface-high:#DAE3ED;
+  --border-default:#CAD5E2;--border-muted:#E2E8F0;
+  --red:#E7000B;--redsoft:#FFE2E2;
+  --amber:#E17100;--ambersoft:#FEF3C6;
+  --green:#007A55;--greensoft:#D0FAE5;
+  --slate:#1D293D;--slatesoft:#E6EFFA;
+  /* Load chip status-dot colors (shared/tokens.css Icon/*) */
+  --icon-emerald-success:#009966;--icon-fuschia-pending:#c800de;--icon-stone-cancelled:#79716b;
+  --icon-blue-in-progress:#155dfc;--icon-violet-dispatched:#7f22fe;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(--bg);height:100vh;overflow:hidden;font-size:14px}
+#app{display:flex;height:100vh}
+/* rail (matches lanes/index.html) */
+#rail{width:64px;background:#fff;border-right:1px solid var(--border-muted);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex:none}
+#rail .logo{width:34px;height:34px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;margin-bottom:10px}
+#rail .ric{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#475569;position:relative}
+#rail .ric:hover{background:var(--surface-lowest)}
+/* Selected nav item = background/high, NOT a teal tint (confirmed Figma spec). */
+#rail .ric.active{background:var(--surface-high);color:var(--text-dark)}
+#rail .ric.ghost{opacity:.38;cursor:default}
+#rail .tz{margin-top:auto;font-size:11px;color:var(--gray);font-weight:500}
+#rail .tip{position:absolute;left:52px;background:var(--ink);color:#fff;font-size:11px;padding:3px 8px;border-radius:5px;white-space:nowrap;display:none;z-index:50}
+#rail .ric:hover .tip{display:block}
+/* main */
+#maincol{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+#poolhead{padding:18px 26px 0;flex:none}
+#poolhead .top{display:flex;align-items:center;gap:14px}
+#poolhead h1{font-size:26px;font-weight:500}
+#poolhead .sub{color:var(--gray);font-size:12.5px;margin-top:4px}
+.recon{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--gray);font-size:12px;font-weight:500;background:var(--surface-lowest);border-radius:16px;padding:5px 12px}
+.recon .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+/* Button (confirmed Figma spec): Primary teal / Outline border-default / Disruptive red. */
+.abtn{border:1px solid var(--border-default);background:#fff;border-radius:8px;font-size:13px;font-weight:600;padding:7px 12px;cursor:pointer;font-family:inherit;color:var(--text-dark)}
+.abtn:hover{background:var(--surface-lowest)}
+.abtn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.abtn.primary:hover{background:var(--teal);opacity:.9}
+.abtn.disruptive{background:var(--red);border-color:var(--red);color:#fff}
+.abtn.ghost{border-color:transparent;background:transparent}
+.abtn.ghost:hover{background:var(--surface-lowest)}
+.abtn:disabled{opacity:.3;cursor:not-allowed}
+/* Segmented control (confirmed Figma spec 46:583/49:580): background/default
+   container, white selected segment, Selector/Dark text — not a teal tint. */
+.viewtoggle{display:inline-flex;background:var(--surface-default);padding:3px;border-radius:10px;gap:0;margin-top:14px}
+.viewtoggle button{border:none;background:transparent;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text-default);cursor:pointer;font-family:inherit}
+.viewtoggle button.active{background:#fff;color:var(--ink);font-weight:600}
+.toolbar{display:flex;align-items:center;gap:8px;padding:0 0 10px;flex-wrap:wrap;flex:none}
+/* Filter chip (confirmed Figma spec: default border-default/white, selected teal border/teal-soft bg). */
+.chip{border:1px solid var(--border-default);border-radius:8px;padding:6px 13px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--text-default)}
+.chip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);font-weight:600}
+/* Group-by toggle — matches the lanes prototype's .gtoggle/.switch exactly.
+   On = group by account; off = fall back to the location-type grouping. */
+.gtoggle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-default);margin-left:auto;cursor:pointer;user-select:none;white-space:nowrap}
+.switch{position:relative;width:40px;height:20px;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch .track{position:absolute;inset:0;background:#99A1AF;border-radius:8px;transition:background .15s ease;cursor:pointer}
+.switch .thumb{position:absolute;top:2px;left:2px;width:22px;height:16px;background:#fff;border-radius:6px;transition:transform .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
+.switch input:checked+.track{background:var(--teal)}
+.switch input:checked+.track .thumb{transform:translateX(14px)}
+.searchrow{padding:0 0 10px;flex:none}
+.searchrow input{width:100%;max-width:260px;border:1px solid var(--border-default);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:var(--text-dark)}
+.searchrow input:focus{border-color:var(--teal)}
+.atfilters{padding:0 0 10px;flex:none}
+.atf-types{display:flex;gap:8px;flex-wrap:wrap}
+.atf-row select{border:1px solid var(--border-default);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff}
+.filterdd{position:relative;display:inline-block}
+.filterbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-default);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--text-dark);cursor:pointer;font-family:inherit}
+.filterbtn:hover{background:var(--surface-lowest)}
+.filterbtn .fcount{background:var(--teal);color:#fff;border-radius:10px;font-size:10.5px;font-weight:700;padding:1px 6px;line-height:1.4}
+.filterpanel{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--border-default);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:14px;width:320px;z-index:50;display:flex;flex-direction:column;gap:10px}
+.filterpanel .fp-label{font-size:11px;letter-spacing:.3px;font-weight:600;color:var(--gray);margin-top:4px}
+.filterpanel .fp-label:first-child{margin-top:0}
+.filterpanel select{border:1px solid var(--border-default);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff;width:100%}
+
+/* split content: map (left) + pool table (right) — mirrors the real Trailers
+   page's grid-cols-2 map/table layout in the apollo app. */
+#content{flex:1;min-height:0;display:flex;gap:0;padding:10px 26px 16px}
+#mapcol{flex:1;min-width:220px;border-radius:16px;border:1px solid var(--border-muted);position:relative;overflow:hidden}
+/* drag handle between the map and the table — dragging resizes #mapcol;
+   #tablecol is flex:1 so it always fills whatever space is left over. */
+#resizer{flex:0 0 17px;margin:0 -1px;cursor:col-resize;display:flex;align-items:center;justify-content:center;touch-action:none}
+#resizer .grip{width:4px;height:56px;border-radius:3px;background:var(--border-default);transition:background .12s}
+#resizer:hover .grip,#resizer.dragging .grip{background:var(--teal)}
+#mapEl{position:absolute;inset:0;background:var(--surface-lowest)}
+#mapcol .maplabel{position:absolute;top:12px;right:56px;z-index:500;font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--gray);text-transform:uppercase;background:rgba(255,255,255,.9);padding:3px 8px;border-radius:6px;pointer-events:none}
+.autozoom-card{position:absolute;top:12px;left:14px;z-index:500;background:#fff;border-radius:10px;padding:8px 10px 8px 12px;box-shadow:0 1px 4px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;user-select:none}
+.azswitch{width:34px;height:19px;border-radius:10px;background:var(--border-default);position:relative;transition:background .15s;flex:none}
+.azswitch::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left .15s}
+.autozoom-card.on .azswitch{background:var(--teal)}
+.autozoom-card.on .azswitch::after{left:17px}
+/* Leaflet divIcon content — the marker itself; Leaflet positions/anchors the
+   wrapping .leaflet-marker-icon, so this only needs its own visual shape. */
+.pin{width:20px;height:20px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.35);border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+.pin.p-ontarget{background:var(--green)}
+.pin.p-belowtarget{background:var(--amber)}
+.pin.p-critical{background:var(--red)}
+.pin.p-notarget{background:var(--gray)}
+.pin .pn{transform:rotate(45deg);color:#fff;font-size:10.5px;font-weight:700;line-height:1}
+/* individual trailer marker — shown once a location is zoomed/clicked into,
+   styled after the real apollo map's yard-level trailer badges (dark circle,
+   small container icon, laid out like trailers parked in a lot). */
+.trailerdot{position:relative;width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.trailerdot.td-gps{background:#1D4F49}
+.trailerdot.td-manual{background:var(--amber)}
+.trailerdot svg{width:14px;height:14px}
+/* PM-due flag: a glanceable badge, no hover needed — Amanda-flags-PMs concept.
+   Amber, not red — routine maintenance due isn't an urgent/critical problem. */
+.trailerdot.pmdue::after{content:'';position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--amber);border:1.5px solid #fff}
+/* Loaded trailers get a gold ring — they aren't real available pool capacity. */
+.trailerdot.loadedflag{box-shadow:0 0 0 3px rgba(224,168,48,.65),0 1px 3px rgba(0,0,0,.4)}
+.trailerdot.flash{animation:dotpulse .9s ease 2}
+.pin.flash{animation:pinpulse .9s ease 2}
+@keyframes dotpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+@keyframes pinpulse{0%,100%{transform:rotate(-45deg) scale(1)}50%{transform:rotate(-45deg) scale(1.5)}}
+/* Trailer card overlay — richer than a single-line tooltip: health/PM/loaded. */
+.leaflet-tooltip.trailercard{padding:9px 11px;min-width:168px}
+.trailercard .tc-id{font-weight:600;font-size:12.5px;color:var(--ink);margin-bottom:4px}
+.trailercard .tc-row{display:flex;align-items:center;font-size:11px;color:var(--text-default);line-height:1.6}
+.trailercard .tc-pm{color:var(--amber);font-weight:600}
+.leaflet-tooltip.poolTip{font-family:Inter,-apple-system,sans-serif;font-size:11px;padding:4px 8px}
+
+#tablecol{flex:1;min-width:340px;display:flex;flex-direction:column;min-height:0}
+/* Table (confirmed Figma spec): lowest bg, 12px padding, 16px radius, Border/Muted row dividers. */
+/* Table card (matches the lanes prototype's .listcard: white card on the
+   light-gray page, not a same-tone fill that blends into it). */
+#listwrap{flex:1;overflow:auto;background:#fff;border:1px solid var(--border-muted);border-radius:10px;padding:0}
+/* colHead() now renders once at the very top of the whole list (see
+   renderList) — it owns top:0/the higher z-index; each group's sechead
+   sticks just underneath it as you scroll past. Sechead keeps a light tint
+   (like lanes' grouphead) so it reads as a section band on the white card. */
+.sechead{display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:12.5px;font-weight:600;color:var(--gray);background:var(--surface-lowest);border-bottom:1px solid var(--border-muted);cursor:pointer;position:sticky;top:33px;z-index:1}
+.sechead .chev{transition:transform .15s;display:inline-block;color:var(--gray)}
+.sechead.collapsed .chev{transform:rotate(-90deg)}
+.sechead .n{color:var(--gray);font-weight:400}
+.colhead{display:grid;grid-template-columns:1.2fr 1fr .8fr .6fr 1.05fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+.poolrow{display:grid;grid-template-columns:1.2fr 1fr .8fr .6fr 1.05fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.poolrow:hover{background:var(--surface-low)}
+.poolrow.flash{background:var(--surface-high)}
+.poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
+.poolrow .loc .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.poolrow .loc .acct{color:var(--gray);font-size:11.5px;font-weight:400}
+.poolrow .count{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
+.poolrow .count b{font-weight:600;color:var(--ink)}
+.poolrow .untracked{color:var(--gray);font-size:12.5px;white-space:nowrap}
+.poolrow .days{color:var(--gray);font-size:12.5px;white-space:nowrap}
+.poolrow .days.flag{color:var(--amber);font-weight:500}
+.poolrow .chev2{color:#CBD5E1}
+/* Status chip (confirmed Figma spec — source of truth for status pill colors).
+   nowrap: a two-word status like "Below target" must stay on one line, same
+   as every pill in the lanes reference — never let a chip wrap. */
+.pill{border-radius:16px;padding:3px 11px;font-size:12px;font-weight:600;display:inline-block;letter-spacing:.2px;white-space:nowrap}
+.p-ontarget{background:var(--greensoft);color:var(--green)}
+.p-belowtarget{background:var(--ambersoft);color:var(--amber)}
+.p-critical{background:var(--redsoft);color:var(--red)}
+.p-notarget{background:var(--slatesoft);color:var(--slate)}
+.p-available{background:var(--greensoft);color:var(--green)}
+.p-unknown{background:var(--slatesoft);color:var(--slate)}
+.lid{background:var(--surface-default);border-radius:6px;padding:3px 9px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
+/* Load chip (Figma node 68:102) — status dot + label, rounded-full pill.
+   Use this wherever a load reference is shown; use .lid for plain id chips. */
+.loadtag{background:var(--surface-default);border-radius:16px;padding:3px 11px 3px 8px;font-weight:600;font-size:12px;display:inline-flex;gap:6px;align-items:center;color:var(--text-dark);white-space:nowrap}
+.loadtag .dot{width:7px;height:7px;border-radius:50%;flex:none}
+
+/* ---------- All Trailers (flat) view — lives in #tablecol next to the map,
+   swapped in for #listwrap; same Table look as the pools list. ---------- */
+#poolToolbar.hidden{display:none}
+#allTrailersList{flex:1;overflow:auto;background:#fff;border:1px solid var(--border-muted);border-radius:10px}
+.atcolhead{display:grid;grid-template-columns:1fr .8fr 1.15fr .8fr .7fr .8fr;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
+.atrow{display:grid;grid-template-columns:1fr .8fr 1.15fr .8fr .7fr .8fr;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
+.atrow:hover{background:var(--surface-low)}
+.atrow.archived{opacity:.6}
+.atrow .tid{font-weight:500;color:var(--ink)}
+.atrow .loc2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atrow .days2{color:var(--gray);font-size:12.5px;white-space:nowrap}
+.atrow .src2{display:inline-flex;align-items:center;color:var(--text-default);font-size:12.5px}
+.emptysec{padding:16px;color:var(--gray);font-size:12.5px}
+.infoq{cursor:help;color:var(--gray);font-size:10px}
+/* drawer */
+#drawer{width:0;flex:none;background:#fff;border-left:1px solid var(--border-muted);overflow:hidden;transition:width .18s ease;display:flex;flex-direction:column}
+#drawer.open{width:400px}
+#dhead{padding:12px;border-bottom:1px solid var(--border-muted);flex:none}
+#dhead .top{display:flex;align-items:center;gap:8px}
+#dhead .x{margin-left:auto;cursor:pointer;color:var(--gray);font-size:16px;padding:2px 8px;border-radius:6px}
+#dhead .x:hover{background:var(--surface-lowest)}
+#dhead h2{font-size:20px;font-weight:600;color:var(--ink);margin-top:8px}
+#dhead .meta{color:var(--gray);font-size:12.5px;margin-top:3px}
+#dhead .btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#dtl{flex:1;overflow-y:auto;padding:14px 18px 24px}
+#dtl .sect{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:600;margin-bottom:10px;display:flex}
+#dtl .sect span:last-child{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none}
+#dfoot{flex:none;border-top:1px solid var(--border-muted);padding:12px 18px;display:none;gap:8px;justify-content:flex-end;background:#fff}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin-bottom:6px}
+.dr{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.dr .k{font-size:11px;color:var(--gray);letter-spacing:.3px}
+.dr .v{color:var(--ink)}
+.suggbanner{background:var(--teal-soft);border:1px solid #B7E4DE;border-radius:8px;padding:12px 14px;margin-bottom:16px}
+.suggbanner .t{font-weight:600;font-size:13.5px;color:var(--teal);display:flex;align-items:center;gap:6px}
+.suggbanner .d{font-size:12.5px;color:#0F5750;margin-top:5px;line-height:1.5}
+.suggbanner .btns{margin-top:9px;display:flex;gap:8px}
+.critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
+.critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
+.critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
+.trow{display:grid;grid-template-columns:1.15fr .7fr .8fr .6fr .7fr;gap:6px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center}
+.trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
+.trow .src{display:inline-flex;align-items:center}
+/* Health indicator keeps its dot — only source (GPS/Manual) indicators lose theirs. */
+.trow .healthind{display:inline-flex;align-items:center;gap:5px}
+.trow .healthind .dot{width:6px;height:6px;border-radius:50%}
+.trow .healthind.gps .dot{background:var(--green)}
+.trow .healthind.flagged .dot{background:var(--red)}
+/* PM is a flag (badge) inline on the trailer id, not its own column. */
+/* PM-due flag — just the icon, no pill/background; hover shows context via
+   the shared .hovertip (matches the lanes prototype's "Expiring soon" flag). */
+.pmflag{display:inline-flex;align-items:center;vertical-align:-2px;cursor:default}
+/* Shared hover tooltip — fixed to body so it escapes any scroll clipping. */
+.hovertip{position:fixed;display:none;background:var(--ink);color:#fff;font-size:11px;font-weight:400;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:250;pointer-events:none}
+.hovertip.show{display:block}
+.emptytrailers{color:var(--gray);font-size:12.5px;padding:10px 0 2px}
+/* form */
+.ffield{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.ffield label{font-size:12px;color:var(--text-default);font-weight:500}
+.ffield input[type=text],.ffield input[type=number],.ffield select{border:1px solid var(--border-default);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%;color:var(--text-dark)}
+.ffield input:focus,.ffield select:focus{border-color:var(--teal)}
+.ffield .hint{font-size:11px;color:#94A3B8}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
+svg.ic{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="rail">
+    <div class="logo">N</div>
+    <div class="ric" onclick="location.href='../load-timeline/mvp2-apollo.html'">📦<span class="tip">Loads</span></div>
+    <div class="ric" onclick="location.href='../lanes/index.html'">🛣<span class="tip">Lanes</span></div>
+    <div class="ric active">🚛<span class="tip">Trailer Pool</span></div>
+    <div class="ric ghost">✦<span class="tip">Ask Apollo — coming to Trailer Pool</span></div>
+    <div class="ric ghost">🔔<span class="tip">Alerts feed — coming soon</span></div>
+    <div class="ric ghost">🗓</div><div class="ric ghost">👤</div><div class="ric ghost">📊</div>
+    <div class="tz">CA</div>
+  </div>
+  <div id="maincol">
+    <div id="poolhead">
+      <div class="top">
+        <div>
+          <h1>Trailer Pool</h1>
+          <div class="sub" id="poolsub">— locations</div>
+        </div>
+        <div class="recon"><span class="dot"></span>Reconciled 4 min ago</div>
+        <button type="button" class="abtn primary" style="margin-left:14px" onclick="openCreateTrailerDrawer()">+ Create Trailer</button>
+      </div>
+      <div class="viewtoggle" id="viewToggle">
+        <button type="button" class="active" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
+        <button type="button" data-view="all" onclick="setPageView('all')">All Trailers</button>
+      </div>
+    </div>
+    <div id="content">
+      <div id="mapcol">
+        <div class="autozoom-card on" id="autozoomCard" onclick="toggleAutoZoom()">
+          <span>Auto-zoom</span><span class="azswitch"></span>
+        </div>
+        <div class="maplabel">Trailer locations</div>
+        <div id="mapEl"></div>
+      </div>
+      <div id="resizer" onmousedown="startResize(event)"><div class="grip"></div></div>
+      <div id="tablecol">
+        <div class="searchrow">
+          <input type="text" id="searchInput" placeholder="Search trailers or locations…" oninput="setSearchText(this.value)">
+        </div>
+        <div class="toolbar" id="poolToolbar">
+          <div id="poolchips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          <label class="gtoggle">
+            <span class="switch"><input type="checkbox" id="groupToggle" checked onchange="setGroupBy(this.checked)"><span class="track"><span class="thumb"></span></span></span>
+            Group by location
+          </label>
+        </div>
+        <div class="atfilters" id="atFilters" style="display:none">
+          <div class="filterdd" id="filterDD">
+            <button type="button" class="filterbtn" onclick="toggleFilterDropdown(event)">
+              <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
+              Filters<span class="fcount" id="filterCount" style="display:none"></span>
+              <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="filterpanel" id="filterPanel" style="display:none">
+              <div class="fp-label">Trailer Type</div>
+              <div class="atf-types" id="atfTypes"></div>
+              <div class="fp-label">Region</div>
+              <select id="atfRegion" onchange="setRegionFilter(this.value)">
+                <option value="all">All Regions</option>
+                <option value="California">California</option>
+              </select>
+              <div class="autozoom-card" id="archivedCard" style="position:static" onclick="toggleIncludeArchived()">
+                <span>Include Archived</span><span class="azswitch"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="listwrap"></div>
+        <div id="allTrailersList" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+  <div id="drawer">
+    <div id="dhead"></div>
+    <div id="dtl"></div>
+    <div id="dfoot"></div>
+  </div>
+  <div id="hovertip" class="hovertip"></div>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
+/* ---------- shared hover tooltip (fixed to body — escapes #listwrap's scroll clipping;
+   same pattern as the lanes prototype's "Expiring soon" flag) ---------- */
+function showTip(el,text){
+ const t=$('hovertip');
+ t.textContent=text;
+ t.classList.add('show');
+ const r=el.getBoundingClientRect();
+ t.style.top=(r.bottom+6)+'px';
+ t.style.left=Math.max(8,Math.min(r.left,window.innerWidth-t.offsetWidth-8))+'px';
+}
+function hideTip(){$('hovertip').classList.remove('show');}
+
+/* Minimal inline icon set (Tabler-style outline, matches the icon look the real
+   apollo app uses via @tabler/icons-react) so we're not relying on emoji for
+   in-content chrome. */
+const ICON = {
+  chevronRight:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  chevronDown:'<svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  x:'<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  pencil:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
+  reposition:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5M20 20v-5h-5M4.5 9a8 8 0 0113.9-3.5L20 9M19.5 15a8 8 0 01-13.9 3.5L4 15"/></svg>',
+  alert:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17a1.7 1.7 0 001.5 2.5h16a1.7 1.7 0 001.5-2.5L13.7 3.9a1.7 1.7 0 00-3.4 0z"/></svg>',
+  /* isometric-box glyph for individual trailer map markers */
+  trailerbox:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+  /* small filled alert-circle — the PM-due flag. Amber, not red: routine
+     maintenance due, not an urgent problem. */
+  pmAlert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--amber)"><circle cx="12" cy="12" r="10"/><rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/><rect x="11" y="15.5" width="2" height="2" rx="1" fill="#fff"/></svg>',
+};
+
+/* ---------- seed data (grounded in the Trailer Pool Management Idea doc — P&G/Moreno Valley
+   sat at 0/4 for 6 days while Perris Ranch idled 3 trailers 11 min away; TSG Fontana was
+   previously excluded from pool counts because has_trailer_storage is scoped to hub-stop
+   storage only; BFL1 carries one manually-flagged Ryder rental with no GPS ping) ----------
+   Structurally mirrors the real apollo Trailers page's groupTrailersByLocation() output:
+   Trailer Pools (has_trailer_storage) / Other Locations / GPS-Unknown. x/y are illustrative
+   map-panel positions (0-100), not real coordinates. */
+let POOL={},OTHER={},GPSUNKNOWN=null,ARCHIVED_TRAILERS=[];
+function seedPool(){
+POOL={
+ 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',target:4,current:0,untracked:0,daysBelow:6,lat:33.9425,lng:-117.2297,
+  suggestion:{name:'Perris Ranch, CA',minutes:11,available:3},
+  trailers:[]},
+ 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',target:2,current:5,untracked:0,daysBelow:0,lat:33.8900,lng:-117.2450,
+  trailers:[
+   {tid:'NEVO-4471',source:'gps',lastPing:'2 min ago'},
+   {tid:'NEVO-4482',source:'gps',lastPing:'6 min ago',loaded:true},
+   {tid:'NEVO-4498',source:'gps',lastPing:'11 min ago'},
+   {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago'},
+   {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
+  ]},
+ 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',target:3,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
+  trailers:[
+   {tid:'NEVO-3312',source:'gps',lastPing:'3 min ago'},
+   {tid:'NEVO-3340',source:'gps',lastPing:'8 min ago'}
+  ]},
+ 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',target:3,current:3,untracked:0,daysBelow:0,lat:33.9550,lng:-117.2550,
+  trailers:[
+   {tid:'NEVO-3355',source:'gps',lastPing:'1 min ago'},
+   {tid:'NEVO-3361',source:'gps',lastPing:'4 min ago'},
+   {tid:'NEVO-3379',source:'gps',lastPing:'9 min ago'}
+  ]},
+ 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',target:3,current:1,untracked:0,daysBelow:4,lat:33.9200,lng:-117.3100,
+  suggestion:{name:'LGB5 – Moreno Valley, CA',minutes:18,available:1},
+  trailers:[
+   {tid:'NEVO-3402',source:'gps',lastPing:'7 min ago'}
+  ]},
+ 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',target:3,current:3,untracked:1,daysBelow:0,lat:33.9800,lng:-117.1850,
+  trailers:[
+   {tid:'NEVO-3510',source:'gps',lastPing:'5 min ago'},
+   {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
+   {tid:'RYDER-8821',source:'manual',lastPing:'flagged manually — Ryder rental, no GPS',dvir:'flagged',pmDue:true}
+  ]},
+ 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',target:2,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
+  trailers:[
+   {tid:'NEVO-2201',source:'gps',lastPing:'2 min ago'},
+   {tid:'NEVO-2219',source:'gps',lastPing:'10 min ago',dvir:'flagged'}
+  ]}
+};
+OTHER={
+ 'ONT-DOCK':{id:'ONT-DOCK',name:'Ontario DC — Customer Dock',account:'Customer-owned',current:2,lat:33.9350,lng:-117.2950,
+  trailers:[
+   {tid:'NEVO-2890',source:'gps',lastPing:'22 min ago'},
+   {tid:'NEVO-2901',source:'gps',lastPing:'40 min ago'}
+  ]}
+};
+GPSUNKNOWN={id:'__unknown__',name:'Unknown location',account:null,current:2,
+  trailers:[
+   {tid:'NEVO-1187',source:'manual',lastPing:'no GPS ping in 6h'},
+   {tid:'NEVO-1204',source:'manual',lastPing:'no GPS ping in 9h'}
+  ]};
+ /* Standalone — archived trailers are pulled from active pool inventory, so
+    they intentionally don't count toward any location's current/target. Only
+    surfaced in the All Trailers list when "Include Archived" is on. */
+ ARCHIVED_TRAILERS=[
+  {tid:'NEVO-1050',source:'gps',lastPing:'archived 42 days ago',locName:'Perris Ranch, CA',locId:'PERRIS'},
+  {tid:'NEVO-0987',source:'manual',lastPing:'archived 95 days ago',locName:'TSG Fontana, CA',locId:'TSG-FONT'}
+ ];
+}
+
+/* ---------- helpers ---------- */
+function deriveHealth(l){
+ if(typeof l.target!=='number')return 'No target set';
+ if(l.current===0)return 'Critical';
+ if(l.current<l.target)return 'Below target';
+ return 'On target';
+}
+/* deriveHealth() returns strings like "No target set" — normalize its class distinctly. */
+function healthClass(h){
+ if(h==='No target set')return 'p-notarget';
+ return 'p-'+h.toLowerCase().replace(/\s+/g,'');
+}
+function healthPill(l){const h=deriveHealth(l);return '<span class="pill '+healthClass(h)+'">'+h+'</span>';}
+function allEntries(){return {...POOL,...OTHER,[GPSUNKNOWN.id]:GPSUNKNOWN};}
+
+/* ---------- map (Leaflet + Esri World Topo tiles — terrain look, no API key) ---------- */
+let MAP=null,MARKERS={},TRAILER_MARKERS={},LOT_RECTS={},AUTOZOOM=true;
+/* Zoom level at which a location's aggregate pin gives way to individual
+   per-trailer markers. Below this, one pin per location; at/above it, each
+   trailer at that location gets its own marker laid out in the yard. Needs to
+   be a close, street-level zoom — a yard's trailer spacing is only ~80-100m,
+   which is illegibly cramped at anything wider. */
+const EXPAND_ZOOM=15;
+const CLICK_EXPAND_ZOOM=17;
+
+function initMap(){
+ MAP=L.map('mapEl',{scrollWheelZoom:true,zoomControl:false,fadeAnimation:false}).setView([34.6,-118.2],7);
+ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
+  maxZoom:19,attribution:'Tiles &copy; Esri — Esri, HERE, Garmin, USGS, NGA, EPA, NPS'
+ }).addTo(MAP);
+ L.control.zoom({position:'topright'}).addTo(MAP);
+ L.control.scale({imperial:false,position:'bottomleft'}).addTo(MAP);
+ MAP.on('zoomend',()=>renderMap());
+ MAP.on('movestart',()=>unpinTrailerTooltip());
+ MAP.on('click',()=>unpinTrailerTooltip());
+}
+function toggleAutoZoom(){
+ AUTOZOOM=!AUTOZOOM;
+ $('autozoomCard').classList.toggle('on',AUTOZOOM);
+ if(AUTOZOOM)fitAllMarkers();
+}
+
+/* ---------- map/table split resizer ---------- */
+let RESIZING=false,RESIZE_START_X=0,RESIZE_START_W=0;
+function startResize(e){
+ RESIZING=true;
+ RESIZE_START_X=e.clientX;
+ RESIZE_START_W=$('mapcol').getBoundingClientRect().width;
+ $('resizer').classList.add('dragging');
+ document.body.style.cursor='col-resize';
+ document.body.style.userSelect='none';
+ document.addEventListener('mousemove',onResizeMove);
+ document.addEventListener('mouseup',stopResize);
+ e.preventDefault();
+}
+function onResizeMove(e){
+ if(!RESIZING)return;
+ const contentW=$('content').getBoundingClientRect().width;
+ const resizerW=$('resizer').getBoundingClientRect().width;
+ const minMap=220,minTable=340;
+ let newW=RESIZE_START_W+(e.clientX-RESIZE_START_X);
+ newW=Math.max(minMap,Math.min(newW,contentW-resizerW-minTable));
+ $('mapcol').style.flex='0 0 '+newW+'px';
+ if(MAP)MAP.invalidateSize();
+}
+function stopResize(){
+ RESIZING=false;
+ $('resizer').classList.remove('dragging');
+ document.body.style.cursor='';
+ document.body.style.userSelect='';
+ document.removeEventListener('mousemove',onResizeMove);
+ document.removeEventListener('mouseup',stopResize);
+}
+function fitAllMarkers(){
+ const pts=Object.values({...POOL,...OTHER}).map(l=>[l.lat,l.lng]);
+ if(pts.length)MAP.fitBounds(pts,{padding:[48,48],maxZoom:13});
+}
+/* Trailers at one yard don't have independent real coordinates, so lay them
+   out like a small parking lot — tight rows/columns around the yard's point,
+   the way trailers actually sit in a staging lot — rather than a loose ring. */
+const LOT_ROW_SPACING=0.0009;
+function lotGrid(lat,lng,n){
+ const cols=Math.ceil(Math.sqrt(n));
+ const rows=Math.ceil(n/cols);
+ const spLat=LOT_ROW_SPACING, spLng=LOT_ROW_SPACING/Math.cos(lat*Math.PI/180);
+ const pts=[];
+ for(let i=0;i<n;i++){
+  const col=i%cols, row=Math.floor(i/cols);
+  pts.push([lat+(row-(rows-1)/2)*spLat, lng+(col-(cols-1)/2)*spLng]);
+ }
+ return{pts,cols,rows,spLat,spLng};
+}
+/* Trailer card overlay content — health (DVIR, per dispatch-playbook's
+   pre/post-trip inspection), PM-due (maintenance flags → Ryder, per the TX
+   journey), and loaded/empty (the TX Bible tracks "Loaded+Empty Trailer #";
+   a loaded unit sitting in a pool isn't real available capacity). Trailers
+   default to DVIR-passed/not-due/empty unless the seed data flags otherwise. */
+const DVIR_TIP='Driver Vehicle Inspection Report (DVIR): the driver\'s pre/post-trip safety check. No live system tracks this yet - a dispatcher reviews it manually today.';
+function trailerCardHTML(t){
+ const flagged=t.dvir==='flagged';
+ return '<div class="trailercard">'+
+  '<div class="tc-id">'+esc(t.tid)+'</div>'+
+  '<div class="tc-row">'+(t.source==='gps'?'GPS':'Manual')+' · '+esc(t.lastPing)+'</div>'+
+  '<div class="tc-row" title="'+DVIR_TIP+'" style="color:'+(flagged?'var(--red)':'var(--green)')+'">'+(flagged?'DVIR flagged':'DVIR passed')+' <span class="infoq">ⓘ</span></div>'+
+  '<div class="tc-row">'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
+  (t.pmDue?'<div class="tc-row tc-pm">Due for preventative maintenance</div>':'')+
+  '</div>';
+}
+function renderMap(){
+ Object.values(MARKERS).forEach(m=>MAP.removeLayer(m));
+ Object.values(TRAILER_MARKERS).flat().forEach(m=>MAP.removeLayer(m));
+ Object.values(LOT_RECTS).forEach(r=>MAP.removeLayer(r));
+ MARKERS={};TRAILER_MARKERS={};LOT_RECTS={};
+ PINNED_TRAILER=null;
+ const expanded=MAP.getZoom()>=EXPAND_ZOOM;
+ Object.values({...POOL,...OTHER}).forEach(l=>{
+  const h=deriveHealth(l);
+  if(expanded&&l.trailers.length>0){
+   const{pts,cols,rows,spLat,spLng}=lotGrid(l.lat,l.lng,l.trailers.length);
+   const padLat=spLat*0.65, padLng=spLng*0.65;
+   const halfLat=((rows-1)/2)*spLat+padLat, halfLng=((cols-1)/2)*spLng+padLng;
+   LOT_RECTS[l.id]=L.rectangle(
+    [[l.lat-halfLat,l.lng-halfLng],[l.lat+halfLat,l.lng+halfLng]],
+    {fillColor:'#E9EDF2',fillOpacity:.55,color:'#B9C4D0',weight:1,dashArray:'3,3',interactive:false}
+   ).addTo(MAP);
+   TRAILER_MARKERS[l.id]=l.trailers.map((t,i)=>{
+    const[lat,lng]=pts[i];
+    const dotClass='trailerdot td-'+t.source+(t.pmDue?' pmdue':'')+(t.loaded?' loadedflag':'');
+    const icon=L.divIcon({className:'',html:'<div class="'+dotClass+'">'+ICON.trailerbox+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+    const marker=L.marker([lat,lng],{icon}).addTo(MAP);
+    marker.bindTooltip(trailerCardHTML(t),{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
+    marker.on('click',(e)=>{
+     L.DomEvent.stopPropagation(e);
+     flashTableRow(l.id);
+     pinTrailerTooltip(marker);
+    });
+    return marker;
+   });
+  } else {
+   const icon=L.divIcon({className:'',html:'<div class="pin '+healthClass(h)+'">'+(l.current>1?'<span class="pn">'+l.current+'</span>':'')+'</div>',iconSize:[20,20],iconAnchor:[10,20]});
+   const marker=L.marker([l.lat,l.lng],{icon}).addTo(MAP);
+   marker.bindTooltip(esc(l.name)+' · '+l.current+(typeof l.target==='number'?'/'+l.target:''),{direction:'top',offset:[0,-18],className:'poolTip'});
+   marker.on('click',()=>{MAP.setView([l.lat,l.lng],CLICK_EXPAND_ZOOM);highlightRow(l.id);});
+   MARKERS[l.id]=marker;
+  }
+ });
+}
+function flashPin(id){
+ const l=allEntries()[id];
+ if(!l||l.lat==null)return;
+ MAP.panTo([l.lat,l.lng],{animate:true});
+ const marker=MARKERS[id];
+ if(marker){
+  marker.openTooltip();
+  const el=marker.getElement();const pinEl=el&&el.querySelector('.pin');
+  if(pinEl){pinEl.classList.add('flash');setTimeout(()=>pinEl.classList.remove('flash'),1800);}
+  setTimeout(()=>marker.closeTooltip(),1800);
+  return;
+ }
+ (TRAILER_MARKERS[id]||[]).forEach(m=>{
+  const el=m.getElement();const dot=el&&el.querySelector('.trailerdot');
+  if(dot){dot.classList.add('flash');setTimeout(()=>dot.classList.remove('flash'),1800);}
+ });
+}
+function flashTableRow(id){
+ const row=document.querySelector('.poolrow[data-id="'+id+'"]');
+ if(row){row.scrollIntoView({block:'nearest',behavior:'smooth'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1400);}
+}
+function highlightRow(id){
+ flashTableRow(id);
+ flashPin(id);
+}
+/* Click-to-pin trailer card: stays open (ignores mouseout) until the map is
+   panned/zoomed or the user clicks elsewhere on the map. */
+let PINNED_TRAILER=null;
+function pinTrailerTooltip(marker){
+ unpinTrailerTooltip();
+ const tooltip=marker.getTooltip();
+ if(tooltip){tooltip.options.permanent=true;marker.openTooltip();}
+ PINNED_TRAILER=marker;
+}
+function unpinTrailerTooltip(){
+ if(!PINNED_TRAILER)return;
+ const tooltip=PINNED_TRAILER.getTooltip&&PINNED_TRAILER.getTooltip();
+ if(tooltip){tooltip.options.permanent=false;PINNED_TRAILER.closeTooltip();}
+ PINNED_TRAILER=null;
+}
+/* Selecting a trailer from the All Trailers list (or anywhere else, later)
+   zooms the map into its yard and pins that trailer's own card overlay —
+   the same thing clicking its marker directly does. No drawer.
+   TODO: once a trailer-detail view exists, this should navigate there instead. */
+function selectTrailerFromList(tid,locId){
+ const loc=allEntries()[locId];
+ if(!loc||loc.lat==null){toast(tid+' has no resolved map location.');return;}
+ MAP.setView([loc.lat,loc.lng],CLICK_EXPAND_ZOOM);
+ const idx=loc.trailers.findIndex(t=>t.tid===tid);
+ const marker=idx>=0?(TRAILER_MARKERS[locId]||[])[idx]:null;
+ if(marker){pinTrailerTooltip(marker);}
+ else{toast(tid+' is archived — not currently shown on the map.');}
+}
+
+/* ---------- list ---------- */
+let COLLAPSED={},CHIPFILTER='all',SELECTED=null;
+function chipCounts(){const vals=Object.values(POOL);
+ return{all:vals.length,ontarget:vals.filter(l=>deriveHealth(l)==='On target').length,
+  belowtarget:vals.filter(l=>deriveHealth(l)==='Below target').length,
+  critical:vals.filter(l=>deriveHealth(l)==='Critical').length};}
+function renderChips(){const c=chipCounts();
+ const defs=[['all','All pools',c.all],['ontarget','On target',c.ontarget],['belowtarget','Below target',c.belowtarget],['critical','Critical',c.critical]];
+ $('poolchips').innerHTML=defs.map(d=>'<div class="chip'+(CHIPFILTER===d[0]?' on':'')+'" onclick="CHIPFILTER=\''+d[0]+'\';renderList()">'+d[1]+' '+d[2]+'</div>').join('');}
+let SEARCHTEXT='';
+function matchesSearch(l){
+ if(!SEARCHTEXT)return true;
+ return(l.name&&l.name.toLowerCase().includes(SEARCHTEXT))||(l.account&&l.account.toLowerCase().includes(SEARCHTEXT));
+}
+function setSearchText(v){SEARCHTEXT=v.trim().toLowerCase();renderList();}
+function passFilter(l){
+ if(CHIPFILTER!=='all'){const h=deriveHealth(l).toLowerCase().replace(/\s+/g,'');if(h!==CHIPFILTER)return false;}
+ return matchesSearch(l);
+}
+function updateSub(){const c=chipCounts();$('poolsub').textContent=c.all+' pools · '+c.belowtarget+' below target · '+c.critical+' critical';}
+function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';
+ return '<div class="poolrow" data-id="'+id+'" onclick="openLocationDrawer(\''+id+'\')">'+
+ '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
+ '<div>'+healthPill(l)+'</div>'+
+ '<div class="count"><b>'+l.current+'</b>'+(hasTarget?' / '+l.target:'')+'</div>'+
+ '<div class="untracked">'+(l.untracked?l.untracked+' manual':'—')+'</div>'+
+ '<div class="days'+(l.daysBelow?' flag':'')+'">'+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below':'—')+'</div>'+
+ '<div class="chev2">'+ICON.chevronRight+'</div></div>';}
+function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div>Current / Target</div><div>Untracked</div><div>Time below target</div><div></div></div>';}
+function toggleSection(key){COLLAPSED[key]=!COLLAPSED[key];renderList();}
+/* One shared colHead() sits at the very top of the whole list (see renderList) —
+   sections only contribute their own grouphead + rows, matching the lanes
+   prototype's single-listcard pattern instead of repeating a column header
+   (and a second sticky offset to fight over) inside every group. */
+function sectionHTML(key,title,rows){
+ const collapsed=!!COLLAPSED[key];
+ let html='<div class="sechead'+(collapsed?' collapsed':'')+'" onclick="toggleSection(\''+key+'\')"><span class="chev">'+ICON.chevronDown+'</span>'+title+' <span class="n">· '+rows.length+'</span></div>';
+ if(collapsed)return html;
+ if(!rows.length){html+='<div class="emptysec">Nothing here right now.</div>';return html;}
+ html+=rows.map(([id,l])=>rowHTML(id,l)).join('');
+ return html;
+}
+let GROUPBY=true;
+function setGroupBy(checked){
+ GROUPBY=checked;
+ renderList();
+}
+function renderList(){renderChips();updateSub();
+ const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
+ const poolRows=poolIds.map(id=>[id,POOL[id]]);
+ const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>matchesSearch(l));
+ const unknownRows=(GPSUNKNOWN.current>0&&matchesSearch(GPSUNKNOWN))?[[GPSUNKNOWN.id,GPSUNKNOWN]]:[];
+ let body;
+ if(GROUPBY){
+  body=sectionHTML('pools','Trailer Pools',poolRows)+sectionHTML('other','Other Locations',otherRows)+sectionHTML('gps','GPS / Unknown',unknownRows);
+ } else {
+  body=[...poolRows,...otherRows,...unknownRows].map(([id,l])=>rowHTML(id,l)).join('');
+ }
+ $('listwrap').innerHTML=colHead()+body;
+ renderMap();
+ if(AUTOZOOM)fitAllMarkers();
+ renderAllTrailers();
+}
+
+/* ---------- All Trailers (flat) view ---------- */
+let PAGEVIEW='pools';
+function setPageView(view){
+ PAGEVIEW=view;
+ document.querySelectorAll('#viewToggle button').forEach(b=>{
+  b.classList.toggle('active',b.dataset.view===view);
+ });
+ $('poolToolbar').classList.toggle('hidden',view!=='pools');
+ $('atFilters').style.display=view==='all'?'block':'none';
+ $('listwrap').style.display=view==='pools'?'':'none';
+ $('allTrailersList').style.display=view==='all'?'':'none';
+ if(view==='all')renderTypeChips();
+ closeFilterDropdown();
+ closeDrawer();
+}
+/* Deterministic pseudo-day-count from a trailer id — illustrative only, this
+   prototype has no real "arrived at location" timestamp to compute from. */
+function pseudoDays(tid){
+ let h=0;
+ for(let i=0;i<tid.length;i++)h=(h*31+tid.charCodeAt(i))>>>0;
+ return h%6;
+}
+/* Illustrative last-assigned-load id, same 4-digit Apollo Load ID convention
+   used across this workspace's other demo data (the 76xx load roster). */
+function pseudoLoadId(tid){
+ let h=0;
+ for(let i=0;i<tid.length;i++)h=(h*17+tid.charCodeAt(i))>>>0;
+ return 7600+(h%140);
+}
+/* Load chip status-dot color — cycles through the real Load-chip status-dot
+   tokens (shared/tokens.css) for illustrative variety, same as the reference. */
+const LOAD_DOT_COLORS=['var(--icon-violet-dispatched)','var(--icon-stone-cancelled)','var(--icon-blue-in-progress)','var(--icon-emerald-success)','var(--icon-fuschia-pending)'];
+function pseudoLoadColor(loadId){
+ return LOAD_DOT_COLORS[loadId%LOAD_DOT_COLORS.length];
+}
+/* Shared Load chip markup — used wherever a trailer's current/last load needs
+   calling out (All Trailers list, drawer trailers table, map card). */
+function loadPillHTML(tid){
+ const loadId=pseudoLoadId(tid);
+ return '<span class="loadtag"><span class="dot" style="background:'+pseudoLoadColor(loadId)+'"></span>Load '+loadId+'</span>';
+}
+/* Real TrailerType values from the apollo app's trailer filter panel. Most
+   seeded trailers don't carry an explicit type, so we skew a deterministic
+   pseudo-type toward Dry Box (typical for a general-freight/Amazon relay
+   pool) with a handful of others for the filter to have something to do. */
+const TRAILER_TYPES=['Dry Box','Reefer','Flatbed','Step Deck','Tanker','Low Boy','Intermodal Chassis','Auto Hauler','Livestock','Dump Tipper','Curtain Side','Stake','Construction','Other'];
+function pseudoType(t){
+ if(t.type)return t.type;
+ let h=0;
+ for(let i=0;i<t.tid.length;i++)h=(h*13+t.tid.charCodeAt(i))>>>0;
+ const r=h%10;
+ if(r<7)return 'Dry Box';
+ if(r===7)return 'Reefer';
+ if(r===8)return 'Flatbed';
+ return 'Curtain Side';
+}
+let TYPEFILTER=new Set(),REGIONFILTER='all',INCLUDEARCHIVED=false;
+function renderTypeChips(){
+ $('atfTypes').innerHTML=TRAILER_TYPES.map(ty=>
+  '<div class="chip'+(TYPEFILTER.has(ty)?' on':'')+'" onclick="toggleTypeFilter(\''+ty+'\')">'+ty+'</div>'
+ ).join('');
+}
+function toggleTypeFilter(ty){
+ if(TYPEFILTER.has(ty))TYPEFILTER.delete(ty);else TYPEFILTER.add(ty);
+ renderTypeChips();
+ updateFilterCount();
+ renderAllTrailers();
+}
+function setRegionFilter(v){REGIONFILTER=v;updateFilterCount();renderAllTrailers();}
+function toggleIncludeArchived(){
+ INCLUDEARCHIVED=!INCLUDEARCHIVED;
+ $('archivedCard').classList.toggle('on',INCLUDEARCHIVED);
+ updateFilterCount();
+ renderAllTrailers();
+}
+/* ---------- filter dropdown ---------- */
+function updateFilterCount(){
+ const n=TYPEFILTER.size+(REGIONFILTER!=='all'?1:0)+(INCLUDEARCHIVED?1:0);
+ const el=$('filterCount');
+ el.style.display=n>0?'inline-block':'none';
+ el.textContent=n;
+}
+function toggleFilterDropdown(e){
+ if(e)e.stopPropagation();
+ const panel=$('filterPanel');
+ panel.style.display=(panel.style.display==='none'||!panel.style.display)?'flex':'none';
+}
+function closeFilterDropdown(){$('filterPanel').style.display='none';}
+document.addEventListener('click',e=>{
+ const dd=$('filterDD');
+ if(dd&&!dd.contains(e.target))closeFilterDropdown();
+});
+function allTrailerRows(includeArchived){
+ const rows=[];
+ Object.values(POOL).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,archived:false})));
+ Object.values(OTHER).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,archived:false})));
+ GPSUNKNOWN.trailers.forEach(t=>rows.push({t,locId:GPSUNKNOWN.id,locName:'Unknown location',archived:false}));
+ if(includeArchived){
+  ARCHIVED_TRAILERS.forEach(t=>rows.push({t,locId:t.locId,locName:t.locName,archived:true}));
+ }
+ return rows;
+}
+function renderAllTrailers(){
+ let rows=allTrailerRows(INCLUDEARCHIVED).filter(r=>{
+  if(TYPEFILTER.size>0&&!TYPEFILTER.has(pseudoType(r.t)))return false;
+  if(REGIONFILTER!=='all'&&REGIONFILTER!=='California')return false;
+  if(SEARCHTEXT&&!(r.t.tid.toLowerCase().includes(SEARCHTEXT)||r.locName.toLowerCase().includes(SEARCHTEXT)))return false;
+  return true;
+ });
+ rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
+ const head='<div class="atcolhead"><div>Trailer</div><div>Status</div><div>Current Location</div><div>At location</div><div>Source</div><div>Last Assigned Load</div></div>';
+ if(!rows.length){
+  $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
+  return;
+ }
+ const body=rows.map(r=>{
+  const status=r.archived?'Archived':(r.t.source==='manual'?'Unknown':'Available');
+  const statusClass=r.archived?'p-notarget':(r.t.source==='manual'?'p-unknown':'p-available');
+  const days=pseudoDays(r.t.tid);
+  return '<div class="atrow'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
+   '<div class="tid">'+esc(r.t.tid)+'</div>'+
+   '<div><span class="pill '+statusClass+'">'+status+'</span></div>'+
+   '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
+   '<div class="days2">'+days+' day'+(days===1?'':'s')+'</div>'+
+   '<div class="src2">'+(r.t.source==='gps'?'GPS':'Manual')+'</div>'+
+   '<div>'+loadPillHTML(r.t.tid)+'</div>'+
+   '</div>';
+ }).join('');
+ $('allTrailersList').innerHTML=head+body;
+}
+
+/* ---------- drawer: view mode ---------- */
+function openLocationDrawer(id){SELECTED=id;$('dfoot').style.display='none';renderDrawerView(id);$('drawer').classList.add('open');flashPin(id);}
+function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfoot').style.display='none';}
+function drow(k,v){return '<div class="dr"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
+ const h=deriveHealth(l);const hasTarget=typeof l.target==='number';
+ $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.id)+'</span>'+healthPill(l)+'<span class="x" onclick="closeDrawer()">'+ICON.x+'</span></div>'+
+ '<h2>'+esc(l.name)+'</h2>'+(l.account?'<div class="meta">'+esc(l.account)+'</div>':'')+
+ '<div class="btns">'+(hasTarget?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">'+ICON.pencil+' Edit target</button>':'')+
+  (l.suggestion?'<button class="abtn primary" onclick="dispatchReposition(\''+id+'\')">'+ICON.reposition+' Dispatch reposition</button>':'')+
+ '</div>';
+ let html='';
+ if(h==='Critical'){
+  html+='<div class="critbanner"><div class="t">'+ICON.alert+' Critical — 0 trailers on site</div><div class="d">Target is '+l.target+'. '+(l.daysBelow?'Sitting at 0 for '+l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' with nobody watching for it manually.':'Just crossed to 0.')+'</div></div>';
+ } else if(h==='Below target'){
+  html+='<div class="critbanner" style="background:var(--ambersoft);border-color:#F3D67C"><div class="t" style="color:var(--amber)">'+ICON.alert+' Below target</div><div class="d" style="color:#7C4A00">'+l.current+' on site against a target of '+l.target+' — '+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below target so far.':'just crossed below target.')+'</div></div>';
+ }
+ if(l.suggestion){
+  html+='<div class="suggbanner"><div class="t">💡 Suggested reposition</div><div class="d"><b>'+esc(l.suggestion.name)+'</b> is '+l.suggestion.minutes+' min away with '+l.suggestion.available+' surplus trailer'+(l.suggestion.available>1?'s':'')+'. Illustrative for now — no live recommendation engine wired up yet.</div>'+
+   '<div class="btns"><button class="abtn" onclick="toast(\'Opening '+esc(l.suggestion.name).replace(/'/g,"\\'")+'…\')">View '+esc(l.suggestion.name)+'</button></div></div>';
+ }
+ html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
+   drow('Current count',l.current)+
+   (hasTarget?drow('Target count',l.target):drow('Target count','Not set'))+
+   drow('Tracked (GPS)',l.current-(l.untracked||0))+
+   drow('Untracked (manual)',l.untracked||'—')+
+   drow('Time below target',l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':''):'—')+
+   drow('Last reconciled','4 min ago')+
+ '</div>';
+ html+='<div class="sect" style="margin-top:14px"><span>TRAILERS AT THIS LOCATION</span><span>'+l.trailers.length+'</span></div>';
+ if(!l.trailers.length){
+  html+='<div class="emptytrailers">No trailers currently on site.</div>';
+ } else {
+  html+='<div class="trow head"><div>Trailer</div><div>Source</div><div>Last signal</div><div title="'+DVIR_TIP+'">Health <span class="infoq">ⓘ</span></div><div>Loaded</div></div>'+
+   l.trailers.map(t=>{
+    const flagged=t.dvir==='flagged';
+    return '<div class="trow">'+
+     '<div>'+esc(t.tid)+(t.pmDue?' <span class="pmflag" onmouseenter="showTip(this,\'Due for preventative maintenance\')" onmouseleave="hideTip()">'+ICON.pmAlert+'</span>':'')+'</div>'+
+     '<div><span class="src">'+(t.source==='gps'?'GPS':'Manual')+'</span></div>'+
+     '<div>'+esc(t.lastPing)+'</div>'+
+     '<div><span class="healthind '+(flagged?'flagged':'gps')+'"><span class="dot"></span>'+(flagged?'Flagged':'OK')+'</span></div>'+
+     '<div>'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
+     '</div>';
+   }).join('');
+ }
+ $('dtl').innerHTML=html;
+}
+
+/* ---------- drawer: edit target ---------- */
+function openEditDrawer(id){const l=POOL[id];
+ $('dhead').innerHTML='<div class="top"><b style="font-size:15px">Edit target — '+esc(l.name)+'</b><span class="x" onclick="renderDrawerView(\''+id+'\')">'+ICON.x+'</span></div>';
+ $('dtl').innerHTML=
+  '<div class="ffield"><label>Target trailer count *</label><input type="number" id="in_target" min="0" value="'+l.target+'"><div class="hint">Lives in Apollo instead of a Slack rule — e.g. "min 3 at every AMZ facility."</div></div>'+
+  '<div class="ffield"><label>Manual / untracked count</label><input type="number" id="in_untracked" min="0" value="'+l.untracked+'"><div class="hint">Included in current count when GPS coverage is incomplete (e.g. Ryder rentals).</div></div>';
+ $('dfoot').style.display='flex';
+ $('dfoot').innerHTML='<button class="abtn" onclick="renderDrawerView(\''+id+'\')">Cancel</button>'+
+  '<button class="abtn primary" onclick="submitEdit(\''+id+'\')">Save changes</button>';
+}
+function submitEdit(id){
+ const target=Math.max(0,parseInt($('in_target').value,10)||0);
+ const untracked=Math.max(0,parseInt($('in_untracked').value,10)||0);
+ POOL[id].target=target;
+ POOL[id].untracked=Math.min(untracked,POOL[id].current);
+ $('dfoot').style.display='none';
+ renderList();renderDrawerView(id);
+ toast('Target updated — '+POOL[id].name+' now targets '+target+'.');
+}
+function dispatchReposition(id){
+ const l=POOL[id];
+ toast('Reposition dispatched — pulling a trailer from '+l.suggestion.name+'. Driver confirmation pending.');
+}
+
+/* ---------- drawer: create trailer ---------- */
+function openCreateTrailerDrawer(){
+ SELECTED=null;
+ const locs=[...Object.values(POOL),...Object.values(OTHER)];
+ const locOptions=locs.map(l=>'<option value="'+l.id+'">'+esc(l.name)+'</option>').join('');
+ $('dhead').innerHTML='<div class="top"><b style="font-size:15px">Create Trailer</b><span class="x" onclick="closeDrawer()">'+ICON.x+'</span></div>';
+ $('dtl').innerHTML=
+  '<div class="ffield"><label>Trailer ID *</label><input type="text" id="in_newtid" placeholder="e.g. NEVO-5001"><div class="hint">Matches the unit ID on the trailer\'s GPS tag or manual log entry.</div></div>'+
+  '<div class="ffield"><label>Trailer type</label><select id="in_newtype">'+TRAILER_TYPES.map(ty=>'<option>'+esc(ty)+'</option>').join('')+'</select></div>'+
+  '<div class="ffield"><label>Location *</label><select id="in_newloc">'+locOptions+'</select></div>'+
+  '<div class="ffield"><label>Source</label><select id="in_newsource"><option value="gps">GPS</option><option value="manual">Manual</option></select><div class="hint">Manual means no live GPS feed — tracked by hand, like a rental.</div></div>';
+ $('dfoot').style.display='flex';
+ $('dfoot').innerHTML='<button class="abtn" onclick="closeDrawer()">Cancel</button>'+
+  '<button class="abtn primary" onclick="submitCreateTrailer()">Create trailer</button>';
+ $('drawer').classList.add('open');
+}
+function submitCreateTrailer(){
+ const tid=$('in_newtid').value.trim();
+ const type=$('in_newtype').value;
+ const locId=$('in_newloc').value;
+ const source=$('in_newsource').value;
+ if(!tid){toast('Enter a trailer ID.');return;}
+ const loc=POOL[locId]||OTHER[locId];
+ if(!loc){toast('Choose a location.');return;}
+ loc.trailers.push({tid,source,type,lastPing:'just added'});
+ loc.current+=1;
+ $('dfoot').style.display='none';
+ closeDrawer();
+ renderList();
+ toast('Trailer '+tid+' created at '+loc.name+'.');
+}
+
+/* ---------- boot ---------- */
+seedPool();
+initMap();
+renderList();
+</script>
+</body>
+</html>
