@@ -44,7 +44,6 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 #poolhead{padding:18px 26px 0;flex:none}
 #poolhead .top{display:flex;align-items:center;gap:14px}
 #poolhead h1{font-size:26px;font-weight:500}
-#poolhead .sub{color:var(--gray);font-size:12.5px;margin-top:4px}
 .recon{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--gray);font-size:12px;font-weight:500;background:var(--surface-lowest);border-radius:16px;padding:5px 12px}
 .recon .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 /* Button (confirmed Figma spec): Primary teal / Outline border-default / Disruptive red. */
@@ -58,7 +57,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .abtn:disabled{opacity:.3;cursor:not-allowed}
 /* Segmented control (confirmed Figma spec 46:583/49:580): background/default
    container, white selected segment, Selector/Dark text — not a teal tint. */
-.viewtoggle{display:inline-flex;background:var(--surface-default);padding:3px;border-radius:10px;gap:0;margin-top:14px}
+.viewtogglerow{display:flex;align-items:center;gap:12px;margin-top:14px}
+.viewtoggle{display:inline-flex;background:var(--surface-default);padding:3px;border-radius:10px;gap:0}
+#regionFilter{border:1px solid var(--border-default);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff}
 .viewtoggle button{border:none;background:transparent;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text-default);cursor:pointer;font-family:inherit}
 .viewtoggle button.active{background:#fff;color:var(--ink);font-weight:600}
 .toolbar{display:flex;align-items:center;gap:8px;padding:0 0 10px;flex-wrap:wrap;flex:none}
@@ -274,14 +275,21 @@ svg.ic{display:block}
       <div class="top">
         <div>
           <h1>Trailer Pool</h1>
-          <div class="sub" id="poolsub">— locations</div>
         </div>
         <div class="recon"><span class="dot"></span>Reconciled 4 min ago</div>
         <button type="button" class="abtn primary" style="margin-left:14px" onclick="openCreateTrailerDrawer()">+ Create Trailer</button>
       </div>
-      <div class="viewtoggle" id="viewToggle">
-        <button type="button" class="active" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
-        <button type="button" data-view="all" onclick="setPageView('all')">All Trailers</button>
+      <div class="viewtogglerow">
+        <div class="viewtoggle" id="viewToggle">
+          <button type="button" class="active" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
+          <button type="button" data-view="all" onclick="setPageView('all')">All Trailers</button>
+        </div>
+        <select id="regionFilter" onchange="setRegionFilter(this.value)">
+          <option value="all">All Regions</option>
+          <option value="AZ">Arizona</option>
+          <option value="CA">California</option>
+          <option value="TX">Texas</option>
+        </select>
       </div>
     </div>
     <div id="content">
@@ -381,10 +389,10 @@ const ICON = {
 let POOL={},OTHER={},GPSUNKNOWN=null,ARCHIVED_TRAILERS=[];
 function seedPool(){
 POOL={
- 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',target:4,provisioned:6,current:0,untracked:0,daysBelow:6,lat:33.9425,lng:-117.2297,
+ 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,provisioned:6,current:0,untracked:0,daysBelow:6,lat:33.9425,lng:-117.2297,
   suggestion:{name:'Perris Ranch, CA',minutes:11,available:3},
   trailers:[]},
- 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',target:2,provisioned:8,current:5,untracked:0,daysBelow:0,lat:33.8900,lng:-117.2450,
+ 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:8,current:5,untracked:0,daysBelow:0,lat:33.8900,lng:-117.2450,
   trailers:[
    {tid:'NEVO-4471',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-4482',source:'gps',lastPing:'6 min ago',loaded:true},
@@ -392,36 +400,36 @@ POOL={
    {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago'},
    {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
   ]},
- 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',target:3,provisioned:4,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
+ 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
   trailers:[
    {tid:'NEVO-3312',source:'gps',lastPing:'3 min ago'},
    {tid:'NEVO-3340',source:'gps',lastPing:'8 min ago'}
   ]},
- 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',target:3,provisioned:3,current:3,untracked:0,daysBelow:0,lat:33.9550,lng:-117.2550,
+ 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:3,current:3,untracked:0,daysBelow:0,lat:33.9550,lng:-117.2550,
   trailers:[
    {tid:'NEVO-3355',source:'gps',lastPing:'1 min ago'},
    {tid:'NEVO-3361',source:'gps',lastPing:'4 min ago'},
    {tid:'NEVO-3379',source:'gps',lastPing:'9 min ago'}
   ]},
- 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',target:3,provisioned:5,current:1,untracked:0,daysBelow:4,lat:33.9200,lng:-117.3100,
+ 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:5,current:1,untracked:0,daysBelow:4,lat:33.9200,lng:-117.3100,
   suggestion:{name:'LGB5 – Moreno Valley, CA',minutes:18,available:1},
   trailers:[
    {tid:'NEVO-3402',source:'gps',lastPing:'7 min ago'}
   ]},
- 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',target:3,provisioned:4,current:3,untracked:1,daysBelow:0,lat:33.9800,lng:-117.1850,
+ 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:3,untracked:1,daysBelow:0,lat:33.9800,lng:-117.1850,
   trailers:[
    {tid:'NEVO-3510',source:'gps',lastPing:'5 min ago'},
    {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
    {tid:'RYDER-8821',source:'manual',lastPing:'flagged manually — Ryder rental, no GPS',dvir:'flagged',pmDue:true}
   ]},
- 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',target:2,provisioned:3,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
+ 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:3,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
   trailers:[
    {tid:'NEVO-2201',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-2219',source:'gps',lastPing:'10 min ago',dvir:'flagged'}
   ]}
 };
 OTHER={
- 'ONT-DOCK':{id:'ONT-DOCK',name:'Ontario DC — Customer Dock',account:'Customer-owned',current:2,lat:33.9350,lng:-117.2950,
+ 'ONT-DOCK':{id:'ONT-DOCK',name:'Ontario DC — Customer Dock',account:'Customer-owned',region:'CA',current:2,lat:33.9350,lng:-117.2950,
   trailers:[
    {tid:'NEVO-2890',source:'gps',lastPing:'22 min ago'},
    {tid:'NEVO-2901',source:'gps',lastPing:'40 min ago'}
@@ -674,11 +682,15 @@ function matchesSearch(l){
  return(l.name&&l.name.toLowerCase().includes(SEARCHTEXT))||(l.account&&l.account.toLowerCase().includes(SEARCHTEXT));
 }
 function setSearchText(v){SEARCHTEXT=v.trim().toLowerCase();renderList();}
+/* Locations/trailers without a resolved region (GPS/Unknown, archived
+   look-up misses) always pass — filtering them out would just hide real
+   assets we genuinely can't place yet. */
+function matchesRegion(l){return REGIONFILTER==='all'||!l.region||l.region===REGIONFILTER;}
 function passFilter(l){
  if(CHIPFILTER!=='all'){const h=deriveHealth(l).toLowerCase().replace(/\s+/g,'');if(h!==CHIPFILTER)return false;}
+ if(!matchesRegion(l))return false;
  return matchesSearch(l);
 }
-function updateSub(){const c=chipCounts();$('poolsub').textContent=c.all+' pools · '+c.belowtarget+' below target · '+c.critical+' critical';}
 function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';
  return '<div class="poolrow" data-id="'+id+'" onclick="openLocationDrawer(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
@@ -707,10 +719,10 @@ function setGroupBy(checked){
  GROUPBY=checked;
  renderList();
 }
-function renderList(){renderChips();updateSub();
+function renderList(){renderChips();
  const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
  const poolRows=poolIds.map(id=>[id,POOL[id]]);
- const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>matchesSearch(l));
+ const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>matchesRegion(l)&&matchesSearch(l));
  const unknownRows=(GPSUNKNOWN.current>0&&matchesSearch(GPSUNKNOWN))?[[GPSUNKNOWN.id,GPSUNKNOWN]]:[];
  let body;
  if(GROUPBY){
@@ -815,18 +827,14 @@ function renderTypeChips(){
     '<div class="atf-types">'+MORE_TYPES.map(typeChipHTML).join('')+'</div>'+
    '</div>'+
   '</div>';
- const regionHTML='<select id="atfRegion" style="margin-left:auto" onchange="setRegionFilter(this.value)">'+
-   '<option value="all"'+(REGIONFILTER==='all'?' selected':'')+'>All Regions</option>'+
-   '<option value="California"'+(REGIONFILTER==='California'?' selected':'')+'>California</option>'+
-  '</select>';
- $('atfRow').innerHTML=primaryHTML+moreHTML+regionHTML;
+ $('atfRow').innerHTML=primaryHTML+moreHTML;
 }
 function toggleTypeFilter(ty){
  if(TYPEFILTER.has(ty))TYPEFILTER.delete(ty);else TYPEFILTER.add(ty);
  renderTypeChips();
  renderAllTrailers();
 }
-function setRegionFilter(v){REGIONFILTER=v;renderAllTrailers();}
+function setRegionFilter(v){REGIONFILTER=v;renderList();}
 function setIncludeArchived(checked){
  INCLUDEARCHIVED=checked;
  renderAllTrailers();
@@ -844,18 +852,21 @@ document.addEventListener('click',e=>{
 });
 function allTrailerRows(includeArchived){
  const rows=[];
- Object.values(POOL).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,archived:false})));
- Object.values(OTHER).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,archived:false})));
- GPSUNKNOWN.trailers.forEach(t=>rows.push({t,locId:GPSUNKNOWN.id,locName:'Unknown location',archived:false}));
+ Object.values(POOL).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,region:l.region,archived:false})));
+ Object.values(OTHER).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,region:l.region,archived:false})));
+ GPSUNKNOWN.trailers.forEach(t=>rows.push({t,locId:GPSUNKNOWN.id,locName:'Unknown location',region:null,archived:false}));
  if(includeArchived){
-  ARCHIVED_TRAILERS.forEach(t=>rows.push({t,locId:t.locId,locName:t.locName,archived:true}));
+  ARCHIVED_TRAILERS.forEach(t=>{
+   const loc=POOL[t.locId]||OTHER[t.locId];
+   rows.push({t,locId:t.locId,locName:t.locName,region:loc&&loc.region,archived:true});
+  });
  }
  return rows;
 }
 function renderAllTrailers(){
  let rows=allTrailerRows(INCLUDEARCHIVED).filter(r=>{
   if(TYPEFILTER.size>0&&!TYPEFILTER.has(pseudoType(r.t)))return false;
-  if(REGIONFILTER!=='all'&&REGIONFILTER!=='California')return false;
+  if(REGIONFILTER!=='all'&&r.region&&r.region!==REGIONFILTER)return false;
   if(SEARCHTEXT&&!(r.t.tid.toLowerCase().includes(SEARCHTEXT)||r.locName.toLowerCase().includes(SEARCHTEXT)))return false;
   return true;
  });
