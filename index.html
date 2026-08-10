@@ -539,7 +539,7 @@ function lotGrid(lat,lng,n){
    a loaded unit sitting in a pool isn't real available capacity). Trailers
    default to DVIR-passed/not-due/empty unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report (DVIR): the driver\'s pre/post-trip safety check. No live system tracks this yet - a dispatcher reviews it manually today.';
-const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by close of business today.';
+const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by 5:00 PM local time — Pacific, for these California yards.';
 function trailerCardHTML(t){
  const flagged=t.dvir==='flagged';
  return '<div class="trailercard">'+
