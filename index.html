@@ -74,20 +74,20 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .switch .thumb{position:absolute;top:2px;left:2px;width:22px;height:16px;background:#fff;border-radius:6px;transition:transform .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
 .switch input:checked+.track{background:var(--teal)}
 .switch input:checked+.track .thumb{transform:translateX(14px)}
-.searchrow{padding:0 0 10px;flex:none}
+.searchrow{padding:0 0 10px;flex:none;display:flex;align-items:center;gap:12px}
 .searchrow input{width:100%;max-width:260px;border:1px solid var(--border-default);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:var(--text-dark)}
 .searchrow input:focus{border-color:var(--teal)}
 .atfilters{padding:0 0 10px;flex:none}
-.atf-types{display:flex;gap:8px;flex-wrap:wrap}
-.atf-row select{border:1px solid var(--border-default);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff}
+/* Same row as the pools view: inline chips + a "More" dropdown for overflow +
+   an inline Region select + Include Archived gets the group-by switch treatment. */
+.atf-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.atf-row select{border:1px solid var(--border-default);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff}
 .filterdd{position:relative;display:inline-block}
-.filterbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-default);background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--text-dark);cursor:pointer;font-family:inherit}
-.filterbtn:hover{background:var(--surface-lowest)}
-.filterbtn .fcount{background:var(--teal);color:#fff;border-radius:10px;font-size:10.5px;font-weight:700;padding:1px 6px;line-height:1.4}
-.filterpanel{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--border-default);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:14px;width:320px;z-index:50;display:flex;flex-direction:column;gap:10px}
-.filterpanel .fp-label{font-size:11px;letter-spacing:.3px;font-weight:600;color:var(--gray);margin-top:4px}
-.filterpanel .fp-label:first-child{margin-top:0}
-.filterpanel select{border:1px solid var(--border-default);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff;width:100%}
+.morebtn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:6px 10px;color:var(--text-default)}
+.morebtn .fcount{background:var(--teal);color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;line-height:1.5}
+.filterpanel{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--border-default);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:14px;width:280px;z-index:50;display:flex;flex-direction:column;gap:10px}
+.filterpanel .fp-label{font-size:11px;letter-spacing:.3px;font-weight:600;color:var(--gray)}
+.filterpanel .atf-types{display:flex;gap:8px;flex-wrap:wrap}
 
 /* split content: map (left) + pool table (right) — mirrors the real Trailers
    page's grid-cols-2 map/table layout in the apollo app. */
@@ -130,10 +130,18 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 @keyframes dotpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
 @keyframes pinpulse{0%,100%{transform:rotate(-45deg) scale(1)}50%{transform:rotate(-45deg) scale(1.5)}}
 /* Trailer card overlay — richer than a single-line tooltip: health/PM/loaded. */
-.leaflet-tooltip.trailercard{padding:9px 11px;min-width:168px}
-.trailercard .tc-id{font-weight:600;font-size:12.5px;color:var(--ink);margin-bottom:4px}
-.trailercard .tc-row{display:flex;align-items:center;font-size:11px;color:var(--text-default);line-height:1.6}
+.leaflet-tooltip.trailercard{padding:10px 12px;min-width:190px}
+.trailercard .tc-id{font-weight:600;font-size:13px;color:var(--ink);margin-bottom:5px}
+.trailercard .tc-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-default);line-height:1.7}
+/* Status rows (health/loaded/PM) get a divider off the identity line above,
+   so the card reads as two grouped sections instead of one flat stack. */
+.trailercard .tc-status{margin-top:5px;padding-top:5px;border-top:1px solid var(--border-muted);display:flex;flex-direction:column;gap:1px}
+.trailercard .tc-dot2{width:6px;height:6px;border-radius:50%;flex:none}
 .trailercard .tc-pm{color:var(--amber);font-weight:600}
+.trailercard .tc-pm svg{flex:none}
+/* Kill the default focus-ring browsers put on the clicked marker element —
+   it reads as a stray blue box, not a deliberate selection state. */
+.leaflet-marker-icon:focus{outline:none}
 .leaflet-tooltip.poolTip{font-family:Inter,-apple-system,sans-serif;font-size:11px;padding:4px 8px}
 
 #tablecol{flex:1;min-width:340px;display:flex;flex-direction:column;min-height:0}
@@ -149,15 +157,18 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .sechead .chev{transition:transform .15s;display:inline-block;color:var(--gray)}
 .sechead.collapsed .chev{transform:rotate(-90deg)}
 .sechead .n{color:var(--gray);font-weight:400}
-.colhead{display:grid;grid-template-columns:1.2fr 1fr .8fr .6fr 1.05fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
-.poolrow{display:grid;grid-template-columns:1.2fr 1fr .8fr .6fr 1.05fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.colhead{display:grid;grid-template-columns:1.1fr .95fr .75fr .5fr .55fr 1fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+.poolrow{display:grid;grid-template-columns:1.1fr .95fr .75fr .5fr .55fr 1fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
 .poolrow .loc .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .poolrow .loc .acct{color:var(--gray);font-size:11.5px;font-weight:400}
-.poolrow .count{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
+.poolrow .count{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
 .poolrow .count b{font-weight:600;color:var(--ink)}
+.countarrow{display:inline-flex;color:var(--gray)}
+.countarrow-head{display:flex;align-items:center;gap:3px}
+.poolrow .target{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
 .poolrow .untracked{color:var(--gray);font-size:12.5px;white-space:nowrap}
 .poolrow .days{color:var(--gray);font-size:12.5px;white-space:nowrap}
 .poolrow .days.flag{color:var(--amber);font-weight:500}
@@ -217,10 +228,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
 .critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
-.trow{display:grid;grid-template-columns:1.15fr .7fr .8fr .6fr .7fr;gap:6px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center}
+.trow{display:grid;grid-template-columns:1.2fr .75fr .95fr .7fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center}
 .trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-.trow .src{display:inline-flex;align-items:center}
-/* Health indicator keeps its dot — only source (GPS/Manual) indicators lose theirs. */
 .trow .healthind{display:inline-flex;align-items:center;gap:5px}
 .trow .healthind .dot{width:6px;height:6px;border-radius:50%}
 .trow .healthind.gps .dot{background:var(--green)}
@@ -239,7 +248,7 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .ffield input[type=text],.ffield input[type=number],.ffield select{border:1px solid var(--border-default);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%;color:var(--text-dark)}
 .ffield input:focus,.ffield select:focus{border-color:var(--teal)}
 .ffield .hint{font-size:11px;color:#94A3B8}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
+.toast{position:fixed;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
 svg.ic{display:block}
 </style>
 </head>
@@ -282,6 +291,10 @@ svg.ic{display:block}
       <div id="tablecol">
         <div class="searchrow">
           <input type="text" id="searchInput" placeholder="Search trailers or locations…" oninput="setSearchText(this.value)">
+          <label class="gtoggle" id="archivedToggleWrap" style="display:none">
+            <span class="switch"><input type="checkbox" id="archivedToggle" onchange="setIncludeArchived(this.checked)"><span class="track"><span class="thumb"></span></span></span>
+            Include Archived
+          </label>
         </div>
         <div class="toolbar" id="poolToolbar">
           <div id="poolchips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
@@ -291,25 +304,7 @@ svg.ic{display:block}
           </label>
         </div>
         <div class="atfilters" id="atFilters" style="display:none">
-          <div class="filterdd" id="filterDD">
-            <button type="button" class="filterbtn" onclick="toggleFilterDropdown(event)">
-              <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
-              Filters<span class="fcount" id="filterCount" style="display:none"></span>
-              <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div class="filterpanel" id="filterPanel" style="display:none">
-              <div class="fp-label">Trailer Type</div>
-              <div class="atf-types" id="atfTypes"></div>
-              <div class="fp-label">Region</div>
-              <select id="atfRegion" onchange="setRegionFilter(this.value)">
-                <option value="all">All Regions</option>
-                <option value="California">California</option>
-              </select>
-              <div class="autozoom-card" id="archivedCard" style="position:static" onclick="toggleIncludeArchived()">
-                <span>Include Archived</span><span class="azswitch"></span>
-              </div>
-            </div>
-          </div>
+          <div class="atf-row" id="atfRow"></div>
         </div>
         <div id="listwrap"></div>
         <div id="allTrailersList" style="display:none"></div>
@@ -328,7 +323,18 @@ svg.ic{display:block}
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
+function toast(t){
+ const d=document.createElement('div');
+ d.className='toast';
+ d.textContent=t;
+ document.body.appendChild(d);
+ /* Center over #maincol (map + table), not the raw viewport — otherwise the
+    rail's width skews it and, at narrower widths, it can end up sitting
+    entirely over the table instead of spanning both panes. */
+ const r=$('maincol').getBoundingClientRect();
+ d.style.left=(r.left+r.width/2)+'px';
+ setTimeout(()=>d.remove(),3200);
+}
 /* ---------- shared hover tooltip (fixed to body — escapes #listwrap's scroll clipping;
    same pattern as the lanes prototype's "Expiring soon" flag) ---------- */
 function showTip(el,text){
@@ -356,6 +362,8 @@ const ICON = {
   /* small filled alert-circle — the PM-due flag. Amber, not red: routine
      maintenance due, not an urgent problem. */
   pmAlert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--amber)"><circle cx="12" cy="12" r="10"/><rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/><rect x="11" y="15.5" width="2" height="2" rx="1" fill="#fff"/></svg>',
+  /* current -> provisioned arrow, wherever the two numbers are paired */
+  arrowRight:'<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
 };
 
 /* ---------- seed data (grounded in the Trailer Pool Management Idea doc — P&G/Moreno Valley
@@ -368,10 +376,10 @@ const ICON = {
 let POOL={},OTHER={},GPSUNKNOWN=null,ARCHIVED_TRAILERS=[];
 function seedPool(){
 POOL={
- 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',target:4,current:0,untracked:0,daysBelow:6,lat:33.9425,lng:-117.2297,
+ 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',target:4,provisioned:6,current:0,untracked:0,daysBelow:6,lat:33.9425,lng:-117.2297,
   suggestion:{name:'Perris Ranch, CA',minutes:11,available:3},
   trailers:[]},
- 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',target:2,current:5,untracked:0,daysBelow:0,lat:33.8900,lng:-117.2450,
+ 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',target:2,provisioned:8,current:5,untracked:0,daysBelow:0,lat:33.8900,lng:-117.2450,
   trailers:[
    {tid:'NEVO-4471',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-4482',source:'gps',lastPing:'6 min ago',loaded:true},
@@ -379,29 +387,29 @@ POOL={
    {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago'},
    {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
   ]},
- 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',target:3,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
+ 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',target:3,provisioned:4,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
   trailers:[
    {tid:'NEVO-3312',source:'gps',lastPing:'3 min ago'},
    {tid:'NEVO-3340',source:'gps',lastPing:'8 min ago'}
   ]},
- 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',target:3,current:3,untracked:0,daysBelow:0,lat:33.9550,lng:-117.2550,
+ 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',target:3,provisioned:3,current:3,untracked:0,daysBelow:0,lat:33.9550,lng:-117.2550,
   trailers:[
    {tid:'NEVO-3355',source:'gps',lastPing:'1 min ago'},
    {tid:'NEVO-3361',source:'gps',lastPing:'4 min ago'},
    {tid:'NEVO-3379',source:'gps',lastPing:'9 min ago'}
   ]},
- 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',target:3,current:1,untracked:0,daysBelow:4,lat:33.9200,lng:-117.3100,
+ 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',target:3,provisioned:5,current:1,untracked:0,daysBelow:4,lat:33.9200,lng:-117.3100,
   suggestion:{name:'LGB5 – Moreno Valley, CA',minutes:18,available:1},
   trailers:[
    {tid:'NEVO-3402',source:'gps',lastPing:'7 min ago'}
   ]},
- 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',target:3,current:3,untracked:1,daysBelow:0,lat:33.9800,lng:-117.1850,
+ 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',target:3,provisioned:4,current:3,untracked:1,daysBelow:0,lat:33.9800,lng:-117.1850,
   trailers:[
    {tid:'NEVO-3510',source:'gps',lastPing:'5 min ago'},
    {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
    {tid:'RYDER-8821',source:'manual',lastPing:'flagged manually — Ryder rental, no GPS',dvir:'flagged',pmDue:true}
   ]},
- 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',target:2,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
+ 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',target:2,provisioned:3,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
   trailers:[
    {tid:'NEVO-2201',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-2219',source:'gps',lastPing:'10 min ago',dvir:'flagged'}
@@ -531,9 +539,11 @@ function trailerCardHTML(t){
  return '<div class="trailercard">'+
   '<div class="tc-id">'+esc(t.tid)+'</div>'+
   '<div class="tc-row">'+(t.source==='gps'?'GPS':'Manual')+' · '+esc(t.lastPing)+'</div>'+
-  '<div class="tc-row" title="'+DVIR_TIP+'" style="color:'+(flagged?'var(--red)':'var(--green)')+'">'+(flagged?'DVIR flagged':'DVIR passed')+' <span class="infoq">ⓘ</span></div>'+
-  '<div class="tc-row">'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
-  (t.pmDue?'<div class="tc-row tc-pm">Due for preventative maintenance</div>':'')+
+  '<div class="tc-status">'+
+   '<div class="tc-row" title="'+DVIR_TIP+'"><span class="tc-dot2" style="background:'+(flagged?'var(--red)':'var(--green)')+'"></span><span style="color:'+(flagged?'var(--red)':'var(--green)')+'">'+(flagged?'DVIR flagged':'DVIR passed')+'</span><span class="infoq">ⓘ</span></div>'+
+   '<div class="tc-row">'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
+   (t.pmDue?'<div class="tc-row tc-pm">'+ICON.pmAlert+'Due for preventative maintenance</div>':'')+
+  '</div>'+
   '</div>';
 }
 function renderMap(){
@@ -569,7 +579,7 @@ function renderMap(){
   } else {
    const icon=L.divIcon({className:'',html:'<div class="pin '+healthClass(h)+'">'+(l.current>1?'<span class="pn">'+l.current+'</span>':'')+'</div>',iconSize:[20,20],iconAnchor:[10,20]});
    const marker=L.marker([l.lat,l.lng],{icon}).addTo(MAP);
-   marker.bindTooltip(esc(l.name)+' · '+l.current+(typeof l.target==='number'?'/'+l.target:''),{direction:'top',offset:[0,-18],className:'poolTip'});
+   marker.bindTooltip(esc(l.name)+' · '+l.current+(typeof l.provisioned==='number'?' → '+l.provisioned:''),{direction:'top',offset:[0,-18],className:'poolTip'});
    marker.on('click',()=>{MAP.setView([l.lat,l.lng],CLICK_EXPAND_ZOOM);highlightRow(l.id);});
    MARKERS[l.id]=marker;
   }
@@ -649,15 +659,16 @@ function passFilter(l){
  return matchesSearch(l);
 }
 function updateSub(){const c=chipCounts();$('poolsub').textContent=c.all+' pools · '+c.belowtarget+' below target · '+c.critical+' critical';}
-function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';
+function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';
  return '<div class="poolrow" data-id="'+id+'" onclick="openLocationDrawer(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
- '<div class="count"><b>'+l.current+'</b>'+(hasTarget?' / '+l.target:'')+'</div>'+
+ '<div class="count"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+
+ '<div class="target">'+(hasTarget?l.target:'—')+'</div>'+
  '<div class="untracked">'+(l.untracked?l.untracked+' manual':'—')+'</div>'+
  '<div class="days'+(l.daysBelow?' flag':'')+'">'+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below':'—')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';}
-function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div>Current / Target</div><div>Untracked</div><div>Time below target</div><div></div></div>';}
+function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span>Provisioned</div><div>Target</div><div>Untracked</div><div>Time below target</div><div></div></div>';}
 function toggleSection(key){COLLAPSED[key]=!COLLAPSED[key];renderList();}
 /* One shared colHead() sits at the very top of the whole list (see renderList) —
    sections only contribute their own grouphead + rows, matching the lanes
@@ -702,9 +713,13 @@ function setPageView(view){
  });
  $('poolToolbar').classList.toggle('hidden',view!=='pools');
  $('atFilters').style.display=view==='all'?'block':'none';
+ $('archivedToggleWrap').style.display=view==='all'?'':'none';
  $('listwrap').style.display=view==='pools'?'':'none';
  $('allTrailersList').style.display=view==='all'?'':'none';
- if(view==='all')renderTypeChips();
+ if(view==='all'){
+  renderTypeChips();
+  $('archivedToggle').checked=INCLUDEARCHIVED;
+ }
  closeFilterDropdown();
  closeDrawer();
 }
@@ -714,6 +729,14 @@ function pseudoDays(tid){
  let h=0;
  for(let i=0;i<tid.length;i++)h=(h*31+tid.charCodeAt(i))>>>0;
  return h%6;
+}
+/* Illustrative last-serviced recency — PM-due trailers skew further out
+   (overdue), everything else lands in a normal-ish maintenance interval. */
+function pseudoLastServiced(t){
+ let h=0;
+ for(let i=0;i<t.tid.length;i++)h=(h*19+t.tid.charCodeAt(i))>>>0;
+ const days=(h%60)+5+(t.pmDue?60:0);
+ return days+' day'+(days===1?'':'s')+' ago';
 }
 /* Illustrative last-assigned-load id, same 4-digit Apollo Load ID convention
    used across this workspace's other demo data (the 76xx load roster). */
@@ -750,39 +773,53 @@ function pseudoType(t){
  return 'Curtain Side';
 }
 let TYPEFILTER=new Set(),REGIONFILTER='all',INCLUDEARCHIVED=false;
+/* First 6 show as inline chips (same treatment as the pools view's health
+   chips); the rest live behind a "More" dropdown that's the last pill in
+   the row. Region stays inline next to it; Include Archived is a switch,
+   same treatment as "Group by location". */
+const PRIMARY_TYPES=TRAILER_TYPES.slice(0,5);
+const MORE_TYPES=TRAILER_TYPES.slice(5);
+function typeChipHTML(ty){
+ return '<div class="chip'+(TYPEFILTER.has(ty)?' on':'')+'" onclick="toggleTypeFilter(\''+ty+'\')">'+ty+'</div>';
+}
 function renderTypeChips(){
- $('atfTypes').innerHTML=TRAILER_TYPES.map(ty=>
-  '<div class="chip'+(TYPEFILTER.has(ty)?' on':'')+'" onclick="toggleTypeFilter(\''+ty+'\')">'+ty+'</div>'
- ).join('');
+ const moreCount=MORE_TYPES.filter(ty=>TYPEFILTER.has(ty)).length;
+ const primaryHTML=PRIMARY_TYPES.map(typeChipHTML).join('');
+ const moreHTML='<div class="filterdd" id="moreDD">'+
+   '<button type="button" class="chip morebtn" onclick="toggleFilterDropdown(event)" aria-label="More trailer types">'+
+    '<svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>'+
+    (moreCount>0?'<span class="fcount">'+moreCount+'</span>':'')+
+   '</button>'+
+   '<div class="filterpanel" id="filterPanel" style="display:none">'+
+    '<div class="fp-label">More trailer types</div>'+
+    '<div class="atf-types">'+MORE_TYPES.map(typeChipHTML).join('')+'</div>'+
+   '</div>'+
+  '</div>';
+ const regionHTML='<select id="atfRegion" style="margin-left:auto" onchange="setRegionFilter(this.value)">'+
+   '<option value="all"'+(REGIONFILTER==='all'?' selected':'')+'>All Regions</option>'+
+   '<option value="California"'+(REGIONFILTER==='California'?' selected':'')+'>California</option>'+
+  '</select>';
+ $('atfRow').innerHTML=primaryHTML+moreHTML+regionHTML;
 }
 function toggleTypeFilter(ty){
  if(TYPEFILTER.has(ty))TYPEFILTER.delete(ty);else TYPEFILTER.add(ty);
  renderTypeChips();
- updateFilterCount();
  renderAllTrailers();
 }
-function setRegionFilter(v){REGIONFILTER=v;updateFilterCount();renderAllTrailers();}
-function toggleIncludeArchived(){
- INCLUDEARCHIVED=!INCLUDEARCHIVED;
- $('archivedCard').classList.toggle('on',INCLUDEARCHIVED);
- updateFilterCount();
+function setRegionFilter(v){REGIONFILTER=v;renderAllTrailers();}
+function setIncludeArchived(checked){
+ INCLUDEARCHIVED=checked;
  renderAllTrailers();
 }
-/* ---------- filter dropdown ---------- */
-function updateFilterCount(){
- const n=TYPEFILTER.size+(REGIONFILTER!=='all'?1:0)+(INCLUDEARCHIVED?1:0);
- const el=$('filterCount');
- el.style.display=n>0?'inline-block':'none';
- el.textContent=n;
-}
+/* ---------- filter dropdown (the "More" types panel) ---------- */
 function toggleFilterDropdown(e){
  if(e)e.stopPropagation();
  const panel=$('filterPanel');
  panel.style.display=(panel.style.display==='none'||!panel.style.display)?'flex':'none';
 }
-function closeFilterDropdown(){$('filterPanel').style.display='none';}
+function closeFilterDropdown(){const p=$('filterPanel');if(p)p.style.display='none';}
 document.addEventListener('click',e=>{
- const dd=$('filterDD');
+ const dd=$('moreDD');
  if(dd&&!dd.contains(e.target))closeFilterDropdown();
 });
 function allTrailerRows(includeArchived){
@@ -829,7 +866,7 @@ function openLocationDrawer(id){SELECTED=id;$('dfoot').style.display='none';rend
 function closeDrawer(){$('drawer').classList.remove('open');SELECTED=null;$('dfoot').style.display='none';}
 function drow(k,v){return '<div class="dr"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
 function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
- const h=deriveHealth(l);const hasTarget=typeof l.target==='number';
+ const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';
  $('dhead').innerHTML='<div class="top"><span class="lid">'+esc(l.id)+'</span>'+healthPill(l)+'<span class="x" onclick="closeDrawer()">'+ICON.x+'</span></div>'+
  '<h2>'+esc(l.name)+'</h2>'+(l.account?'<div class="meta">'+esc(l.account)+'</div>':'')+
  '<div class="btns">'+(hasTarget?'<button class="abtn" onclick="openEditDrawer(\''+id+'\')">'+ICON.pencil+' Edit target</button>':'')+
@@ -847,7 +884,8 @@ function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
  }
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
    drow('Current count',l.current)+
-   (hasTarget?drow('Target count',l.target):drow('Target count','Not set'))+
+   drow('Provisioned',hasProvisioned?l.provisioned:'Not set')+
+   drow('Target count',hasTarget?l.target:'Not set')+
    drow('Tracked (GPS)',l.current-(l.untracked||0))+
    drow('Untracked (manual)',l.untracked||'—')+
    drow('Time below target',l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':''):'—')+
@@ -857,14 +895,13 @@ function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
  if(!l.trailers.length){
   html+='<div class="emptytrailers">No trailers currently on site.</div>';
  } else {
-  html+='<div class="trow head"><div>Trailer</div><div>Source</div><div>Last signal</div><div title="'+DVIR_TIP+'">Health <span class="infoq">ⓘ</span></div><div>Loaded</div></div>'+
+  html+='<div class="trow head"><div>Trailer</div><div title="'+DVIR_TIP+'">DVIR <span class="infoq">ⓘ</span></div><div>Last Serviced</div><div>Loaded</div></div>'+
    l.trailers.map(t=>{
     const flagged=t.dvir==='flagged';
     return '<div class="trow">'+
      '<div>'+esc(t.tid)+(t.pmDue?' <span class="pmflag" onmouseenter="showTip(this,\'Due for preventative maintenance\')" onmouseleave="hideTip()">'+ICON.pmAlert+'</span>':'')+'</div>'+
-     '<div><span class="src">'+(t.source==='gps'?'GPS':'Manual')+'</span></div>'+
-     '<div>'+esc(t.lastPing)+'</div>'+
      '<div><span class="healthind '+(flagged?'flagged':'gps')+'"><span class="dot"></span>'+(flagged?'Flagged':'OK')+'</span></div>'+
+     '<div>'+pseudoLastServiced(t)+'</div>'+
      '<div>'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
      '</div>';
    }).join('');
