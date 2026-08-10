@@ -539,6 +539,7 @@ function lotGrid(lat,lng,n){
    a loaded unit sitting in a pool isn't real available capacity). Trailers
    default to DVIR-passed/not-due/empty unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report (DVIR): the driver\'s pre/post-trip safety check. No live system tracks this yet - a dispatcher reviews it manually today.';
+const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by close of business today.';
 function trailerCardHTML(t){
  const flagged=t.dvir==='flagged';
  return '<div class="trailercard">'+
@@ -687,7 +688,7 @@ function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==
  '<div class="untracked">'+(l.untracked?l.untracked+' manual':'—')+'</div>'+
  '<div class="days'+(l.daysBelow?' flag':'')+'">'+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below':'—')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';}
-function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span>Provisioned</div><div>Target</div><div>Untracked</div><div>Time below target</div><div></div></div>';}
+function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div>Target</div><div>Untracked</div><div>Time below target</div><div></div></div>';}
 function toggleSection(key){COLLAPSED[key]=!COLLAPSED[key];renderList();}
 /* One shared colHead() sits at the very top of the whole list (see renderList) —
    sections only contribute their own grouphead + rows, matching the lanes
@@ -903,7 +904,7 @@ function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
  }
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
    drow('Current count',l.current)+
-   drow('Provisioned',hasProvisioned?l.provisioned:'Not set')+
+   drow('<span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span>',hasProvisioned?l.provisioned:'Not set')+
    drow('Target count',hasTarget?l.target:'Not set')+
    drow('Tracked (GPS)',l.current-(l.untracked||0))+
    drow('Untracked (manual)',l.untracked||'—')+
