@@ -21,6 +21,9 @@
   --amber:#E17100;--ambersoft:#FEF3C6;
   --green:#007A55;--greensoft:#D0FAE5;
   --slate:#1D293D;--slatesoft:#E6EFFA;
+  /* Blue Status chip pair (shared/tokens.css --status-bg-blue-in-progress /
+     Icon/blue-in-progress) — reused here for "Over target". */
+  --blue:#155DFC;--bluesoft:#DBEAFE;
   /* Load chip status-dot colors (shared/tokens.css Icon/*) */
   --icon-emerald-success:#009966;--icon-fuschia-pending:#c800de;--icon-stone-cancelled:#79716b;
   --icon-blue-in-progress:#155dfc;--icon-violet-dispatched:#7f22fe;
@@ -164,8 +167,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .sechead .chev{transition:transform .15s;display:inline-block;color:var(--gray)}
 .sechead.collapsed .chev{transform:rotate(-90deg)}
 .sechead .n{color:var(--gray);font-weight:400}
-.colhead{display:grid;grid-template-columns:1.1fr .95fr .75fr .5fr .55fr 1fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
-.poolrow{display:grid;grid-template-columns:1.1fr .95fr .75fr .5fr .55fr 1fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.colhead{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr .6fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+.poolrow{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr .6fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
@@ -177,8 +180,6 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .countarrow-head{display:flex;align-items:center;gap:3px}
 .poolrow .target{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
 .poolrow .untracked{color:var(--gray);font-size:12.5px;white-space:nowrap}
-.poolrow .days{color:var(--gray);font-size:12.5px;white-space:nowrap}
-.poolrow .days.flag{color:var(--amber);font-weight:500}
 .poolrow .chev2{color:#CBD5E1}
 /* Status chip (confirmed Figma spec — source of truth for status pill colors).
    nowrap: a two-word status like "Below target" must stay on one line, same
@@ -186,6 +187,7 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .pill{border-radius:16px;padding:3px 11px;font-size:12px;font-weight:600;display:inline-block;letter-spacing:.2px;white-space:nowrap}
 .p-ontarget{background:var(--greensoft);color:var(--green)}
 .p-belowtarget{background:var(--ambersoft);color:var(--amber)}
+.p-overtarget{background:var(--bluesoft);color:var(--blue)}
 .p-critical{background:var(--redsoft);color:var(--red)}
 .p-notarget{background:var(--slatesoft);color:var(--slate)}
 .p-available{background:var(--greensoft);color:var(--green)}
@@ -200,23 +202,20 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    swapped in for #listwrap; same Table look as the pools list. ---------- */
 #poolToolbar.hidden{display:none}
 #allTrailersList{flex:1;overflow:auto;background:#fff;border:1px solid var(--border-muted);border-radius:10px}
-.atcolhead{display:grid;grid-template-columns:1.5fr .65fr .95fr .5fr .5fr .8fr .8fr .75fr;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
-.atrow{display:grid;grid-template-columns:1.5fr .65fr .95fr .5fr .5fr .8fr .8fr .75fr;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
-.atrow .pm2{white-space:nowrap}
-.atrow .pm2.overdue{color:var(--amber);font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.atcolhead{display:grid;grid-template-columns:1.5fr .65fr 1.3fr .5fr .8fr;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
+.atrow{display:grid;grid-template-columns:1.5fr .65fr 1.3fr .5fr .8fr;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
 .atrow:hover{background:var(--surface-low)}
 .atrow.archived{opacity:.6}
 .atrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
 /* "Needs maintenance" flag — icon + hover-tooltip, same treatment as the
    drawer/map's .pmflag (which mirrors the lanes prototype's "Expiring soon"
    flag's hover-context pattern, just icon-only instead of a text pill). */
-.flagmaint{display:inline-flex;align-items:center;vertical-align:-2px;cursor:default;flex:none}
+.flagmaint{display:inline-flex;align-items:center;vertical-align:-2px;cursor:default;flex:none;color:var(--amber)}
 /* Trailer name reads as a link — same affordance as lanes' .provlink — even
    though it doesn't navigate anywhere yet (no detail view to send it to). */
 .atrow .tidlink:hover{text-decoration:underline}
 .atrow .loc2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .atrow .days2{color:var(--gray);font-size:12.5px;white-space:nowrap}
-.atrow .src2{display:inline-flex;align-items:center;color:var(--text-default);font-size:12.5px}
 .emptysec{padding:16px;color:var(--gray);font-size:12.5px}
 .infoq{cursor:help;color:var(--gray);font-size:10px}
 /* drawer */
@@ -244,14 +243,10 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
 .critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
-.trow{display:grid;grid-template-columns:1.2fr .75fr .95fr .7fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}
+.trow{display:grid;grid-template-columns:1.7fr 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}
 .trow:not(.head):hover{background:var(--surface-low)}
 .trow.head{cursor:default}
 .trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-.trow .healthind{display:inline-flex;align-items:center;gap:5px}
-.trow .healthind .dot{width:6px;height:6px;border-radius:50%}
-.trow .healthind.gps .dot{background:var(--green)}
-.trow .healthind.flagged .dot{background:var(--red)}
 /* En-route table — same row rhythm as .trow above, just a narrower 3-column
    shape (trailer / origin / ETA). Not clickable: these trailers aren't
    physically at this location's yard yet, so there's no marker to pin. */
@@ -263,6 +258,11 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 /* PM-due flag — just the icon, no pill/background; hover shows context via
    the shared .hovertip (matches the lanes prototype's "Expiring soon" flag). */
 .pmflag{display:inline-flex;align-items:center;vertical-align:-2px;cursor:default}
+/* Preventative-maintenance callout — icon + bold amber label, same visual
+   language as the lanes prototype's "Expiring soon" flag (icon + colored
+   bold text) and this file's own map-card .tc-pm row. Hover still gives the
+   due-date context via the shared .hovertip. */
+.pmcallout{display:inline-flex;align-items:center;gap:4px;color:var(--amber);font-weight:600;font-size:12px;cursor:help;vertical-align:-2px}
 /* Shared hover tooltip — fixed to body so it escapes any scroll clipping. */
 .hovertip{position:fixed;display:none;background:var(--ink);color:#fff;font-size:11px;font-weight:400;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:250;pointer-events:none}
 .hovertip.show{display:block}
@@ -395,7 +395,9 @@ const ICON = {
   pmAlert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--amber)"><circle cx="12" cy="12" r="10"/><rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/><rect x="11" y="15.5" width="2" height="2" rx="1" fill="#fff"/></svg>',
   /* small filled flag — the "needs maintenance" flag on the All Trailers list.
      Amber, matching the PM-due alert glyph's color language. */
-  flag:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--amber)"><rect x="4" y="2" width="2" height="20" rx="1"/><path d="M6 3.5h12l-3 4.5 3 4.5H6z"/></svg>',
+  /* fill:currentColor so callers tint via CSS — amber for routine
+     maintenance flags, red for a DVIR safety flag. */
+  flag:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="2" width="2" height="20" rx="1"/><path d="M6 3.5h12l-3 4.5 3 4.5H6z"/></svg>',
   /* current -> provisioned arrow, wherever the two numbers are paired */
   arrowRight:'<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
 };
@@ -426,7 +428,7 @@ POOL={
    {tid:'NEVO-4471',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-4482',source:'gps',lastPing:'6 min ago',loaded:true},
    {tid:'NEVO-4498',source:'gps',lastPing:'11 min ago'},
-   {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago'},
+   {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago',pmDue:true},
    {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
   ]},
  'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
@@ -497,6 +499,7 @@ function deriveHealth(l){
  if(typeof l.target!=='number')return 'No target set';
  if(l.current===0)return 'Critical';
  if(l.current<l.target)return 'Below target';
+ if(l.current>l.target)return 'Over target';
  return 'On target';
 }
 /* deriveHealth() returns strings like "No target set" — normalize its class distinctly. */
@@ -589,7 +592,7 @@ function lotGrid(lat,lng,n){
    journey), and loaded/empty (the TX Bible tracks "Loaded+Empty Trailer #";
    a loaded unit sitting in a pool isn't real available capacity). Trailers
    default to DVIR-passed/not-due/empty unless the seed data flags otherwise. */
-const DVIR_TIP='Driver Vehicle Inspection Report (DVIR): the driver\'s pre/post-trip safety check. No live system tracks this yet - a dispatcher reviews it manually today.';
+const DVIR_TIP='Driver Vehicle Inspection Report missing';
 const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by 5:00 PM local time — Pacific, for these California yards.';
 function trailerCardHTML(t){
  const flagged=t.dvir==='flagged';
@@ -715,9 +718,10 @@ let COLLAPSED={},CHIPFILTER='all',SELECTED=null;
 function chipCounts(){const vals=Object.values(POOL);
  return{all:vals.length,ontarget:vals.filter(l=>deriveHealth(l)==='On target').length,
   belowtarget:vals.filter(l=>deriveHealth(l)==='Below target').length,
+  overtarget:vals.filter(l=>deriveHealth(l)==='Over target').length,
   critical:vals.filter(l=>deriveHealth(l)==='Critical').length};}
 function renderChips(){const c=chipCounts();
- const defs=[['all','All pools',c.all],['ontarget','On target',c.ontarget],['belowtarget','Below target',c.belowtarget],['critical','Critical',c.critical]];
+ const defs=[['all','All pools',c.all],['ontarget','On target',c.ontarget],['belowtarget','Below target',c.belowtarget],['overtarget','Over target',c.overtarget],['critical','Critical',c.critical]];
  $('poolchips').innerHTML=defs.map(d=>'<div class="chip'+(CHIPFILTER===d[0]?' on':'')+'" onclick="CHIPFILTER=\''+d[0]+'\';renderList()">'+d[1]+' '+d[2]+'</div>').join('');}
 let SEARCHTEXT='';
 function matchesSearch(l){
@@ -741,9 +745,8 @@ function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==
  '<div class="count"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+
  '<div class="target">'+(hasTarget?l.target:'—')+'</div>'+
  '<div class="untracked">'+(l.untracked?l.untracked+' manual':'—')+'</div>'+
- '<div class="days'+(l.daysBelow?' flag':'')+'">'+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below':'—')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';}
-function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div>Target</div><div>Untracked</div><div>Time below target</div><div></div></div>';}
+function colHead(){return '<div class="colhead"><div>Location</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div>Target</div><div>Untracked</div><div></div></div>';}
 function toggleSection(key){COLLAPSED[key]=!COLLAPSED[key];renderList();}
 /* One shared colHead() sits at the very top of the whole list (see renderList) —
    sections only contribute their own grouphead + rows, matching the lanes
@@ -938,7 +941,7 @@ function renderAllTrailers(){
   return true;
  });
  rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
- const head='<div class="atcolhead"><div>Trailer</div><div>Status</div><div>Current Location</div><div>At location</div><div>Source</div><div>Last Maintained</div><div>Scheduled PM</div><div>Last Assigned Load</div></div>';
+ const head='<div class="atcolhead"><div>Trailer</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Assigned Load</div></div>';
  if(!rows.length){
   $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
   return;
@@ -947,7 +950,6 @@ function renderAllTrailers(){
   const status=r.archived?'Archived':(r.t.source==='manual'?'Unknown':'Available');
   const statusClass=r.archived?'p-notarget':(r.t.source==='manual'?'p-unknown':'p-available');
   const days=pseudoDays(r.t.tid);
-  const scheduled=pseudoScheduledPM(r.t);
   /* "Needs maintenance" is an Amazon-defined attribute we don't have a real
      feed for yet — illustrated here by reusing the same trailers already
      marked pmDue in the seed data, since those are the ones that plausibly
@@ -958,9 +960,6 @@ function renderAllTrailers(){
    '<div><span class="pill '+statusClass+'">'+status+'</span></div>'+
    '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
    '<div class="days2">'+days+' day'+(days===1?'':'s')+'</div>'+
-   '<div class="src2">'+(r.t.source==='gps'?'GPS':'Manual')+'</div>'+
-   '<div class="pm2">'+pseudoLastServiced(r.t)+'</div>'+
-   '<div class="pm2'+(scheduled.overdue?' overdue':'')+'">'+(scheduled.overdue?ICON.pmAlert:'')+scheduled.text+'</div>'+
    '<div>'+loadPillHTML(r.t.tid)+'</div>'+
    '</div>';
  }).join('');
@@ -989,26 +988,28 @@ function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
    '<div class="btns"><button class="abtn" onclick="toast(\'Opening '+esc(l.suggestion.name).replace(/'/g,"\\'")+'…\')">View '+esc(l.suggestion.name)+'</button></div></div>';
  }
  html+='<div class="sect"><span>DETAILS</span></div><div class="dgrid">'+
+   drow('Status',healthPill(l))+
    drow('Current count',l.current)+
    drow('<span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span>',hasProvisioned?l.provisioned:'Not set')+
    drow('Target count',hasTarget?l.target:'Not set')+
    drow('Tracked (GPS)',l.current-(l.untracked||0))+
    drow('Untracked (manual)',l.untracked||'—')+
-   drow('Time below target',l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':''):'—')+
-   drow('Last reconciled','4 min ago')+
  '</div>';
  html+='<div class="sect" style="margin-top:14px"><span>TRAILERS AT THIS LOCATION</span><span>'+l.trailers.length+'</span></div>';
  if(!l.trailers.length){
   html+='<div class="emptytrailers">No trailers currently on site.</div>';
  } else {
-  html+='<div class="trow head"><div>Trailer</div><div title="'+DVIR_TIP+'">DVIR <span class="infoq">ⓘ</span></div><div>Last Serviced</div><div>Loaded</div></div>'+
+  html+='<div class="trow head"><div>Trailer</div><div>Last Serviced</div></div>'+
    l.trailers.map(t=>{
     const flagged=t.dvir==='flagged';
+    const pmTip=t.pmDue?('Due for preventative maintenance — was due '+pseudoScheduledPM(t).text).replace(/'/g,"\\'"):'';
     return '<div class="trow" onclick="selectTrailerFromList(\''+t.tid+'\',\''+l.id+'\')">'+
-     '<div>'+esc(t.tid)+(t.pmDue?' <span class="pmflag" onmouseenter="showTip(this,\'Due for preventative maintenance\')" onmouseleave="hideTip()">'+ICON.pmAlert+'</span>':'')+'</div>'+
-     '<div><span class="healthind '+(flagged?'flagged':'gps')+'"><span class="dot"></span>'+(flagged?'Flagged':'OK')+'</span></div>'+
+     '<div><div>'+esc(t.tid)+
+      (flagged?' <span class="pmflag" style="color:var(--red)" onmouseenter="showTip(this,DVIR_TIP)" onmouseleave="hideTip()">'+ICON.flag+'</span>':'')+
+      '</div>'+
+      (t.pmDue?'<span class="pmcallout" onmouseenter="showTip(this,\''+pmTip+'\')" onmouseleave="hideTip()">'+ICON.pmAlert+'Preventative maintenance due</span>':'')+
+     '</div>'+
      '<div>'+pseudoLastServiced(t)+'</div>'+
-     '<div>'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
      '</div>';
    }).join('');
  }
