@@ -200,11 +200,17 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    swapped in for #listwrap; same Table look as the pools list. ---------- */
 #poolToolbar.hidden{display:none}
 #allTrailersList{flex:1;overflow:auto;background:#fff;border:1px solid var(--border-muted);border-radius:10px}
-.atcolhead{display:grid;grid-template-columns:1fr .8fr 1.15fr .8fr .7fr .8fr;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
-.atrow{display:grid;grid-template-columns:1fr .8fr 1.15fr .8fr .7fr .8fr;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
+.atcolhead{display:grid;grid-template-columns:1.5fr .65fr .95fr .5fr .5fr .8fr .8fr .75fr;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
+.atrow{display:grid;grid-template-columns:1.5fr .65fr .95fr .5fr .5fr .8fr .8fr .75fr;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
+.atrow .pm2{white-space:nowrap}
+.atrow .pm2.overdue{color:var(--amber);font-weight:500;display:inline-flex;align-items:center;gap:4px}
 .atrow:hover{background:var(--surface-low)}
 .atrow.archived{opacity:.6}
-.atrow .tid{font-weight:500;color:var(--ink)}
+.atrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
+/* "Needs maintenance" flag — icon + hover-tooltip, same treatment as the
+   drawer/map's .pmflag (which mirrors the lanes prototype's "Expiring soon"
+   flag's hover-context pattern, just icon-only instead of a text pill). */
+.flagmaint{display:inline-flex;align-items:center;vertical-align:-2px;cursor:default;flex:none}
 /* Trailer name reads as a link — same affordance as lanes' .provlink — even
    though it doesn't navigate anywhere yet (no detail view to send it to). */
 .atrow .tidlink:hover{text-decoration:underline}
@@ -246,6 +252,13 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .trow .healthind .dot{width:6px;height:6px;border-radius:50%}
 .trow .healthind.gps .dot{background:var(--green)}
 .trow .healthind.flagged .dot{background:var(--red)}
+/* En-route table — same row rhythm as .trow above, just a narrower 3-column
+   shape (trailer / origin / ETA). Not clickable: these trailers aren't
+   physically at this location's yard yet, so there's no marker to pin. */
+.erow{display:grid;grid-template-columns:1.2fr 1.1fr .7fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;margin:0 -6px;padding-left:6px;padding-right:6px}
+.erow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
+.erow .from{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erow .eta{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* PM is a flag (badge) inline on the trailer id, not its own column. */
 /* PM-due flag — just the icon, no pill/background; hover shows context via
    the shared .hovertip (matches the lanes prototype's "Expiring soon" flag). */
@@ -380,6 +393,9 @@ const ICON = {
   /* small filled alert-circle — the PM-due flag. Amber, not red: routine
      maintenance due, not an urgent problem. */
   pmAlert:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--amber)"><circle cx="12" cy="12" r="10"/><rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/><rect x="11" y="15.5" width="2" height="2" rx="1" fill="#fff"/></svg>',
+  /* small filled flag — the "needs maintenance" flag on the All Trailers list.
+     Amber, matching the PM-due alert glyph's color language. */
+  flag:'<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--amber)"><rect x="4" y="2" width="2" height="20" rx="1"/><path d="M6 3.5h12l-3 4.5 3 4.5H6z"/></svg>',
   /* current -> provisioned arrow, wherever the two numbers are paired */
   arrowRight:'<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
 };
@@ -396,8 +412,16 @@ function seedPool(){
 POOL={
  'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,provisioned:6,current:0,untracked:0,daysBelow:6,lat:33.9425,lng:-117.2297,
   suggestion:{name:'Perris Ranch, CA',minutes:11,available:3},
+  enRoute:[
+   {tid:'NEVO-5102',from:'Perris Ranch, CA',eta:'3:15 PM'},
+   {tid:'NEVO-5118',from:'TSG Fontana, CA',eta:'4:40 PM'}
+  ],
   trailers:[]},
  'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:8,current:5,untracked:0,daysBelow:0,lat:33.8900,lng:-117.2450,
+  enRoute:[
+   {tid:'NEVO-5133',from:'Amazon LGB5 – Moreno Valley, CA',eta:'2:20 PM'},
+   {tid:'NEVO-5147',from:'TSG Fontana, CA',eta:'5:00 PM'}
+  ],
   trailers:[
    {tid:'NEVO-4471',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-4482',source:'gps',lastPing:'6 min ago',loaded:true},
@@ -406,11 +430,15 @@ POOL={
    {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
   ]},
  'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:2,untracked:0,daysBelow:2,lat:33.9950,lng:-117.2050,
+  enRoute:[
+   {tid:'NEVO-5160',from:'Perris Ranch, CA',eta:'1:50 PM'}
+  ],
   trailers:[
    {tid:'NEVO-3312',source:'gps',lastPing:'3 min ago'},
    {tid:'NEVO-3340',source:'gps',lastPing:'8 min ago'}
   ]},
  'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:3,current:3,untracked:0,daysBelow:0,lat:33.9550,lng:-117.2550,
+  enRoute:[],
   trailers:[
    {tid:'NEVO-3355',source:'gps',lastPing:'1 min ago'},
    {tid:'NEVO-3361',source:'gps',lastPing:'4 min ago'},
@@ -418,16 +446,26 @@ POOL={
   ]},
  'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:5,current:1,untracked:0,daysBelow:4,lat:33.9200,lng:-117.3100,
   suggestion:{name:'LGB5 – Moreno Valley, CA',minutes:18,available:1},
+  enRoute:[
+   {tid:'NEVO-5175',from:'Amazon LGB5 – Moreno Valley, CA',eta:'3:40 PM'},
+   {tid:'NEVO-5182',from:'Perris Ranch, CA',eta:'4:55 PM'}
+  ],
   trailers:[
    {tid:'NEVO-3402',source:'gps',lastPing:'7 min ago'}
   ]},
  'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:3,untracked:1,daysBelow:0,lat:33.9800,lng:-117.1850,
+  enRoute:[
+   {tid:'NEVO-5199',from:'Perris Ranch, CA',eta:'2:10 PM'}
+  ],
   trailers:[
    {tid:'NEVO-3510',source:'gps',lastPing:'5 min ago'},
    {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
    {tid:'RYDER-8821',source:'manual',lastPing:'flagged manually — Ryder rental, no GPS',dvir:'flagged',pmDue:true}
   ]},
  'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:3,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
+  enRoute:[
+   {tid:'NEVO-5204',from:'Amazon LGB3 – Redlands, CA',eta:'12:30 PM'}
+  ],
   trailers:[
    {tid:'NEVO-2201',source:'gps',lastPing:'2 min ago'},
    {tid:'NEVO-2219',source:'gps',lastPing:'10 min ago',dvir:'flagged'}
@@ -765,13 +803,36 @@ function pseudoDays(tid){
  for(let i=0;i<tid.length;i++)h=(h*31+tid.charCodeAt(i))>>>0;
  return h%6;
 }
-/* Illustrative last-serviced recency — PM-due trailers skew further out
+/* Calendar-date formatter shared by the last-serviced/scheduled-PM helpers
+   below — "Aug 12, 2026", not a relative "N days ago"/"in N days" string. */
+function fmtDate(d){
+ return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+/* Illustrative last-serviced date — PM-due trailers skew further back
    (overdue), everything else lands in a normal-ish maintenance interval. */
 function pseudoLastServiced(t){
  let h=0;
  for(let i=0;i<t.tid.length;i++)h=(h*19+t.tid.charCodeAt(i))>>>0;
  const days=(h%60)+5+(t.pmDue?60:0);
- return days+' day'+(days===1?'':'s')+' ago';
+ const d=new Date();d.setDate(d.getDate()-days);
+ return fmtDate(d);
+}
+/* Illustrative next-scheduled-PM date — PM-due trailers land overdue (past
+   due date, flagged amber); everything else lands somewhere in the normal
+   maintenance-interval future. Same deterministic-hash approach as the other
+   pseudo-* helpers, just walked forward instead of back. */
+function pseudoScheduledPM(t){
+ let h=0;
+ for(let i=0;i<t.tid.length;i++)h=(h*29+t.tid.charCodeAt(i))>>>0;
+ const d=new Date();
+ if(t.pmDue){
+  const days=(h%20)+1;
+  d.setDate(d.getDate()-days);
+  return{text:fmtDate(d),overdue:true};
+ }
+ const days=(h%75)+15;
+ d.setDate(d.getDate()+days);
+ return{text:fmtDate(d),overdue:false};
 }
 /* Illustrative last-assigned-load id, same 4-digit Apollo Load ID convention
    used across this workspace's other demo data (the 76xx load roster). */
@@ -877,7 +938,7 @@ function renderAllTrailers(){
   return true;
  });
  rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
- const head='<div class="atcolhead"><div>Trailer</div><div>Status</div><div>Current Location</div><div>At location</div><div>Source</div><div>Last Assigned Load</div></div>';
+ const head='<div class="atcolhead"><div>Trailer</div><div>Status</div><div>Current Location</div><div>At location</div><div>Source</div><div>Last Maintained</div><div>Scheduled PM</div><div>Last Assigned Load</div></div>';
  if(!rows.length){
   $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
   return;
@@ -886,12 +947,20 @@ function renderAllTrailers(){
   const status=r.archived?'Archived':(r.t.source==='manual'?'Unknown':'Available');
   const statusClass=r.archived?'p-notarget':(r.t.source==='manual'?'p-unknown':'p-available');
   const days=pseudoDays(r.t.tid);
+  const scheduled=pseudoScheduledPM(r.t);
+  /* "Needs maintenance" is an Amazon-defined attribute we don't have a real
+     feed for yet — illustrated here by reusing the same trailers already
+     marked pmDue in the seed data, since those are the ones that plausibly
+     need it. */
+  const needsMaint=!!r.t.pmDue;
   return '<div class="atrow'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
-   '<div class="tid"><span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span></div>'+
+   '<div class="tid"><span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span>'+(needsMaint?'<span class="flagmaint" onmouseenter="showTip(this,\'Amazon-flagged — needs maintenance before its next dispatch\')" onmouseleave="hideTip()">'+ICON.flag+'</span>':'')+'</div>'+
    '<div><span class="pill '+statusClass+'">'+status+'</span></div>'+
    '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
    '<div class="days2">'+days+' day'+(days===1?'':'s')+'</div>'+
    '<div class="src2">'+(r.t.source==='gps'?'GPS':'Manual')+'</div>'+
+   '<div class="pm2">'+pseudoLastServiced(r.t)+'</div>'+
+   '<div class="pm2'+(scheduled.overdue?' overdue':'')+'">'+(scheduled.overdue?ICON.pmAlert:'')+scheduled.text+'</div>'+
    '<div>'+loadPillHTML(r.t.tid)+'</div>'+
    '</div>';
  }).join('');
@@ -942,6 +1011,18 @@ function renderDrawerView(id){const l=allEntries()[id];if(!l)return;
      '<div>'+(t.loaded?loadPillHTML(t.tid):'Empty')+'</div>'+
      '</div>';
    }).join('');
+ }
+ /* En route only applies to Trailer Pool locations — Other Locations and
+    GPS/Unknown don't carry an EOD target, so there's nothing to be "on the
+    way" toward. */
+ if(typeof l.enRoute!=='undefined'){
+  html+='<div class="sect" style="margin-top:14px"><span title="'+EOD_TIP+'">EN ROUTE — ARRIVING BY EOD <span class="infoq">ⓘ</span></span><span>'+l.enRoute.length+'</span></div>';
+  if(!l.enRoute.length){
+   html+='<div class="emptytrailers">Nothing currently en route.</div>';
+  } else {
+   html+='<div class="erow head"><div>Trailer</div><div>From</div><div>ETA</div></div>'+
+    l.enRoute.map(e=>'<div class="erow"><div>'+esc(e.tid)+'</div><div class="from">'+esc(e.from)+'</div><div class="eta">'+esc(e.eta)+'</div></div>').join('');
+  }
  }
  $('dtl').innerHTML=html;
 }
