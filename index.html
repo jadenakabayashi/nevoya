@@ -70,11 +70,15 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .viewtoggle{display:inline-flex;background:var(--surface-default);padding:3px;border-radius:8px;gap:0;flex:none}
 /* Custom chevron over an appearance:none select — matches height with the
    segmented toggle beside it and swaps the native OS arrow for our icon set. */
-.selectwrap{position:relative;display:inline-flex;align-items:center;flex:none;margin-left:auto}
+.selectwrap{position:relative;display:inline-flex;align-items:center;flex:none}
+.searchrow .selectwrap{margin-left:auto}
 .selectwrap .chev{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray)}
-#regionFilter{appearance:none;-webkit-appearance:none;height:34px;border:1px solid var(--border-default);border-radius:8px;padding:0 30px 0 12px;font-size:13px;font-weight:500;font-family:inherit;color:var(--text-dark);background:#fff;cursor:pointer}
-#regionFilter:hover{background:var(--surface-lowest)}
-#regionFilter:focus{outline:none;border-color:var(--teal)}
+/* Shared appearance:none select treatment — Region (search row) and
+   Type/Flags/Status (All Trailers filter row) all use the same custom
+   chevron instead of a mix of native-arrow and custom-chevron selects. */
+.ddselect{appearance:none;-webkit-appearance:none;height:34px;border:1px solid var(--border-default);border-radius:8px;padding:0 30px 0 12px;font-size:13px;font-weight:500;font-family:inherit;color:var(--text-dark);background:#fff;cursor:pointer}
+.ddselect:hover{background:var(--surface-lowest)}
+.ddselect:focus{outline:none;border-color:var(--teal)}
 .viewtoggle button{border:none;background:transparent;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-default);cursor:pointer;font-family:inherit;white-space:nowrap}
 .viewtoggle button.active{background:#fff;color:var(--ink);font-weight:600}
 .toolbar{display:flex;align-items:center;gap:8px;padding:0 0 10px;flex-wrap:wrap;flex:none}
@@ -95,10 +99,10 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .searchrow input:focus{border-color:var(--teal)}
 .atfilters{padding:0 0 10px;flex:none}
 /* Type/Flags/Status are plain <select> dropdowns now (no exposed chips, no
-   "More" overflow panel) — the toggle anchors the row on the left, Include
-   Archived keeps the group-by-style switch treatment on the right. */
+   "More" overflow panel), styled via .ddselect/.selectwrap — same custom-
+   chevron treatment as Region. The toggle anchors the row on the left,
+   Include Archived keeps the group-by-style switch treatment on the right. */
 .atf-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.atf-row select{border:1px solid var(--border-default);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;color:var(--text-dark);background:#fff}
 
 /* split content: map (left) + pool table (right) — mirrors the real Trailers
    page's grid-cols-2 map/table layout in the apollo app. */
@@ -146,6 +150,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .leaflet-tooltip.trailercard{padding:10px 12px;min-width:190px}
 .trailercard .tc-id{font-weight:600;font-size:13px;color:var(--ink);margin-bottom:5px}
 .trailercard .tc-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-default);line-height:1.7}
+/* Same text treatment as .tc-row above, for the GPS/Manual · last-ping
+   callout reused in the All Trailers list and expanded trailers table. */
+.srcping{font-size:11.5px;color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
 /* Status rows (health/loaded/PM) get a divider off the identity line above,
    so the card reads as two grouped sections instead of one flat stack. */
 .trailercard .tc-status{margin-top:5px;padding-top:5px;border-top:1px solid var(--border-muted);display:flex;flex-direction:column;gap:1px}
@@ -225,8 +232,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    while letting Current Location claim the rest. If the combined floors
    ever exceed the available width, #allTrailersList's overflow:auto turns
    that into a horizontal scrollbar instead of squished/overlapping cells. */
-.atcolhead{display:grid;grid-template-columns:minmax(170px,1.3fr) minmax(140px,1fr) minmax(120px,1.7fr) minmax(80px,.6fr) minmax(95px,.9fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
-.atrow{display:grid;grid-template-columns:minmax(170px,1.3fr) minmax(140px,1fr) minmax(120px,1.7fr) minmax(80px,.6fr) minmax(95px,.9fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
+.atcolhead{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
+.atrow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
 .atrow:hover{background:var(--surface-low)}
 .atrow.archived{opacity:.6}
 .atrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
@@ -250,16 +257,28 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
 .critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
-.trow{display:grid;grid-template-columns:1.3fr 1.1fr 1.1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}
+/* Trailer / Status / From / Arrived / Last Load. minmax() per column (not
+   plain fr) + min-width:0 on every cell — same reasoning as the All
+   Trailers table: each .trow is its own independent grid instance, and
+   without a floor + min-width:0, one row's longer content desyncs that
+   row's tracks from its neighbors. */
+.trow{display:grid;grid-template-columns:minmax(100px,1.1fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(110px,1.1fr) minmax(120px,1.1fr) minmax(85px,.8fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}
 .trow:not(.head):hover{background:var(--surface-low)}
+/* Trailer name reads as a link — same affordance as .atrow .tidlink/lanes'
+   .provlink — even though there's no detail view to send it to yet. */
+.trow:hover .tidname{text-decoration:underline}
 .trow.head{cursor:default}
 .trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-/* En-route table — same row rhythm as .trow above, just a narrower 3-column
-   shape (trailer / origin / ETA). Not clickable: these trailers aren't
-   physically at this location's yard yet, so there's no marker to pin. */
-.erow{display:grid;grid-template-columns:1.2fr 1.1fr .7fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;margin:0 -6px;padding-left:6px;padding-right:6px}
+.trow>div,.erow>div{min-width:0;overflow:hidden}
+.trow .from,.trow .arr{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
+/* En-route table — same row rhythm and column shape as .trow above, minus
+   the DVIR/PM flags (a trailer in transit isn't checked in at this yard,
+   so it can't have been inspected here) and with ETA instead of Arrived.
+   Not clickable: these trailers aren't physically at this location's yard
+   yet, so there's no marker to pin. */
+.erow{display:grid;grid-template-columns:minmax(80px,.9fr) minmax(130px,1.2fr) minmax(110px,1.1fr) minmax(60px,.6fr) minmax(85px,.8fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;margin:0 -6px;padding-left:6px;padding-right:6px}
 .erow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-.erow .from{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erow .from{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
 .erow .eta{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* PM is a flag (badge) inline on the trailer id, not its own column. */
 /* PM-due flag — just the icon, no pill/background; hover shows context via
@@ -343,7 +362,7 @@ svg.ic{display:block}
         <div class="searchrow">
           <input type="text" id="searchInput" placeholder="Search trailers or locations…" oninput="setSearchText(this.value)">
           <div class="selectwrap">
-            <select id="regionFilter" onchange="setRegionFilter(this.value)">
+            <select id="regionFilter" class="ddselect" onchange="setRegionFilter(this.value)">
               <option value="all">All Regions</option>
               <option value="AZ">Arizona</option>
               <option value="CA">California</option>
@@ -365,24 +384,33 @@ svg.ic{display:block}
               <button type="button" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
               <button type="button" class="active" data-view="all" onclick="setPageView('all')">All Trailers</button>
             </div>
-            <select id="typeFilter" onchange="setTypeFilter(this.value)"></select>
-            <select id="flagFilter" onchange="setFlagFilter(this.value)">
-              <option value="all">All Flags</option>
-              <option value="pm">Preventative maintenance</option>
-              <option value="dvir">DVIR</option>
-              <option value="amzn">AMZN hold</option>
-            </select>
-            <select id="statusFilterAT" onchange="setStatusFilterAT(this.value)">
-              <option value="all">All Statuses</option>
-              <option value="available">Available</option>
-              <option value="athubstop">At Hub Stop</option>
-              <option value="atpickup">At Load Pickup</option>
-              <option value="atdelivery">At Load Delivery</option>
-              <option value="unknown">Unknown</option>
-              <option value="transitloaded">In Transit - Loaded</option>
-              <option value="transitempty">In Transit - Empty</option>
-              <option value="archived">Archived</option>
-            </select>
+            <div class="selectwrap">
+              <select id="typeFilter" class="ddselect" onchange="setTypeFilter(this.value)"></select>
+              <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="selectwrap">
+              <select id="flagFilter" class="ddselect" onchange="setFlagFilter(this.value)">
+                <option value="all">Select flags</option>
+                <option value="pm">Preventative maintenance</option>
+                <option value="dvir">DVIR</option>
+                <option value="amzn">AMZN hold</option>
+              </select>
+              <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="selectwrap">
+              <select id="statusFilterAT" class="ddselect" onchange="setStatusFilterAT(this.value)">
+                <option value="all">Select status</option>
+                <option value="available">Available</option>
+                <option value="athubstop">At Hub Stop</option>
+                <option value="atpickup">At Load Pickup</option>
+                <option value="atdelivery">At Load Delivery</option>
+                <option value="unknown">Unknown</option>
+                <option value="transitloaded">In Transit - Loaded</option>
+                <option value="transitempty">In Transit - Empty</option>
+                <option value="archived">Archived</option>
+              </select>
+              <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
             <label class="gtoggle">
               <span class="switch"><input type="checkbox" id="archivedToggle" onchange="setIncludeArchived(this.checked)"><span class="track"><span class="thumb"></span></span></span>
               Include Archived</label>
@@ -509,7 +537,7 @@ POOL={
   trailers:[
    {tid:'NEVO-3510',source:'gps',lastPing:'5 min ago'},
    {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
-   {tid:'RYDER-8821',source:'manual',lastPing:'flagged manually — Ryder rental, no GPS',dvir:'flagged',pmDue:true}
+   {tid:'RYDER-8821',source:'manual',lastPing:'logged 3 hr ago',dvir:'flagged',pmDue:true}
   ]},
  'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:3,current:2,untracked:0,daysBelow:0,lat:33.9700,lng:-117.3300,
   enRoute:[
@@ -641,17 +669,38 @@ function lotGrid(lat,lng,n){
    default to DVIR-passed/not-due/empty unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report missing';
 const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by 5:00 PM local time — Pacific, for these California yards.';
-function trailerCardHTML(t){
- const flagged=t.dvir==='flagged';
- const hasStatus=flagged||t.loaded||t.pmDue;
- const pmTip=t.pmDue?'Due for preventative maintenance — was due '+pseudoScheduledPM(t).text:'';
+/* Single source of truth for the DVIR/PM-due/AMZN-hold flag badges — reused
+   by the map card, the expanded location's trailers table, and the All
+   Trailers list, so a trailer reads the same everywhere instead of drifting
+   (e.g. an Amazon-held trailer showing generic "PM due" on the map card but
+   "AMZN hold" in the tables). useTitle picks the tooltip mechanism: native
+   title (map card, already inside a Leaflet tooltip) vs the shared
+   showTip/hideTip hovertip (tables). */
+function flagBadgeHTML(cls,color,icon,label,tip,useTitle){
+ const inner=(color?'<span style="color:'+color+';display:inline-flex">'+icon+'</span>':icon)+label;
+ return useTitle
+  ? '<span class="'+cls+'" title="'+esc(tip)+'">'+inner+'</span>'
+  : '<span class="'+cls+'" onmouseenter="showTip(this,\''+tip.replace(/'/g,"\\'")+'\')" onmouseleave="hideTip()">'+inner+'</span>';
+}
+function dvirBadgeHTML(t,useTitle){
+ return t.dvir==='flagged'?flagBadgeHTML('pmflag','var(--red)',ICON.flag,'DVIR',DVIR_TIP,useTitle):'';
+}
+function maintBadgeHTML(t,needsMaint,useTitle){
+ if(needsMaint)return flagBadgeHTML('pmflag','var(--amber)',ICON.flag,'AMZN hold','Amazon-flagged — needs maintenance before its next dispatch',useTitle);
+ if(t.pmDue)return flagBadgeHTML('pmcallout',null,ICON.pmAlert,'PM due','Due for preventative maintenance — was due '+pseudoScheduledPM(t).text,useTitle);
+ return '';
+}
+function trailerCardHTML(t,needsMaint){
+ const dvir=dvirBadgeHTML(t,true);
+ const maint=maintBadgeHTML(t,needsMaint,true);
+ const hasStatus=!!dvir||t.loaded||!!maint;
  return '<div class="trailercard">'+
   '<div class="tc-id">'+esc(t.tid)+'</div>'+
   '<div class="tc-row">'+(t.source==='gps'?'GPS':'Manual')+' · '+esc(t.lastPing)+'</div>'+
   (hasStatus?'<div class="tc-status">'+
-   (flagged?'<div class="tc-row"><span class="pmflag" title="'+DVIR_TIP+'"><span style="color:var(--red);display:inline-flex">'+ICON.flag+'</span>DVIR</span></div>':'')+
+   (dvir?'<div class="tc-row">'+dvir+'</div>':'')+
    (t.loaded?'<div class="tc-row">'+loadPillHTML(t.tid)+'</div>':'')+
-   (t.pmDue?'<div class="tc-row"><span class="pmcallout" title="'+pmTip+'">'+ICON.pmAlert+'PM due</span></div>':'')+
+   (maint?'<div class="tc-row">'+maint+'</div>':'')+
   '</div>':'')+
   '</div>';
 }
@@ -677,7 +726,7 @@ function renderMap(){
     const dotClass='trailerdot td-'+t.source+(t.pmDue?' pmdue':'')+(t.loaded?' loadedflag':'');
     const icon=L.divIcon({className:'',html:'<div class="'+dotClass+'">'+ICON.trailerbox+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
     const marker=L.marker([lat,lng],{icon}).addTo(MAP);
-    marker._cardHTML=trailerCardHTML(t);
+    marker._cardHTML=trailerCardHTML(t,needsAmznHold({t,account:l.account}));
     marker.bindTooltip(marker._cardHTML,{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
     marker.on('click',(e)=>{
      L.DomEvent.stopPropagation(e);
@@ -895,6 +944,14 @@ const LOAD_DOT_COLORS=['var(--icon-violet-dispatched)','var(--icon-stone-cancell
 function pseudoLoadColor(loadId){
  return LOAD_DOT_COLORS[loadId%LOAD_DOT_COLORS.length];
 }
+/* Same GPS/Manual · last-ping callout the map's trailer card shows — reused
+   verbatim in the All Trailers list and the expanded location's trailers
+   table so tracking-method context isn't map-only. Transit (en-route)
+   entries don't carry source/lastPing, hence the fallback. */
+function sourcePingHTML(t){
+ if(!t.source)return '—';
+ return (t.source==='gps'?'GPS':'Manual')+' · '+esc(t.lastPing);
+}
 /* Shared Load chip markup — used wherever a trailer's current/last load needs
    calling out (All Trailers list, drawer trailers table, map card). */
 function loadPillHTML(tid){
@@ -922,7 +979,7 @@ function pseudoType(t){
    rebuild or a "More" panel to manage. */
 let TYPEFILTER='all',FLAGFILTER='all',STATUSFILTER='all',REGIONFILTER='all',INCLUDEARCHIVED=false;
 function renderTypeOptions(){
- $('typeFilter').innerHTML='<option value="all">All Types</option>'+TRAILER_TYPES.map(ty=>'<option value="'+esc(ty)+'">'+esc(ty)+'</option>').join('');
+ $('typeFilter').innerHTML='<option value="all">Select trailer types</option>'+TRAILER_TYPES.map(ty=>'<option value="'+esc(ty)+'">'+esc(ty)+'</option>').join('');
 }
 function setTypeFilter(v){TYPEFILTER=v;renderAllTrailers();}
 function setFlagFilter(v){FLAGFILTER=v;renderAllTrailers();}
@@ -999,15 +1056,22 @@ function renderAllTrailers(){
   return true;
  });
  rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
- const head='<div class="atcolhead"><div>Trailer</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Load</div></div>';
+ const head='<div class="atcolhead"><div>Trailer</div><div>Source</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Load</div></div>';
  if(!rows.length){
   $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
   return;
  }
  const body=rows.map(r=>{
   const days=pseudoDays(r.t.tid);
+  /* Same dvirBadgeHTML/maintBadgeHTML used by the expanded location table
+     and the map card — filtering the Flags dropdown should visibly explain
+     why a row matched, and the badge shown here must match what shows up
+     everywhere else for the same trailer, not drift independently. */
   return '<div class="atrow'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
-   '<div class="tid"><span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span>'+(r.needsMaint?'<span class="pmflag" onmouseenter="showTip(this,\'Amazon-flagged — needs maintenance before its next dispatch\')" onmouseleave="hideTip()"><span style="color:var(--amber);display:inline-flex">'+ICON.flag+'</span>AMZN hold</span>':'')+'</div>'+
+   '<div class="tid"><span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span>'+
+    dvirBadgeHTML(r.t,false)+maintBadgeHTML(r.t,r.needsMaint,false)+
+   '</div>'+
+   '<div class="srcping">'+sourcePingHTML(r.t)+'</div>'+
    '<div><span class="pill '+r.st.cls+'">'+r.st.label+'</span></div>'+
    '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
    '<div class="days2">'+(r.transit?'ETA '+esc(r.eta):days+' day'+(days===1?'':'s'))+'</div>'+
@@ -1041,17 +1105,21 @@ function rowExpandHTML(l){
  if(!l.trailers.length){
   html+='<div class="emptytrailers">No trailers currently on site.</div>';
  } else {
-  html+='<div class="trow head"><div>Trailer</div><div>From</div><div>Arrived</div></div>'+
+  const isPoolLoc=!!POOL[l.id];
+  html+='<div class="trow head"><div>Trailer</div><div>Source</div><div>Status</div><div>From</div><div>Arrived</div><div>Last Load</div></div>'+
    l.trailers.map(t=>{
-    const flagged=t.dvir==='flagged';
-    const pmTip=t.pmDue?('Due for preventative maintenance — was due '+pseudoScheduledPM(t).text).replace(/'/g,"\\'"):'';
+    const r={t,locId:l.id,account:l.account,isPool:isPoolLoc,archived:false};
+    const needsMaint=needsAmznHold(r);
+    const st=deriveTrailerStatus(r,needsMaint);
     return '<div class="trow" onclick="selectTrailerFromList(\''+t.tid+'\',\''+l.id+'\')">'+
-     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+esc(t.tid)+
-      (flagged?'<span class="pmflag" onmouseenter="showTip(this,DVIR_TIP)" onmouseleave="hideTip()"><span style="color:var(--red);display:inline-flex">'+ICON.flag+'</span>DVIR</span>':'')+
-      (t.pmDue?'<span class="pmcallout" onmouseenter="showTip(this,\''+pmTip+'\')" onmouseleave="hideTip()">'+ICON.pmAlert+'PM due</span>':'')+
+     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="tidname" title="View trailer detail">'+esc(t.tid)+'</span>'+
+      dvirBadgeHTML(t,false)+maintBadgeHTML(t,needsMaint,false)+
      '</div>'+
-     '<div>'+esc(pseudoArrivedFrom(t,l.name))+'</div>'+
-     '<div>'+pseudoArrivedAt(t)+'</div>'+
+     '<div class="srcping">'+sourcePingHTML(t)+'</div>'+
+     '<div><span class="pill '+st.cls+'">'+st.label+'</span></div>'+
+     '<div class="from">'+esc(pseudoArrivedFrom(t,l.name))+'</div>'+
+     '<div class="arr">'+pseudoArrivedAt(t)+'</div>'+
+     '<div>'+loadPillHTML(t.tid)+'</div>'+
      '</div>';
    }).join('');
  }
@@ -1063,8 +1131,12 @@ function rowExpandHTML(l){
   if(!l.enRoute.length){
    html+='<div class="emptytrailers">Nothing currently en route.</div>';
   } else {
-   html+='<div class="erow head"><div>Trailer</div><div>From</div><div>ETA</div></div>'+
-    l.enRoute.map(e=>'<div class="erow"><div>'+esc(e.tid)+'</div><div class="from">'+esc(e.from)+'</div><div class="eta">'+esc(e.eta)+'</div></div>').join('');
+   html+='<div class="erow head"><div>Trailer</div><div>Status</div><div>From</div><div>ETA</div><div>Last Load</div></div>'+
+    l.enRoute.map(e=>{
+     const r={t:e,locId:l.id,account:l.account,isPool:true,transit:true};
+     const st=deriveTrailerStatus(r,false);
+     return '<div class="erow"><div>'+esc(e.tid)+'</div><div><span class="pill '+st.cls+'">'+st.label+'</span></div><div class="from">'+esc(e.from)+'</div><div class="eta">'+esc(e.eta)+'</div><div>'+loadPillHTML(e.tid)+'</div></div>';
+    }).join('');
   }
  }
  html+='</div>';
