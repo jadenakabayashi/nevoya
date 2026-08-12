@@ -179,7 +179,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
 .poolrow .loc .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .poolrow .loc .acct{color:var(--gray);font-size:11.5px;font-weight:400}
-.poolrow .count{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.poolrow .count{color:var(--text-default);display:flex;flex-direction:column;gap:1px}
+.poolrow .count .cnums{font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.poolrow .count .emptynote{color:var(--gray);font-size:11px;font-weight:400;white-space:nowrap}
 .poolrow .count b{font-weight:600;color:var(--ink)}
 .countarrow{display:inline-flex;color:var(--gray)}
 .countarrow-head{display:flex;align-items:center;gap:3px}
@@ -570,6 +572,17 @@ GPSUNKNOWN={id:'__unknown__',name:'Unknown location',account:null,current:2,
 }
 
 /* ---------- helpers ---------- */
+/* How many of the EOD projection will actually be empty (real available
+   capacity) vs loaded. On-site trailers are all counted as empty (this
+   file no longer tracks a per-unit loaded flag for them — see the map
+   "loaded" cleanup); the only loaded portion of the projection comes from
+   inbound en-route trailers flagged loaded. Rough first pass, not a real
+   feed. */
+function emptyEODCount(l){
+ if(typeof l.provisioned!=='number')return null;
+ const loadedInbound=(l.enRoute||[]).filter(e=>e.loaded).length;
+ return Math.max(0,l.provisioned-loadedInbound);
+}
 /* "Low" logic is a rough first pass, not final: currently just "exactly one
    trailer short of target" (closer to on-target than a real shortfall) —
    revisit once there's real guidance on what "approaching target" should
@@ -853,7 +866,7 @@ function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==
  let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
- '<div class="count"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+
+ '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+(hasProvisioned?'<div class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</div>':'')+'</div>'+
  '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';
  if(expanded)out+=rowExpandHTML(l);
