@@ -683,7 +683,7 @@ function zoomToSearchMatches(matched){
      whichever of its trailers has its own resolved coordinates AND is
      actually what the search matched, rather than zooming to nothing. */
   (l.trailers||[]).forEach(t=>{
-   if(t.lat!=null&&t.tid.toLowerCase().includes(SEARCHTEXT))pts.push([t.lat,t.lng]);
+   if(t.lat!=null&&(t.tid.toLowerCase().includes(SEARCHTEXT)||(t.loc&&t.loc.toLowerCase().includes(SEARCHTEXT))))pts.push([t.lat,t.lng]);
   });
  });
  if(!pts.length)return;
@@ -898,7 +898,7 @@ function matchesSearch(l){
  if(!SEARCHTEXT)return true;
  if(l.name&&l.name.toLowerCase().includes(SEARCHTEXT))return true;
  if(l.account&&l.account.toLowerCase().includes(SEARCHTEXT))return true;
- return!!(l.trailers&&l.trailers.some(t=>t.tid.toLowerCase().includes(SEARCHTEXT)));
+ return!!(l.trailers&&l.trailers.some(t=>t.tid.toLowerCase().includes(SEARCHTEXT)||(t.loc&&t.loc.toLowerCase().includes(SEARCHTEXT))));
 }
 function setSearchText(v){SEARCHTEXT=v.trim().toLowerCase();renderList();}
 /* Locations/trailers without a resolved region (GPS/Unknown, archived
@@ -910,7 +910,18 @@ function passFilter(l){
  if(!matchesRegion(l))return false;
  return matchesSearch(l);
 }
-function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';const expanded=!!EXPANDEDROWS[id];
+/* While a search is active, a matched row should show itself open with
+   only the trailer(s) that actually matched — not force the user to click
+   in, then still have to scan past everything that didn't match. If the
+   query matched the location itself (name/account) every trailer there is
+   still relevant, so show them all. */
+function visibleTrailers(l){
+ if(!SEARCHTEXT)return l.trailers;
+ const groupMatches=(l.name&&l.name.toLowerCase().includes(SEARCHTEXT))||(l.account&&l.account.toLowerCase().includes(SEARCHTEXT));
+ if(groupMatches)return l.trailers;
+ return l.trailers.filter(t=>t.tid.toLowerCase().includes(SEARCHTEXT)||(t.loc&&t.loc.toLowerCase().includes(SEARCHTEXT)));
+}
+function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';const expanded=!!EXPANDEDROWS[id]||!!SEARCHTEXT;
  let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
@@ -1167,8 +1178,9 @@ function rowExpandHTML(l){
  } else if(h==='Below target'){
   html+='<div class="critbanner" style="background:var(--ambersoft);border-color:#F3D67C"><div class="t" style="color:var(--amber)">'+ICON.alert+' Below target</div><div class="d" style="color:#7C4A00">'+l.current+' on site against a target of '+l.target+' — '+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below target so far.':'just crossed below target.')+'</div></div>';
  }
- html+='<div class="sect"><span>'+(typeof l.target!=='number'?'NO ASSIGNED YARD':'TRAILERS AT THIS YARD')+'</span><span>'+l.trailers.length+'</span></div>';
- if(!l.trailers.length){
+ const vts=visibleTrailers(l);
+ html+='<div class="sect"><span>'+(typeof l.target!=='number'?'NO ASSIGNED YARD':'TRAILERS AT THIS YARD')+'</span><span>'+vts.length+'</span></div>';
+ if(!vts.length){
   html+='<div class="emptytrailers">No trailers currently on site.</div>';
  } else {
   const isPoolLoc=!!POOL[l.id];
@@ -1178,7 +1190,7 @@ function rowExpandHTML(l){
      instead of implying they all share one formal yard. */
   const isNoYard=typeof l.target!=='number';
   html+='<div class="trow head'+(isNoYard?' noyard':'')+'"><div>Trailer</div><div>Source</div><div>Status</div><div>From</div>'+(isNoYard?'<div>Location</div>':'')+'<div>Arrived</div><div>Last Load</div></div>'+
-   l.trailers.map(t=>{
+   vts.map(t=>{
     const r={t,locId:l.id,account:l.account,isPool:isPoolLoc,archived:false};
     const needsMaint=needsAmznHold(r);
     const st=deriveTrailerStatus(r,needsMaint);
