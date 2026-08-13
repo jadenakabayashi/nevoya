@@ -81,12 +81,15 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .ddselect:focus{outline:none;border-color:var(--teal)}
 .viewtoggle button{border:none;background:transparent;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-default);cursor:pointer;font-family:inherit;white-space:nowrap}
 .viewtoggle button.active{background:#fff;color:var(--ink);font-weight:600}
+/* Shared row shape for both the Group-by/filters toolbar and the (pool-mode-
+   only) health-chips row beneath it — same flex-wrap idiom, no separate
+   .atfilters/.atf-row wrapper needed now that there's one unified table. */
 .toolbar{display:flex;align-items:center;gap:8px;padding:0 0 10px;flex-wrap:wrap;flex:none}
+.toolbar .gblabel{font-size:12.5px;color:var(--gray);font-weight:500;margin-right:2px}
 /* Filter chip (confirmed Figma spec: default border-default/white, selected teal border/teal-soft bg). */
 .chip{border:1px solid var(--border-default);border-radius:8px;padding:6px 13px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--text-default)}
 .chip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);font-weight:600}
-/* Group-by toggle — matches the lanes prototype's .gtoggle/.switch exactly.
-   On = group by account; off = fall back to the location-type grouping. */
+/* Include Archived toggle — matches the lanes prototype's .gtoggle/.switch. */
 .gtoggle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-default);margin-left:auto;cursor:pointer;user-select:none;white-space:nowrap}
 .switch{position:relative;width:40px;height:20px;flex:none}
 .switch input{opacity:0;width:0;height:0;position:absolute}
@@ -97,12 +100,6 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .searchrow{padding:0 0 10px;flex:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .searchrow input{flex:1;min-width:120px;max-width:260px;border:1px solid var(--border-default);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:var(--text-dark)}
 .searchrow input:focus{border-color:var(--teal)}
-.atfilters{padding:0 0 10px;flex:none}
-/* Type/Flags/Status are plain <select> dropdowns now (no exposed chips, no
-   "More" overflow panel), styled via .ddselect/.selectwrap — same custom-
-   chevron treatment as Region. The toggle anchors the row on the left,
-   Include Archived keeps the group-by-style switch treatment on the right. */
-.atf-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
 /* split content: map (left) + pool table (right) — mirrors the real Trailers
    page's grid-cols-2 map/table layout in the apollo app. */
@@ -159,21 +156,28 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .leaflet-marker-icon:focus{outline:none}
 .leaflet-tooltip.poolTip{font-family:Inter,-apple-system,sans-serif;font-size:11px;padding:4px 8px}
 
-/* 480px floor (not 340px) — below that, the All Trailers list's 5 columns
-   (id, status pill, location, days, load chip) can't all fit without
-   wrapping/overflowing regardless of fr tuning; keep the resizer's minTable
-   below in sync with this. */
+/* 480px floor (not 340px) — below that, the unified trailer table's 6
+   columns (id+flags, source, status pill, location/from, arrived, load
+   chip) can't all fit without wrapping/overflowing regardless of fr tuning;
+   keep the resizer's minTable below in sync with this. */
 #tablecol{flex:2;min-width:480px;display:flex;flex-direction:column;min-height:0}
 /* Table (confirmed Figma spec): lowest bg, 12px padding, 16px radius, Border/Muted row dividers. */
 /* Table card (matches the lanes prototype's .listcard: white card on the
    light-gray page, not a same-tone fill that blends into it). */
 #listwrap{flex:1;overflow:auto;background:#fff;border:1px solid var(--border-muted);border-radius:10px;padding:0}
-/* colHead() now renders once at the very top of the whole list (see
-   renderList) — it owns top:0/the higher z-index; each group's sechead
-   sticks just underneath it as you scroll past. Sechead keeps a light tint
-   (like lanes' grouphead) so it reads as a section band on the white card. */
+/* colHead() renders once at the top of the list, only in "Group by Trailer
+   Pool" mode (the one mode where nearly every group shares this exact
+   column shape). .poolrow (rich, pool-metadata header) and .simplehead
+   (plain name+count header, used for individual non-pool locations in
+   "Group by Location" and for the two catch-all buckets in "Group by
+   Trailer Pool") are both group HEADERS now, not rows with their own
+   expand-to-a-side-panel behavior — clicking one toggles COLLAPSEDGROUPS
+   and the group's own trailer rows render directly beneath it via
+   groupBodyHTML(), no separate mini-tables. Both get a light tint
+   (surface-lowest) so they read as a section band over their white-bg
+   trailer rows, matching the lanes prototype's grouphead treatment. */
 .colhead{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
-.poolrow{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.poolrow{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:var(--surface-lowest)}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
@@ -186,15 +190,26 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .countarrow{display:inline-flex;color:var(--gray)}
 .countarrow-head{display:flex;align-items:center;gap:3px}
 .poolrow .target{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:5px}
-.poolrow .chev2{color:#CBD5E1;transition:transform .15s}
+.poolrow .chev2{color:var(--gray);transition:transform .15s}
 .poolrow.expanded .chev2{transform:rotate(90deg)}
-/* Inline expanded-row detail — sits as its own full-width block right under
-   the row it belongs to (a flow sibling, not a grid cell), reusing the same
-   banner/table components the old drawer view rendered. */
-.rowexpand{padding:16px 20px 20px;background:var(--surface-lowest);border-bottom:1px solid var(--border-muted);cursor:default}
-.rowexpand .sect{font-size:11px;letter-spacing:1px;color:var(--gray);font-weight:600;margin-bottom:10px;display:flex}
-.rowexpand .sect span:last-child{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none}
-.rowexpand .sect:not(:first-child){margin-top:14px}
+/* Plain group header — same section-band treatment as .poolrow, just a
+   name(+account) on the left and a trailer count + chevron on the right,
+   for groups with no target/health/EOD to show (individual non-pool
+   locations, and the two catch-all buckets). */
+.simplehead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:var(--surface-lowest)}
+.simplehead:hover{background:var(--surface-low)}
+.simplehead.flash{background:var(--surface-high)}
+.simplehead .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
+.simplehead .loc .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.simplehead .loc .acct{color:var(--gray);font-size:11.5px;font-weight:400}
+.simplehead .shcount{display:flex;align-items:center;gap:8px;color:var(--text-default);font-size:13px;flex:none}
+.simplehead .chev2{color:var(--gray);transition:transform .15s}
+.simplehead.expanded .chev2{transform:rotate(90deg)}
+/* Wraps a group's optional critical/below-target/suggestion banners + its
+   trailer rows — a plain flow container, not its own padded panel, so the
+   rows read as a continuation of one table rather than a nested drawer. */
+.groupbody{padding:0}
+.groupbody .critbanner,.groupbody .suggbanner{margin:10px 16px}
 /* Status chip (confirmed Figma spec — source of truth for status pill colors).
    nowrap: a two-word status like "Below target" must stay on one line, same
    as every pill in the lanes reference — never let a chip wrap. */
@@ -225,31 +240,38 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .loadtag{background:var(--surface-default);border-radius:16px;padding:3px 11px 3px 8px;font-weight:600;font-size:12px;display:inline-flex;gap:6px;align-items:center;color:var(--text-dark);white-space:nowrap}
 .loadtag .dot{width:7px;height:7px;border-radius:50%;flex:none}
 
-/* ---------- All Trailers (flat) view — lives in #tablecol next to the map,
-   swapped in for #listwrap; same Table look as the pools list. ---------- */
-#poolToolbar.hidden{display:none}
-#allTrailersList{flex:1;overflow:auto;background:#fff;border:1px solid var(--border-muted);border-radius:10px}
-/* minmax() per column, not plain fr: guarantees each column a pixel floor
-   (pill/chip content has a real minimum size that fr alone can't protect)
-   while letting Current Location claim the rest. If the combined floors
-   ever exceed the available width, #allTrailersList's overflow:auto turns
-   that into a horizontal scrollbar instead of squished/overlapping cells. */
-.atcolhead{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
-.atrow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
-.atrow:hover{background:var(--surface-low)}
-.atrow.archived{opacity:.6}
-.atrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
+/* ---------- unified trailer row (.utrow) — the one row shape every trailer
+   uses everywhere now (on-site, en-route, archived), across all three
+   Group-by modes. Two column shapes:
+     .utrow          Trailer / Source / Status / From / Arrived / Last Load
+                      (used inside a specific group — From replaces Current
+                      Location since the group header already names the place)
+     .utrow.flat     Trailer / Source / Status / Current Location / Arrived /
+                      Last Load (used in "Group by None", and inside the two
+                      catch-all buckets which can span multiple locations)
+   minmax() per column + min-width:0 on every cell for the same reason as
+   before: each .utrow is its own independent grid instance, and without a
+   floor + min-width:0 one row's longer content (two flags stacked, a long
+   location name) desyncs that row's tracks from its neighbors. */
+.utrow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(110px,.8fr) minmax(140px,1fr) minmax(130px,1.3fr) minmax(130px,1fr) minmax(95px,.8fr);gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer;align-items:center}
+/* .flat's 4th column (Current Location) happens to need the same width as
+   From does, so no separate grid-template-columns override — the class
+   just marks "render Current Location instead of From" for the JS side. */
+.utrow:not(.head):hover{background:var(--surface-low)}
+.utrow.archived{opacity:.6}
+.utrow.head{cursor:default;color:var(--gray);font-size:11px;letter-spacing:.3px;font-weight:600;padding:10px 16px;border-bottom:1px solid var(--border-muted)}
+/* Only a head row that's a DIRECT child of #listwrap — i.e. "Group by
+   None"'s own top-level header — sticks; per-group head rows (nested one
+   level deeper, inside .groupbody) scroll normally so multiple groups'
+   sticky headers don't stack/overlap each other. */
+#listwrap>.utrow.head{position:sticky;top:0;z-index:2}
+.utrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
 /* Trailer name reads as a link — same affordance as lanes' .provlink — even
    though it doesn't navigate anywhere yet (no detail view to send it to). */
-.atrow .tidlink:hover{text-decoration:underline}
-.atrow .loc2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.atrow .days2{color:var(--gray);font-size:12.5px;white-space:nowrap}
-/* min-width:0 on every grid-item cell is load-bearing: each .atrow is its
-   own independent grid instance, and white-space:nowrap text otherwise
-   reports its full unwrapped width as min-content, forcing that row's
-   track wider than its fr share (and shrinking its neighbors) — which is
-   what was throwing column widths out of sync row-to-row before this. */
-.atrow>div{min-width:0;overflow:hidden}
+.utrow .tidlink:hover{text-decoration:underline}
+.utrow .loc2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.utrow .from,.utrow .arr{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.utrow>div{min-width:0;overflow:hidden}
 .emptysec{padding:16px;color:var(--gray);font-size:12.5px}
 .infoq{cursor:help;color:var(--gray);font-size:10px}
 .suggbanner{background:var(--teal-soft);border:1px solid #B7E4DE;border-radius:8px;padding:12px 14px;margin-bottom:16px}
@@ -259,29 +281,19 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
 .critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
-/* Trailer / Status / From / Arrived / Last Load. minmax() per column (not
-   plain fr) + min-width:0 on every cell — same reasoning as the All
-   Trailers table: each .trow is its own independent grid instance, and
-   without a floor + min-width:0, one row's longer content desyncs that
-   row's tracks from its neighbors. */
-.trow{display:grid;grid-template-columns:minmax(100px,1.1fr) minmax(90px,.8fr) minmax(110px,1fr) minmax(110px,1.1fr) minmax(120px,1.1fr) minmax(85px,.8fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}
-.trow:not(.head):hover{background:var(--surface-low)}
-/* Trailer name reads as a link — same affordance as .atrow .tidlink/lanes'
-   .provlink — even though there's no detail view to send it to yet. */
-.trow:hover .tidname{text-decoration:underline}
-.trow.head{cursor:default}
-.trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-.trow>div,.erow>div{min-width:0;overflow:hidden}
-.trow .from,.trow .arr{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
-/* En-route table — same row rhythm and column shape as .trow above, minus
-   the DVIR/PM flags (a trailer in transit isn't checked in at this yard,
-   so it can't have been inspected here) and with ETA instead of Arrived.
-   Not clickable: these trailers aren't physically at this location's yard
-   yet, so there's no marker to pin. */
-.erow{display:grid;grid-template-columns:minmax(80px,.9fr) minmax(130px,1.2fr) minmax(110px,1.1fr) minmax(60px,.6fr) minmax(85px,.8fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;margin:0 -6px;padding-left:6px;padding-right:6px}
-.erow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-.erow .from{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
-.erow .eta{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* PM is a flag (badge) inline on the trailer id, not its own column. */
+/* PM-due flag — just the icon, no pill/background; hover shows context via
+   the shared .hovertip (matches the lanes prototype's "Expiring soon" flag). */
+.pmflag{display:inline-flex;align-items:center;gap:4px;vertical-align:-2px;cursor:default;color:var(--ink);font-weight:400;font-size:12px}
+/* Preventative-maintenance callout — amber icon + plain-weight black label,
+   matching the surrounding table type. Shared between the trailer rows and
+   the map's trailer card. Hover still gives the due-date context via the
+   shared .hovertip (or a native title on the map card). */
+.pmcallout{display:inline-flex;align-items:center;gap:4px;color:var(--ink);font-weight:400;font-size:12px;cursor:help}
+/* Shared hover tooltip — fixed to body so it escapes any scroll clipping. */
+.hovertip{position:fixed;display:none;background:var(--ink);color:#fff;font-size:11px;font-weight:400;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:250;pointer-events:none}
+.hovertip.show{display:block}
+.emptytrailers{color:var(--gray);font-size:12.5px;padding:10px 16px}
 /* PM is a flag (badge) inline on the trailer id, not its own column. */
 /* PM-due flag — just the icon, no pill/background; hover shows context via
    the shared .hovertip (matches the lanes prototype's "Expiring soon" flag). */
@@ -373,53 +385,48 @@ svg.ic{display:block}
             <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </div>
         </div>
-        <div class="toolbar" id="poolToolbar">
-          <div class="viewtoggle">
-            <button type="button" class="active" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
-            <button type="button" data-view="all" onclick="setPageView('all')">All Trailers</button>
+        <div class="toolbar" id="mainToolbar">
+          <span class="gblabel">Group by</span>
+          <div class="viewtoggle" id="groupToggle">
+            <button type="button" class="active" data-mode="pool" onclick="setGroupBy('pool')">Trailer Pool</button>
+            <button type="button" data-mode="location" onclick="setGroupBy('location')">Location</button>
+            <button type="button" data-mode="none" onclick="setGroupBy('none')">None</button>
           </div>
+          <div class="selectwrap">
+            <select id="typeFilter" class="ddselect" onchange="setTypeFilter(this.value)"></select>
+            <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="selectwrap">
+            <select id="flagFilter" class="ddselect" onchange="setFlagFilter(this.value)">
+              <option value="all">Select flags</option>
+              <option value="pm">Preventative maintenance</option>
+              <option value="dvir">DVIR</option>
+              <option value="amzn">AMZN hold</option>
+            </select>
+            <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="selectwrap">
+            <select id="statusFilterAT" class="ddselect" onchange="setStatusFilterAT(this.value)">
+              <option value="all">Select status</option>
+              <option value="available">Available</option>
+              <option value="athubstop">At Hub Stop</option>
+              <option value="atpickup">At Load Pickup</option>
+              <option value="atdelivery">At Load Delivery</option>
+              <option value="unknown">Unknown</option>
+              <option value="transitloaded">In Transit - Loaded</option>
+              <option value="transitempty">In Transit - Empty</option>
+              <option value="archived">Archived</option>
+            </select>
+            <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <label class="gtoggle">
+            <span class="switch"><input type="checkbox" id="archivedToggle" onchange="setIncludeArchived(this.checked)"><span class="track"><span class="thumb"></span></span></span>
+            Include Archived</label>
+        </div>
+        <div class="toolbar" id="healthChipsRow">
           <div id="poolchips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
         </div>
-        <div class="atfilters" id="atFilters" style="display:none">
-          <div class="atf-row" id="atfRow">
-            <div class="viewtoggle">
-              <button type="button" data-view="pools" onclick="setPageView('pools')">Trailer Pools</button>
-              <button type="button" class="active" data-view="all" onclick="setPageView('all')">All Trailers</button>
-            </div>
-            <div class="selectwrap">
-              <select id="typeFilter" class="ddselect" onchange="setTypeFilter(this.value)"></select>
-              <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="selectwrap">
-              <select id="flagFilter" class="ddselect" onchange="setFlagFilter(this.value)">
-                <option value="all">Select flags</option>
-                <option value="pm">Preventative maintenance</option>
-                <option value="dvir">DVIR</option>
-                <option value="amzn">AMZN hold</option>
-              </select>
-              <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="selectwrap">
-              <select id="statusFilterAT" class="ddselect" onchange="setStatusFilterAT(this.value)">
-                <option value="all">Select status</option>
-                <option value="available">Available</option>
-                <option value="athubstop">At Hub Stop</option>
-                <option value="atpickup">At Load Pickup</option>
-                <option value="atdelivery">At Load Delivery</option>
-                <option value="unknown">Unknown</option>
-                <option value="transitloaded">In Transit - Loaded</option>
-                <option value="transitempty">In Transit - Empty</option>
-                <option value="archived">Archived</option>
-              </select>
-              <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <label class="gtoggle">
-              <span class="switch"><input type="checkbox" id="archivedToggle" onchange="setIncludeArchived(this.checked)"><span class="track"><span class="thumb"></span></span></span>
-              Include Archived</label>
-          </div>
-        </div>
         <div id="listwrap"></div>
-        <div id="allTrailersList" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -783,7 +790,10 @@ function flashPin(id){
  });
 }
 function flashTableRow(id){
- const row=document.querySelector('.poolrow[data-id="'+id+'"]');
+ /* Group headers use one of two classes now — .poolrow (rich, pool-type)
+    or .simplehead (plain, individual non-pool location in "Group by
+    Location" mode) — either can carry a data-id matching a map pin. */
+ const row=document.querySelector('.poolrow[data-id="'+id+'"],.simplehead[data-id="'+id+'"]');
  if(row){row.scrollIntoView({block:'nearest',behavior:'smooth'});row.classList.add('flash');setTimeout(()=>row.classList.remove('flash'),1400);}
 }
 function highlightRow(id){
@@ -836,8 +846,22 @@ function selectTrailerFromList(tid,locId){
  }
 }
 
-/* ---------- list ---------- */
-let CHIPFILTER='all',EXPANDEDROWS={};
+/* ---------- unified table: state ---------- */
+/* GROUPBY picks which of the three modes renderList() builds:
+     'pool'     — every POOL entry is its own rich (health/target/EOD)
+                  group; every non-pool trailer is bucketed into one of two
+                  catch-all groups (Other Locations, GPS/Unknown) since they
+                  don't belong to a formal pool. Default mode.
+     'location' — every distinct physical location (pool or not) is its own
+                  group, no catch-all bucketing — the thing a formal "trailer
+                  pool" grouping can't show, since a trailer can sit
+                  somewhere that was never assigned pool status.
+     'none'     — flat, ungrouped list (today's old All Trailers view). */
+let GROUPBY='pool',CHIPFILTER='all',COLLAPSEDGROUPS={};
+/* Fixed keys for the two catch-all buckets ('pool' mode only) — not real
+   location ids, so allEntries()/flashPin() safely no-op on them (no lat/lng
+   to pan to for a bucket spanning multiple places). */
+const OTHER_CATCHALL_KEY='__other_catchall__',GPS_CATCHALL_KEY='__gps_catchall__';
 function chipCounts(){const vals=Object.values(POOL);
  return{all:vals.length,ontarget:vals.filter(l=>deriveHealth(l)==='On target').length,
   low:vals.filter(l=>deriveHealth(l)==='Low').length,
@@ -857,51 +881,24 @@ function setSearchText(v){SEARCHTEXT=v.trim().toLowerCase();renderList();}
    look-up misses) always pass — filtering them out would just hide real
    assets we genuinely can't place yet. */
 function matchesRegion(l){return REGIONFILTER==='all'||!l.region||l.region===REGIONFILTER;}
-function passFilter(l){
- if(CHIPFILTER!=='all'){const h=deriveHealth(l).toLowerCase().replace(/\s+/g,'');if(h!==CHIPFILTER)return false;}
- if(!matchesRegion(l))return false;
- return matchesSearch(l);
-}
-function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';const expanded=!!EXPANDEDROWS[id];
- let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
- '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
- '<div>'+healthPill(l)+'</div>'+
- '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+(hasProvisioned?'<div class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</div>':'')+'</div>'+
- '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
- '<div class="chev2">'+ICON.chevronRight+'</div></div>';
- if(expanded)out+=rowExpandHTML(l);
- return out;}
-function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div>Target</div><div></div></div>';}
-function renderList(){renderChips();
- const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
- const poolRows=poolIds.map(id=>[id,POOL[id]]);
- const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>matchesRegion(l)&&matchesSearch(l));
- const unknownRows=(GPSUNKNOWN.current>0&&matchesSearch(GPSUNKNOWN))?[[GPSUNKNOWN.id,GPSUNKNOWN]]:[];
- const body=[...poolRows,...otherRows,...unknownRows].map(([id,l])=>rowHTML(id,l)).join('');
- $('listwrap').innerHTML=colHead()+body;
- renderMap();
- if(AUTOZOOM)fitAllMarkers();
- renderAllTrailers();
-}
-
-/* ---------- All Trailers (flat) view ---------- */
-let PAGEVIEW='pools';
-function setPageView(view){
- PAGEVIEW=view;
- /* Two toggle instances now — one anchoring the Pools toolbar, one
-    anchoring the All Trailers filter row — kept in sync via a shared
-    class instead of a single #id. */
- document.querySelectorAll('.viewtoggle button').forEach(b=>{
-  b.classList.toggle('active',b.dataset.view===view);
- });
- $('poolToolbar').classList.toggle('hidden',view!=='pools');
- $('atFilters').style.display=view==='all'?'block':'none';
- $('listwrap').style.display=view==='pools'?'':'none';
- $('allTrailersList').style.display=view==='all'?'':'none';
+function setGroupBy(mode){
+ GROUPBY=mode;
+ document.querySelectorAll('#groupToggle button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+ $('healthChipsRow').style.display=mode==='pool'?'flex':'none';
  closeModal();
+ renderList();
 }
-/* Deterministic pseudo-day-count from a trailer id — illustrative only, this
-   prototype has no real "arrived at location" timestamp to compute from. */
+function toggleGroup(key){
+ COLLAPSEDGROUPS[key]=!COLLAPSEDGROUPS[key];
+ /* Expanding pans the map to that location — a no-op for catch-all keys and
+    GPS/Unknown (flashPin already guards on missing lat/lng), same as
+    clicking a specific pool/location's marker directly did before. */
+ if(!COLLAPSEDGROUPS[key])flashPin(key);
+ renderList();
+}
+/* Deterministic pseudo-day-count from a trailer id — feeds pseudoArrivedAt's
+   date offset below; no longer shown as its own column (Arrived/ETA is
+   strictly more informative than a bare day count). */
 function pseudoDays(tid){
  let h=0;
  for(let i=0;i<tid.length;i++)h=(h*31+tid.charCodeAt(i))>>>0;
@@ -1002,13 +999,13 @@ let TYPEFILTER='all',FLAGFILTER='all',STATUSFILTER='all',REGIONFILTER='all',INCL
 function renderTypeOptions(){
  $('typeFilter').innerHTML='<option value="all">Select trailer types</option>'+TRAILER_TYPES.map(ty=>'<option value="'+esc(ty)+'">'+esc(ty)+'</option>').join('');
 }
-function setTypeFilter(v){TYPEFILTER=v;renderAllTrailers();}
-function setFlagFilter(v){FLAGFILTER=v;renderAllTrailers();}
-function setStatusFilterAT(v){STATUSFILTER=v;renderAllTrailers();}
+function setTypeFilter(v){TYPEFILTER=v;renderList();}
+function setFlagFilter(v){FLAGFILTER=v;renderList();}
+function setStatusFilterAT(v){STATUSFILTER=v;renderList();}
 function setRegionFilter(v){REGIONFILTER=v;renderList();}
 function setIncludeArchived(checked){
  INCLUDEARCHIVED=checked;
- renderAllTrailers();
+ renderList();
 }
 function allTrailerRows(includeArchived){
  const rows=[];
@@ -1017,7 +1014,7 @@ function allTrailerRows(includeArchived){
   /* En-route trailers get their own row here too — folded in from each
      Trailer Pool's enRoute list so "In Transit - Loaded/Empty" has real
      rows to show on, not just the per-location mini-table. */
-  (l.enRoute||[]).forEach(e=>rows.push({t:e,locId:l.id,locName:l.name,region:l.region,account:l.account,isPool:true,archived:false,transit:true,eta:e.eta}));
+  (l.enRoute||[]).forEach(e=>rows.push({t:e,locId:l.id,locName:l.name,region:l.region,account:l.account,isPool:true,archived:false,transit:true,eta:e.eta,from:e.from}));
  });
  Object.values(OTHER).forEach(l=>l.trailers.forEach(t=>rows.push({t,locId:l.id,locName:l.name,region:l.region,account:l.account,isPool:false,archived:false})));
  GPSUNKNOWN.trailers.forEach(t=>rows.push({t,locId:GPSUNKNOWN.id,locName:'Unknown location',region:null,account:null,isPool:false,archived:false}));
@@ -1064,104 +1061,186 @@ function matchesFlagFilter(r,needsMaint){
  if(FLAGFILTER==='amzn')return needsMaint;
  return true;
 }
-function renderAllTrailers(){
- let rows=allTrailerRows(INCLUDEARCHIVED).map(r=>{
+/* ---------- unified table: filtering + grouping ---------- */
+/* Every filter here (Type/Status/Flag/Region/Search) applies at the ROW
+   level, identically regardless of GROUPBY — a trailer's own attributes,
+   not a function of how it's currently grouped. CHIPFILTER (health) is
+   the one exception: it's a GROUP-level gate applied only to pool-type
+   groups inside buildPoolGroups/buildLocationGroups, since health is a
+   pool concept, not a trailer one. */
+function buildFilteredRows(){
+ return allTrailerRows(INCLUDEARCHIVED).map(r=>{
   const needsMaint=needsAmznHold(r);
   return{...r,needsMaint,st:deriveTrailerStatus(r,needsMaint)};
  }).filter(r=>{
   if(TYPEFILTER!=='all'&&pseudoType(r.t)!==TYPEFILTER)return false;
-  if(REGIONFILTER!=='all'&&r.region&&r.region!==REGIONFILTER)return false;
   if(STATUSFILTER!=='all'&&r.st.key!==STATUSFILTER)return false;
   if(!matchesFlagFilter(r,r.needsMaint))return false;
+  if(REGIONFILTER!=='all'&&r.region&&r.region!==REGIONFILTER)return false;
   if(SEARCHTEXT&&!(r.t.tid.toLowerCase().includes(SEARCHTEXT)||r.locName.toLowerCase().includes(SEARCHTEXT)))return false;
   return true;
  });
- rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
- const head='<div class="atcolhead"><div>Trailer</div><div>Source</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Load</div></div>';
- if(!rows.length){
-  $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
-  return;
- }
- const body=rows.map(r=>{
-  const days=pseudoDays(r.t.tid);
-  /* Same dvirBadgeHTML/maintBadgeHTML used by the expanded location table
-     and the map card — filtering the Flags dropdown should visibly explain
-     why a row matched, and the badge shown here must match what shows up
-     everywhere else for the same trailer, not drift independently. */
-  return '<div class="atrow'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
-   '<div class="tid"><span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span>'+
-    dvirBadgeHTML(r.t,false)+maintBadgeHTML(r.t,r.needsMaint,false)+
-   '</div>'+
-   '<div class="srcping">'+sourcePingHTML(r.t)+'</div>'+
-   '<div><span class="pill '+r.st.cls+'">'+r.st.label+'</span></div>'+
-   '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
-   '<div class="days2">'+(r.transit?'ETA '+esc(r.eta):days+' day'+(days===1?'':'s'))+'</div>'+
-   '<div>'+loadPillHTML(r.t.tid)+'</div>'+
-   '</div>';
- }).join('');
- $('allTrailersList').innerHTML=head+body;
 }
-
-/* ---------- expandable row detail (replaces the old side drawer for
-   location rows — trailers-at-location + en-route now render inline,
-   directly under the row, instead of in a separate panel) ---------- */
-function toggleRowExpand(id){
- EXPANDEDROWS[id]=!EXPANDEDROWS[id];
- if(EXPANDEDROWS[id])flashPin(id);
- renderList();
+/* "Group by Trailer Pool": every POOL entry is its own group (hidden only
+   by the health chip or a region mismatch — matches the old Trailer Pools
+   view's passFilter exactly); every OTHER location is merged into one
+   "Other Locations" bucket and GPSUNKNOWN into "GPS / Unknown", both always
+   shown, both filtered by region at the ROW level (a catch-all spans
+   multiple places, so it doesn't have one single region to gate on). */
+function buildPoolGroups(rows){
+ const groups=[];
+ Object.keys(POOL).forEach(id=>{
+  const loc=POOL[id];
+  if(CHIPFILTER!=='all'){
+   const h=deriveHealth(loc).toLowerCase().replace(/\s+/g,'');
+   if(h!==CHIPFILTER)return;
+  }
+  if(!matchesRegion(loc))return;
+  const myRows=rows.filter(r=>r.locId===id);
+  if(SEARCHTEXT&&!matchesSearch(loc)&&!myRows.length)return;
+  groups.push({key:id,kind:'pool',loc,rows:myRows});
+ });
+ groups.push({key:OTHER_CATCHALL_KEY,kind:'catchall',title:'Other Locations',rows:rows.filter(r=>!!OTHER[r.locId])});
+ groups.push({key:GPS_CATCHALL_KEY,kind:'catchall',title:'GPS / Unknown',rows:rows.filter(r=>r.locId===GPSUNKNOWN.id)});
+ return groups;
 }
-function rowExpandHTML(l){
- const h=deriveHealth(l);
- let html='<div class="rowexpand">';
- if(h==='Critical'){
-  html+='<div class="critbanner"><div class="t">'+ICON.alert+' Critical — 0 trailers on site</div><div class="d">Target is '+l.target+'. '+(l.daysBelow?'Sitting at 0 for '+l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' with nobody watching for it manually.':'Just crossed to 0.')+'</div></div>';
- } else if(h==='Below target'){
-  html+='<div class="critbanner" style="background:var(--ambersoft);border-color:#F3D67C"><div class="t" style="color:var(--amber)">'+ICON.alert+' Below target</div><div class="d" style="color:#7C4A00">'+l.current+' on site against a target of '+l.target+' — '+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below target so far.':'just crossed below target.')+'</div></div>';
- }
- if(l.suggestion){
-  html+='<div class="suggbanner"><div class="t">💡 Suggested reposition</div><div class="d"><b>'+esc(l.suggestion.name)+'</b> is '+l.suggestion.minutes+' min away with '+l.suggestion.available+' surplus trailer'+(l.suggestion.available>1?'s':'')+'. Illustrative for now — no live recommendation engine wired up yet.</div>'+
-   '<div class="btns"><button class="abtn" onclick="flashPin(\''+l.suggestion.locId+'\')">View '+esc(l.suggestion.name)+'</button></div></div>';
- }
- html+='<div class="sect"><span>TRAILERS AT THIS LOCATION</span><span>'+l.trailers.length+'</span></div>';
- if(!l.trailers.length){
-  html+='<div class="emptytrailers">No trailers currently on site.</div>';
- } else {
-  const isPoolLoc=!!POOL[l.id];
-  html+='<div class="trow head"><div>Trailer</div><div>Source</div><div>Status</div><div>From</div><div>Arrived</div><div>Last Load</div></div>'+
-   l.trailers.map(t=>{
-    const r={t,locId:l.id,account:l.account,isPool:isPoolLoc,archived:false};
-    const needsMaint=needsAmznHold(r);
-    const st=deriveTrailerStatus(r,needsMaint);
-    return '<div class="trow" onclick="selectTrailerFromList(\''+t.tid+'\',\''+l.id+'\')">'+
-     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="tidname" title="View trailer detail">'+esc(t.tid)+'</span>'+
-      dvirBadgeHTML(t,false)+maintBadgeHTML(t,needsMaint,false)+
-     '</div>'+
-     '<div class="srcping">'+sourcePingHTML(t)+'</div>'+
-     '<div><span class="pill '+st.cls+'">'+st.label+'</span></div>'+
-     '<div class="from">'+esc(pseudoArrivedFrom(t,l.name))+'</div>'+
-     '<div class="arr">'+pseudoArrivedAt(t)+'</div>'+
-     '<div>'+loadPillHTML(t.tid)+'</div>'+
-     '</div>';
-   }).join('');
- }
- /* En route only applies to Trailer Pool locations — Other Locations and
-    GPS/Unknown don't carry an EOD target, so there's nothing to be "on the
-    way" toward. */
- if(typeof l.enRoute!=='undefined'){
-  html+='<div class="sect" style="margin-top:14px"><span title="'+EOD_TIP+'">EN ROUTE — ARRIVING BY EOD <span class="infoq">ⓘ</span></span><span>'+l.enRoute.length+'</span></div>';
-  if(!l.enRoute.length){
-   html+='<div class="emptytrailers">Nothing currently en route.</div>';
-  } else {
-   html+='<div class="erow head"><div>Trailer</div><div>Status</div><div>From</div><div>ETA</div><div>Last Load</div></div>'+
-    l.enRoute.map(e=>{
-     const r={t:e,locId:l.id,account:l.account,isPool:true,transit:true};
-     const st=deriveTrailerStatus(r,false);
-     return '<div class="erow"><div>'+esc(e.tid)+'</div><div><span class="pill '+st.cls+'">'+st.label+'</span></div><div class="from">'+esc(e.from)+'</div><div class="eta">'+esc(e.eta)+'</div><div>'+loadPillHTML(e.tid)+'</div></div>';
-    }).join('');
+/* "Group by Location": every distinct physical location gets its own group
+   — no catch-all merging, since the whole point of this mode is seeing
+   trailers by where they physically are, independent of pool assignment.
+   Health chip doesn't apply here (hidden in this mode); region still gates
+   at the group level like any named location. */
+function buildLocationGroups(rows){
+ const groups=[];
+ const allLocs={...POOL,...OTHER,[GPSUNKNOWN.id]:GPSUNKNOWN};
+ Object.keys(allLocs).forEach(id=>{
+  const loc=allLocs[id];
+  if(!matchesRegion(loc))return;
+  const myRows=rows.filter(r=>r.locId===id);
+  if(SEARCHTEXT&&!matchesSearch(loc)&&!myRows.length)return;
+  groups.push({key:id,kind:POOL[id]?'pool':(OTHER[id]?'other':'unknown'),loc,rows:myRows});
+ });
+ return groups;
+}
+/* ---------- unified table: row + header rendering ---------- */
+function trailerIdCellInner(r){
+ return '<span class="tidlink" title="View trailer detail">'+esc(r.t.tid)+'</span>'+dvirBadgeHTML(r.t,false)+maintBadgeHTML(r.t,r.needsMaint,false);
+}
+/* Inside a specific group — From replaces Current Location since the group
+   header already names the place. */
+function trailerRowGrouped(r){
+ const from=r.transit?r.from:pseudoArrivedFrom(r.t,r.locName);
+ const arrived=r.transit?('ETA '+esc(r.eta)):pseudoArrivedAt(r.t);
+ return '<div class="utrow'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
+  '<div class="tid">'+trailerIdCellInner(r)+'</div>'+
+  '<div class="srcping">'+sourcePingHTML(r.t)+'</div>'+
+  '<div><span class="pill '+r.st.cls+'">'+r.st.label+'</span></div>'+
+  '<div class="from" title="'+esc(from)+'">'+esc(from)+'</div>'+
+  '<div class="arr">'+arrived+'</div>'+
+  '<div>'+loadPillHTML(r.t.tid)+'</div>'+
+ '</div>';
+}
+/* Flat ("Group by None") or inside a catch-all bucket — Current Location
+   replaces From, since a catch-all/flat list spans multiple places. */
+function trailerRowFlat(r){
+ const arrived=r.transit?('ETA '+esc(r.eta)):pseudoArrivedAt(r.t);
+ return '<div class="utrow flat'+(r.archived?' archived':'')+'" onclick="selectTrailerFromList(\''+r.t.tid+'\',\''+r.locId+'\')">'+
+  '<div class="tid">'+trailerIdCellInner(r)+'</div>'+
+  '<div class="srcping">'+sourcePingHTML(r.t)+'</div>'+
+  '<div><span class="pill '+r.st.cls+'">'+r.st.label+'</span></div>'+
+  '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
+  '<div class="arr">'+arrived+'</div>'+
+  '<div>'+loadPillHTML(r.t.tid)+'</div>'+
+ '</div>';
+}
+function groupedHeadRowHTML(){return '<div class="utrow head"><div>Trailer</div><div>Source</div><div>Status</div><div>From</div><div>Arrived</div><div>Last Load</div></div>';}
+function flatHeadRowHTML(){return '<div class="utrow flat head"><div>Trailer</div><div>Source</div><div>Status</div><div>Current Location</div><div>Arrived</div><div>Last Load</div></div>';}
+/* Rich header — reused verbatim from the old Trailer Pools row: name+
+   account, health pill, Current->EOD(+empty note), Target with its hover
+   pencil, chevron. Click toggles this group's collapse (and pans the map,
+   via toggleGroup -> flashPin). */
+function poolGroupHeaderHTML(id,l,collapsed){
+ const hasTarget=typeof l.target==='number';
+ const hasProvisioned=typeof l.provisioned==='number';
+ return '<div class="poolrow'+(collapsed?'':' expanded')+'" data-id="'+id+'" onclick="toggleGroup(\''+id+'\')">'+
+  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
+  '<div>'+healthPill(l)+'</div>'+
+  '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+(hasProvisioned?'<div class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</div>':'')+'</div>'+
+  '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
+  '<div class="chev2">'+ICON.chevronRight+'</div></div>';
+}
+/* Plain header — a specific but non-pool location ("Group by Location"
+   mode): name+account, trailer count, chevron. No health/target/EOD since
+   this location was never assigned a pool target. */
+function simpleGroupHeaderHTML(id,l,collapsed,count){
+ return '<div class="simplehead'+(collapsed?'':' expanded')+'" data-id="'+id+'" onclick="toggleGroup(\''+id+'\')">'+
+  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
+  '<div class="shcount">'+count+' trailer'+(count===1?'':'s')+'<span class="chev2">'+ICON.chevronRight+'</span></div>'+
+ '</div>';
+}
+/* Catch-all header ("Group by Trailer Pool" mode only) — just a title +
+   count; no single location to pan to, so no data-id/flashPin. */
+function catchallHeaderHTML(key,title,count,collapsed){
+ return '<div class="simplehead catchall'+(collapsed?'':' expanded')+'" onclick="toggleGroup(\''+key+'\')">'+
+  '<div class="loc"><span class="name">'+esc(title)+'</span></div>'+
+  '<div class="shcount">'+count+' trailer'+(count===1?'':'s')+'<span class="chev2">'+ICON.chevronRight+'</span></div>'+
+ '</div>';
+}
+function groupBodyHTML(g,shape){
+ let html='';
+ if(g.kind==='pool'){
+  const h=deriveHealth(g.loc);
+  if(h==='Critical'){
+   html+='<div class="critbanner"><div class="t">'+ICON.alert+' Critical — 0 trailers on site</div><div class="d">Target is '+g.loc.target+'. '+(g.loc.daysBelow?'Sitting at 0 for '+g.loc.daysBelow+' day'+(g.loc.daysBelow>1?'s':'')+' with nobody watching for it manually.':'Just crossed to 0.')+'</div></div>';
+  } else if(h==='Below target'){
+   html+='<div class="critbanner" style="background:var(--ambersoft);border-color:#F3D67C"><div class="t" style="color:var(--amber)">'+ICON.alert+' Below target</div><div class="d" style="color:#7C4A00">'+g.loc.current+' on site against a target of '+g.loc.target+' — '+(g.loc.daysBelow?g.loc.daysBelow+' day'+(g.loc.daysBelow>1?'s':'')+' below target so far.':'just crossed below target.')+'</div></div>';
+  }
+  if(g.loc.suggestion){
+   html+='<div class="suggbanner"><div class="t">💡 Suggested reposition</div><div class="d"><b>'+esc(g.loc.suggestion.name)+'</b> is '+g.loc.suggestion.minutes+' min away with '+g.loc.suggestion.available+' surplus trailer'+(g.loc.suggestion.available>1?'s':'')+'. Illustrative for now — no live recommendation engine wired up yet.</div>'+
+    '<div class="btns"><button class="abtn" onclick="event.stopPropagation();flashPin(\''+g.loc.suggestion.locId+'\')">View '+esc(g.loc.suggestion.name)+'</button></div></div>';
   }
  }
- html+='</div>';
- return html;
+ if(!g.rows.length){
+  html+='<div class="emptytrailers">No trailers currently here.</div>';
+ } else {
+  const rows=[...g.rows].sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
+  html+=(shape==='grouped'?groupedHeadRowHTML():flatHeadRowHTML())+
+   rows.map(r=>shape==='grouped'?trailerRowGrouped(r):trailerRowFlat(r)).join('');
+ }
+ return '<div class="groupbody">'+html+'</div>';
+}
+function renderGroup(g){
+ const collapsed=!!COLLAPSEDGROUPS[g.key];
+ let header,shape;
+ if(g.kind==='pool'){header=poolGroupHeaderHTML(g.key,g.loc,collapsed);shape='grouped';}
+ else if(g.kind==='catchall'){header=catchallHeaderHTML(g.key,g.title,g.rows.length,collapsed);shape='flat';}
+ else{header=simpleGroupHeaderHTML(g.key,g.loc,collapsed,g.rows.length);shape='flat';}
+ return collapsed?header:header+groupBodyHTML(g,shape);
+}
+function renderFlatTable(rows){
+ rows=[...rows].sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
+ if(!rows.length)return flatHeadRowHTML()+'<div class="emptysec">No trailers match these filters.</div>';
+ return flatHeadRowHTML()+rows.map(trailerRowFlat).join('');
+}
+/* Labeled column header for the rich pool-group header shape — rendered
+   once at the top of the list, only in "Group by Trailer Pool" mode, since
+   that's the one mode where nearly every group (every real pool) shares
+   this exact shape. "Group by Location" mixes rich/plain headers with no
+   single shape to label, and "None" gets its own sticky flatHeadRowHTML(). */
+function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div>Target</div><div></div></div>';}
+function renderList(){
+ $('healthChipsRow').style.display=GROUPBY==='pool'?'flex':'none';
+ if(GROUPBY==='pool')renderChips();
+ const rows=buildFilteredRows();
+ let html;
+ if(GROUPBY==='none'){
+  html=renderFlatTable(rows);
+ } else {
+  const groups=GROUPBY==='pool'?buildPoolGroups(rows):buildLocationGroups(rows);
+  html=(GROUPBY==='pool'?colHead():'')+groups.map(renderGroup).join('');
+ }
+ $('listwrap').innerHTML=html;
+ renderMap();
+ if(AUTOZOOM)fitAllMarkers();
 }
 
 /* ---------- edit target modal (Figma Dialog, node 80:208) — triggered by
