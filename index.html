@@ -172,8 +172,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    renderList) — it owns top:0/the higher z-index; each group's sechead
    sticks just underneath it as you scroll past. Sechead keeps a light tint
    (like lanes' grouphead) so it reads as a section band on the white card. */
-.colhead{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
-.poolrow{display:grid;grid-template-columns:1.3fr 1fr .8fr .55fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.colhead{display:grid;grid-template-columns:1.15fr 1fr .8fr .55fr .55fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+.poolrow{display:grid;grid-template-columns:1.15fr 1fr .8fr .55fr .55fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.dailylow{display:flex;align-items:center;gap:5px}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
@@ -486,13 +487,13 @@ const ICON = {
 let POOL={},OTHER={},GPSUNKNOWN=null,ARCHIVED_TRAILERS=[];
 function seedPool(){
 POOL={
- 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,provisioned:6,current:0,daysBelow:6,lat:33.9425,lng:-117.2297,
+ 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,provisioned:6,current:0,daysBelow:6,dailyLow:0,lat:33.9425,lng:-117.2297,
   enRoute:[
    {tid:'NEVO-5102',from:'Perris Ranch, CA',eta:'3:15 PM'},
    {tid:'NEVO-5118',from:'TSG Fontana, CA',eta:'4:40 PM',loaded:true}
   ],
   trailers:[]},
- 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:8,current:5,daysBelow:0,lat:33.8900,lng:-117.2450,
+ 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:8,current:5,daysBelow:0,dailyLow:0,lat:33.8900,lng:-117.2450,
   enRoute:[
    {tid:'NEVO-5133',from:'Amazon LGB5 – Moreno Valley, CA',eta:'2:20 PM'},
    {tid:'NEVO-5147',from:'TSG Fontana, CA',eta:'5:00 PM'}
@@ -504,7 +505,7 @@ POOL={
    {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago',pmDue:true},
    {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
   ]},
- 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:2,daysBelow:2,lat:33.9950,lng:-117.2050,
+ 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:2,daysBelow:2,dailyLow:2,lat:33.9950,lng:-117.2050,
   enRoute:[
    {tid:'NEVO-5160',from:'Perris Ranch, CA',eta:'1:50 PM'}
   ],
@@ -512,14 +513,14 @@ POOL={
    {tid:'NEVO-3312',source:'gps',lastPing:'3 min ago'},
    {tid:'NEVO-3340',source:'gps',lastPing:'8 min ago'}
   ]},
- 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:3,current:3,daysBelow:0,lat:33.9550,lng:-117.2550,
+ 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:3,current:3,daysBelow:0,dailyLow:3,lat:33.9550,lng:-117.2550,
   enRoute:[],
   trailers:[
    {tid:'NEVO-3355',source:'gps',lastPing:'1 min ago'},
    {tid:'NEVO-3361',source:'gps',lastPing:'4 min ago'},
    {tid:'NEVO-3379',source:'gps',lastPing:'9 min ago'}
   ]},
- 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:5,current:1,daysBelow:4,lat:33.9200,lng:-117.3100,
+ 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:5,current:1,daysBelow:4,dailyLow:0,lat:33.9200,lng:-117.3100,
   enRoute:[
    {tid:'NEVO-5175',from:'Amazon LGB5 – Moreno Valley, CA',eta:'3:40 PM'},
    {tid:'NEVO-5182',from:'Perris Ranch, CA',eta:'4:55 PM'}
@@ -527,7 +528,7 @@ POOL={
   trailers:[
    {tid:'NEVO-3402',source:'gps',lastPing:'7 min ago'}
   ]},
- 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:3,daysBelow:0,lat:33.9800,lng:-117.1850,
+ 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:3,daysBelow:0,dailyLow:2,lat:33.9800,lng:-117.1850,
   enRoute:[
    {tid:'NEVO-5199',from:'Perris Ranch, CA',eta:'2:10 PM'}
   ],
@@ -536,7 +537,7 @@ POOL={
    {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
    {tid:'RYDER-8821',source:'manual',lastPing:'logged 3 hr ago',dvir:'flagged',pmDue:true}
   ]},
- 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:3,current:2,daysBelow:0,lat:33.9700,lng:-117.3300,
+ 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:3,current:2,daysBelow:0,dailyLow:1,lat:33.9700,lng:-117.3300,
   enRoute:[
    {tid:'NEVO-5204',from:'Amazon LGB3 – Redlands, CA',eta:'12:30 PM'}
   ],
@@ -714,6 +715,7 @@ function lotGrid(lat,lng,n){
    DVIR-passed/not-due unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report missing';
 const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by 5:00 PM local time — Pacific, for these California yards.';
+const DAILYLOW_TIP='The lowest on-site count this location hit today — an EOD projection alone can hide a critical mid-day dip. Illustrative for now; not backed by a live intraday feed yet.';
 /* Single source of truth for the DVIR/PM-due/AMZN-hold flag badges — reused
    by the map card, the expanded location's trailers table, and the All
    Trailers list, so a trailer reads the same everywhere instead of drifting
@@ -922,15 +924,17 @@ function visibleTrailers(l){
  return l.trailers.filter(t=>t.tid.toLowerCase().includes(SEARCHTEXT)||(t.loc&&t.loc.toLowerCase().includes(SEARCHTEXT)));
 }
 function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';const expanded=!!EXPANDEDROWS[id]||!!SEARCHTEXT;
+ const hasDailyLow=typeof l.dailyLow==='number';
  let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
  '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+(hasProvisioned?'<div class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</div>':'')+'</div>'+
+ '<div class="dailylow">'+(hasDailyLow?l.dailyLow:'—')+'</div>'+
  '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';
  if(expanded)out+=rowExpandHTML(l);
  return out;}
-function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div>Target</div><div></div></div>';}
+function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div title="'+DAILYLOW_TIP+'">Daily Low <span class="infoq">ⓘ</span></div><div>Target</div><div></div></div>';}
 function renderList(){renderChips();
  const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
  const poolRows=poolIds.map(id=>[id,POOL[id]]);
