@@ -252,10 +252,6 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .atrow>div{min-width:0;overflow:hidden}
 .emptysec{padding:16px;color:var(--gray);font-size:12.5px}
 .infoq{cursor:help;color:var(--gray);font-size:10px}
-.suggbanner{background:var(--teal-soft);border:1px solid #B7E4DE;border-radius:8px;padding:12px 14px;margin-bottom:16px}
-.suggbanner .t{font-weight:600;font-size:13.5px;color:var(--teal);display:flex;align-items:center;gap:6px}
-.suggbanner .d{font-size:12.5px;color:#0F5750;margin-top:5px;line-height:1.5}
-.suggbanner .btns{margin-top:9px;display:flex;gap:8px}
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .critbanner .t{font-weight:600;font-size:13.5px;color:var(--red);display:flex;align-items:center;gap:6px}
 .critbanner .d{font-size:12.5px;color:#8A0009;margin-top:5px;line-height:1.5}
@@ -272,7 +268,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .trow.head{cursor:default}
 .trow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
 .trow>div,.erow>div{min-width:0;overflow:hidden}
-.trow .from,.trow .arr{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
+.trow .from,.trow .arr,.trow .loc2{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
+.trow.noyard{grid-template-columns:minmax(90px,.9fr) minmax(160px,1.3fr) minmax(125px,1fr) minmax(100px,.95fr) minmax(90px,.75fr) minmax(110px,.9fr) minmax(70px,.6fr)}
 /* En-route table — same row rhythm and column shape as .trow above, minus
    the DVIR/PM flags (a trailer in transit isn't checked in at this yard,
    so it can't have been inspected here) and with ETA instead of Arrived.
@@ -490,7 +487,6 @@ let POOL={},OTHER={},GPSUNKNOWN=null,ARCHIVED_TRAILERS=[];
 function seedPool(){
 POOL={
  'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,provisioned:6,current:0,daysBelow:6,lat:33.9425,lng:-117.2297,
-  suggestion:{name:'Perris Ranch, CA',locId:'PERRIS',minutes:11,available:3},
   enRoute:[
    {tid:'NEVO-5102',from:'Perris Ranch, CA',eta:'3:15 PM'},
    {tid:'NEVO-5118',from:'TSG Fontana, CA',eta:'4:40 PM',loaded:true}
@@ -524,7 +520,6 @@ POOL={
    {tid:'NEVO-3379',source:'gps',lastPing:'9 min ago'}
   ]},
  'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:5,current:1,daysBelow:4,lat:33.9200,lng:-117.3100,
-  suggestion:{name:'LGB5 – Moreno Valley, CA',locId:'LGB5',minutes:18,available:1},
   enRoute:[
    {tid:'NEVO-5175',from:'Amazon LGB5 – Moreno Valley, CA',eta:'3:40 PM'},
    {tid:'NEVO-5182',from:'Perris Ranch, CA',eta:'4:55 PM'}
@@ -553,14 +548,21 @@ POOL={
 OTHER={
  'ONT-DOCK':{id:'ONT-DOCK',name:'Ontario DC — Customer Dock',account:'Customer-owned',region:'CA',current:2,lat:33.9350,lng:-117.2950,
   trailers:[
-   {tid:'NEVO-2890',source:'gps',lastPing:'22 min ago'},
-   {tid:'NEVO-2901',source:'gps',lastPing:'40 min ago'}
+   {tid:'NEVO-2890',source:'gps',lastPing:'22 min ago',loc:'Ontario, CA'},
+   {tid:'NEVO-2901',source:'gps',lastPing:'40 min ago',loc:'Ontario, CA'}
   ]}
 };
-GPSUNKNOWN={id:'__unknown__',name:'Unknown location',account:null,current:2,
+/* Most "no assigned yard" trailers are genuinely unresolved (no ping — no
+   lat/lng at all). But a trailer can have a resolved GPS fix while still
+   not being anywhere near a yard/pool — those two carry their own lat/lng
+   so the map can plot them at their real spot, even though they're still
+   grouped under this single "Unknown location" row in the table. */
+ GPSUNKNOWN={id:'__unknown__',name:'Unknown location',account:null,current:4,
   trailers:[
    {tid:'NEVO-1187',source:'manual',lastPing:'no GPS ping in 6h'},
-   {tid:'NEVO-1204',source:'manual',lastPing:'no GPS ping in 9h'}
+   {tid:'NEVO-1204',source:'manual',lastPing:'no GPS ping in 9h'},
+   {tid:'NEVO-3018',source:'gps',lastPing:'15 min ago',lat:34.0100,lng:-117.2900,loc:'San Bernardino, CA'},
+   {tid:'NEVO-3105',source:'manual',lastPing:'no GPS ping in 3h',lat:33.9600,lng:-117.1600,loc:'Fontana, CA'}
   ]};
  /* Standalone — archived trailers are pulled from active pool inventory, so
     they intentionally don't count toward any location's current/target. Only
@@ -664,8 +666,29 @@ function stopResize(){
  document.removeEventListener('mouseup',stopResize);
 }
 function fitAllMarkers(){
- const pts=Object.values({...POOL,...OTHER}).map(l=>[l.lat,l.lng]);
+ const pts=Object.values({...POOL,...OTHER}).map(l=>[l.lat,l.lng])
+  .concat(GPSUNKNOWN.trailers.filter(t=>t.lat!=null).map(t=>[t.lat,t.lng]));
  if(pts.length)MAP.fitBounds(pts,{padding:[48,48],maxZoom:13});
+}
+/* A search query that resolves to one or more specific locations (by name,
+   account, or a trailer id living there) should zoom the map to just those
+   locations, rather than leaving the full fitAllMarkers view — the map
+   should follow what the search actually found. GPS/Unknown has no
+   resolved coordinates, so it's naturally skipped here. */
+function zoomToSearchMatches(matched){
+ const pts=[];
+ matched.forEach(l=>{
+  if(l.lat!=null){pts.push([l.lat,l.lng]);return;}
+  /* No single group point (e.g. "Unknown location") — fall back to
+     whichever of its trailers has its own resolved coordinates AND is
+     actually what the search matched, rather than zooming to nothing. */
+  (l.trailers||[]).forEach(t=>{
+   if(t.lat!=null&&t.tid.toLowerCase().includes(SEARCHTEXT))pts.push([t.lat,t.lng]);
+  });
+ });
+ if(!pts.length)return;
+ if(pts.length===1)MAP.flyTo(pts[0],15,{duration:0.6});
+ else MAP.fitBounds(pts,{padding:[48,48],maxZoom:14});
 }
 /* Trailers at one yard don't have independent real coordinates, so lay them
    out like a small parking lot — tight rows/columns around the yard's point,
@@ -747,6 +770,7 @@ function renderMap(){
     const dotClass='trailerdot td-'+t.source+(t.pmDue?' pmdue':'');
     const icon=L.divIcon({className:'',html:'<div class="'+dotClass+'">'+ICON.trailerbox+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
     const marker=L.marker([lat,lng],{icon}).addTo(MAP);
+    marker._tid=t.tid;
     marker._cardHTML=trailerCardHTML(t,needsAmznHold({t,account:l.account}));
     marker.bindTooltip(marker._cardHTML,{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
     marker.on('click',(e)=>{
@@ -763,6 +787,24 @@ function renderMap(){
    marker.on('click',()=>{MAP.setView([l.lat,l.lng],CLICK_EXPAND_ZOOM);highlightRow(l.id);});
    MARKERS[l.id]=marker;
   }
+ });
+ /* "Unknown location" has no single group point to plot or lot-grid around —
+    it's a catch-all, not a yard. But individual trailers inside it can still
+    carry their own resolved lat/lng (a GPS fix that just isn't near any
+    yard), so plot those directly at their real coordinates. */
+ TRAILER_MARKERS[GPSUNKNOWN.id]=GPSUNKNOWN.trailers.filter(t=>t.lat!=null).map(t=>{
+  const dotClass='trailerdot td-'+t.source+(t.pmDue?' pmdue':'');
+  const icon=L.divIcon({className:'',html:'<div class="'+dotClass+'">'+ICON.trailerbox+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+  const marker=L.marker([t.lat,t.lng],{icon}).addTo(MAP);
+  marker._tid=t.tid;
+  marker._cardHTML=trailerCardHTML(t,needsAmznHold({t,account:GPSUNKNOWN.account}));
+  marker.bindTooltip(marker._cardHTML,{direction:'top',offset:[0,-14],className:'poolTip trailercard',interactive:true});
+  marker.on('click',(e)=>{
+   L.DomEvent.stopPropagation(e);
+   flashTableRow(GPSUNKNOWN.id);
+   pinTrailerTooltip(marker);
+  });
+  return marker;
  });
 }
 function flashPin(id){
@@ -824,10 +866,14 @@ function unpinTrailerTooltip(){
    TODO: once a trailer-detail view exists, this should navigate there instead. */
 function selectTrailerFromList(tid,locId){
  const loc=allEntries()[locId];
- if(!loc||loc.lat==null){toast(tid+' has no resolved map location.');return;}
- MAP.setView([loc.lat,loc.lng],CLICK_EXPAND_ZOOM);
- const idx=loc.trailers.findIndex(t=>t.tid===tid);
- const marker=idx>=0?(TRAILER_MARKERS[locId]||[])[idx]:null;
+ if(!loc){toast(tid+' has no resolved map location.');return;}
+ /* Groups like "Unknown location" have no single point of their own, but a
+    specific trailer inside can still carry its own resolved lat/lng. */
+ const t=(loc.trailers||[]).find(x=>x.tid===tid);
+ const viewPoint=loc.lat!=null?[loc.lat,loc.lng]:(t&&t.lat!=null?[t.lat,t.lng]:null);
+ if(!viewPoint){toast(tid+' has no resolved map location.');return;}
+ MAP.setView(viewPoint,CLICK_EXPAND_ZOOM);
+ const marker=(TRAILER_MARKERS[locId]||[]).find(m=>m._tid===tid);
  if(marker){pinTrailerTooltip(marker);}
  else{
   const enRouteEntry=(loc.enRoute||[]).find(e=>e.tid===tid);
@@ -850,7 +896,9 @@ function renderChips(){const c=chipCounts();
 let SEARCHTEXT='';
 function matchesSearch(l){
  if(!SEARCHTEXT)return true;
- return(l.name&&l.name.toLowerCase().includes(SEARCHTEXT))||(l.account&&l.account.toLowerCase().includes(SEARCHTEXT));
+ if(l.name&&l.name.toLowerCase().includes(SEARCHTEXT))return true;
+ if(l.account&&l.account.toLowerCase().includes(SEARCHTEXT))return true;
+ return!!(l.trailers&&l.trailers.some(t=>t.tid.toLowerCase().includes(SEARCHTEXT)));
 }
 function setSearchText(v){SEARCHTEXT=v.trim().toLowerCase();renderList();}
 /* Locations/trailers without a resolved region (GPS/Unknown, archived
@@ -880,7 +928,8 @@ function renderList(){renderChips();
  const body=[...poolRows,...otherRows,...unknownRows].map(([id,l])=>rowHTML(id,l)).join('');
  $('listwrap').innerHTML=colHead()+body;
  renderMap();
- if(AUTOZOOM)fitAllMarkers();
+ if(SEARCHTEXT)zoomToSearchMatches([...poolRows,...otherRows,...unknownRows].map(([id,l])=>l));
+ else if(AUTOZOOM)fitAllMarkers();
  renderAllTrailers();
 }
 
@@ -1118,27 +1167,29 @@ function rowExpandHTML(l){
  } else if(h==='Below target'){
   html+='<div class="critbanner" style="background:var(--ambersoft);border-color:#F3D67C"><div class="t" style="color:var(--amber)">'+ICON.alert+' Below target</div><div class="d" style="color:#7C4A00">'+l.current+' on site against a target of '+l.target+' — '+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below target so far.':'just crossed below target.')+'</div></div>';
  }
- if(l.suggestion){
-  html+='<div class="suggbanner"><div class="t">💡 Suggested reposition</div><div class="d"><b>'+esc(l.suggestion.name)+'</b> is '+l.suggestion.minutes+' min away with '+l.suggestion.available+' surplus trailer'+(l.suggestion.available>1?'s':'')+'. Illustrative for now — no live recommendation engine wired up yet.</div>'+
-   '<div class="btns"><button class="abtn" onclick="flashPin(\''+l.suggestion.locId+'\')">View '+esc(l.suggestion.name)+'</button></div></div>';
- }
- html+='<div class="sect"><span>TRAILERS AT THIS LOCATION</span><span>'+l.trailers.length+'</span></div>';
+ html+='<div class="sect"><span>'+(typeof l.target!=='number'?'NO ASSIGNED YARD':'TRAILERS AT THIS YARD')+'</span><span>'+l.trailers.length+'</span></div>';
  if(!l.trailers.length){
   html+='<div class="emptytrailers">No trailers currently on site.</div>';
  } else {
   const isPoolLoc=!!POOL[l.id];
-  html+='<div class="trow head"><div>Trailer</div><div>Source</div><div>Status</div><div>From</div><div>Arrived</div><div>Last Load</div></div>'+
+  /* "No assigned yard" groups (Ontario DC, Unknown location) aren't a
+     yard/trailer pool site themselves, so their trailers table gets an
+     extra Location column showing each trailer's own regular location
+     instead of implying they all share one formal yard. */
+  const isNoYard=typeof l.target!=='number';
+  html+='<div class="trow head'+(isNoYard?' noyard':'')+'"><div>Trailer</div><div>Source</div><div>Status</div><div>From</div>'+(isNoYard?'<div>Location</div>':'')+'<div>Arrived</div><div>Last Load</div></div>'+
    l.trailers.map(t=>{
     const r={t,locId:l.id,account:l.account,isPool:isPoolLoc,archived:false};
     const needsMaint=needsAmznHold(r);
     const st=deriveTrailerStatus(r,needsMaint);
-    return '<div class="trow" onclick="selectTrailerFromList(\''+t.tid+'\',\''+l.id+'\')">'+
+    return '<div class="trow'+(isNoYard?' noyard':'')+'" onclick="selectTrailerFromList(\''+t.tid+'\',\''+l.id+'\')">'+
      '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="tidname" title="View trailer detail">'+esc(t.tid)+'</span>'+
       dvirBadgeHTML(t,false)+maintBadgeHTML(t,needsMaint,false)+
      '</div>'+
      '<div class="srcping">'+sourcePingHTML(t)+'</div>'+
      '<div><span class="pill '+st.cls+'">'+st.label+'</span></div>'+
      '<div class="from">'+esc(pseudoArrivedFrom(t,l.name))+'</div>'+
+     (isNoYard?'<div class="loc2" title="'+esc(t.loc||'—')+'">'+esc(t.loc||'—')+'</div>':'')+
      '<div class="arr">'+pseudoArrivedAt(t)+'</div>'+
      '<div>'+loadPillHTML(t.tid)+'</div>'+
      '</div>';
