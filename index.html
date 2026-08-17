@@ -928,7 +928,7 @@ function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==
  let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
- '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned:'')+'</div>'+(hasProvisioned?'<div class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</div>':'')+'</div>'+
+ '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned+'<span class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</span>':'')+'</div></div>'+
  '<div class="dailylow">'+(hasDailyLow?l.dailyLow:'—')+'</div>'+
  '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';
