@@ -172,9 +172,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    renderList) — it owns top:0/the higher z-index; each group's sechead
    sticks just underneath it as you scroll past. Sechead keeps a light tint
    (like lanes' grouphead) so it reads as a section band on the white card. */
-.colhead{display:grid;grid-template-columns:1.15fr 1fr .8fr .55fr .55fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
-.poolrow{display:grid;grid-template-columns:1.15fr 1fr .8fr .55fr .55fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
-.dailylow{display:flex;align-items:center;gap:5px}
+.colhead{display:grid;grid-template-columns:1.15fr 1fr .8fr 1.1fr .5fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+.poolrow{display:grid;grid-template-columns:1.15fr 1fr .8fr 1.1fr .5fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
@@ -182,10 +181,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .poolrow .loc .acct{color:var(--gray);font-size:11.5px;font-weight:400}
 .poolrow .count{color:var(--text-default);display:flex;flex-direction:column;gap:1px}
 .poolrow .count .cnums{font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
-.poolrow .count .emptynote{color:var(--gray);font-size:11px;font-weight:400;white-space:nowrap}
 .poolrow .count b{font-weight:600;color:var(--ink)}
-.countarrow{display:inline-flex;color:var(--gray)}
-.countarrow-head{display:flex;align-items:center;gap:3px}
+.poolrow .loadedempty{color:var(--text-default);font-size:12.5px;white-space:nowrap}
+.poolrow .loadedempty b{font-weight:600;color:var(--ink)}
 .poolrow .target{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .poolrow .chev2{color:#CBD5E1;transition:transform .15s}
 .poolrow.expanded .chev2{transform:rotate(90deg)}
@@ -271,15 +269,15 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .trow>div,.erow>div{min-width:0;overflow:hidden}
 .trow .from,.trow .arr,.trow .loc2{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
 .trow.noyard{grid-template-columns:minmax(90px,.9fr) minmax(160px,1.3fr) minmax(125px,1fr) minmax(100px,.95fr) minmax(90px,.75fr) minmax(110px,.9fr) minmax(70px,.6fr)}
-/* En-route table — same row rhythm and column shape as .trow above, minus
-   the DVIR/PM flags (a trailer in transit isn't checked in at this yard,
-   so it can't have been inspected here) and with ETA instead of Arrived.
-   Not clickable: these trailers aren't physically at this location's yard
-   yet, so there's no marker to pin. */
-.erow{display:grid;grid-template-columns:minmax(80px,.9fr) minmax(130px,1.2fr) minmax(110px,1.1fr) minmax(60px,.6fr) minmax(85px,.8fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;margin:0 -6px;padding-left:6px;padding-right:6px}
+/* Planned table — upcoming hook/drop activity at this location, same row
+   rhythm as .trow above. Not clickable: there's no trailer detail view for
+   a not-yet-assigned trailer to link to. */
+.erow{display:grid;grid-template-columns:minmax(65px,.65fr) minmax(120px,1.05fr) minmax(85px,.75fr) minmax(150px,1.35fr) minmax(75px,.7fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--border-muted);font-size:12px;align-items:center;margin:0 -6px;padding-left:6px;padding-right:6px}
 .erow.head{color:var(--gray);font-size:10.5px;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border-default)}
-.erow .from{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
-.erow .eta{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap}
+.erow .time{color:var(--text-default);white-space:nowrap;text-overflow:ellipsis}
+.erow .bal{color:var(--text-dark);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.underdeficit{color:var(--gray);font-size:11px;font-weight:400;white-space:nowrap}
+.underdeficit .unum{color:var(--red)}
 /* PM is a flag (badge) inline on the trailer id, not its own column. */
 /* PM-due flag — just the icon, no pill/background; hover shows context via
    the shared .hovertip (matches the lanes prototype's "Expiring soon" flag). */
@@ -473,8 +471,6 @@ const ICON = {
   /* fill:currentColor so callers tint via CSS — amber for routine
      maintenance flags, red for a DVIR safety flag. */
   flag:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="2" width="2" height="20" rx="1"/><path d="M6 3.5h12l-3 4.5 3 4.5H6z"/></svg>',
-  /* current -> provisioned arrow, wherever the two numbers are paired */
-  arrowRight:'<svg class="ic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
 };
 
 /* ---------- seed data (grounded in the Trailer Pool Management Idea doc — P&G/Moreno Valley
@@ -487,16 +483,29 @@ const ICON = {
 let POOL={},OTHER={},GPSUNKNOWN=null,ARCHIVED_TRAILERS=[];
 function seedPool(){
 POOL={
- 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,provisioned:6,current:0,daysBelow:6,dailyLow:0,lat:33.9425,lng:-117.2297,
+ 'PG-MRV':{id:'PG-MRV',name:'P&G – Moreno Valley, CA',account:'P&G',region:'CA',target:4,current:0,daysBelow:6,lat:33.9425,lng:-117.2297,
   enRoute:[
    {tid:'NEVO-5102',from:'Perris Ranch, CA',eta:'3:15 PM'},
    {tid:'NEVO-5118',from:'TSG Fontana, CA',eta:'4:40 PM',loaded:true}
   ],
+  /* Chronological — soonest first. The two arrivals below are already
+     assigned (same tids as enRoute), but anything scheduled further out
+     than that is only a slot, not a specific trailer yet. */
+  planned:[
+   {type:'drop',time:'3:15 PM',tid:'NEVO-5102'},
+   {type:'drop',time:'4:40 PM',tid:'NEVO-5118'},
+   {type:'hook',time:'Aug 13, 2026, 9:00 AM',tid:null,load:7734}
+  ],
   trailers:[]},
- 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:8,current:5,daysBelow:0,dailyLow:0,lat:33.8900,lng:-117.2450,
+ 'PERRIS':{id:'PERRIS',name:'Perris Ranch, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,current:5,daysBelow:0,lat:33.8900,lng:-117.2450,
   enRoute:[
    {tid:'NEVO-5133',from:'Amazon LGB5 – Moreno Valley, CA',eta:'2:20 PM'},
    {tid:'NEVO-5147',from:'TSG Fontana, CA',eta:'5:00 PM'}
+  ],
+  planned:[
+   {type:'drop',time:'2:20 PM',tid:'NEVO-5133'},
+   {type:'drop',time:'5:00 PM',tid:'NEVO-5147'},
+   {type:'hook',time:'Aug 13, 2026, 7:30 AM',tid:null,load:7719}
   ],
   trailers:[
    {tid:'NEVO-4471',source:'gps',lastPing:'2 min ago'},
@@ -505,41 +514,60 @@ POOL={
    {tid:'NEVO-4503',source:'gps',lastPing:'14 min ago',pmDue:true},
    {tid:'NEVO-4517',source:'gps',lastPing:'19 min ago'}
   ]},
- 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:2,daysBelow:2,dailyLow:2,lat:33.9950,lng:-117.2050,
+ 'LGB3':{id:'LGB3',name:'Amazon LGB3 – Redlands, CA',account:'Amazon Relay',region:'CA',target:3,current:2,daysBelow:2,lat:33.9950,lng:-117.2050,
   enRoute:[
    {tid:'NEVO-5160',from:'Perris Ranch, CA',eta:'1:50 PM'}
+  ],
+  planned:[
+   {type:'drop',time:'1:50 PM',tid:'NEVO-5160'},
+   {type:'hook',time:'Aug 13, 2026, 8:15 AM',tid:null,load:7683}
   ],
   trailers:[
    {tid:'NEVO-3312',source:'gps',lastPing:'3 min ago'},
    {tid:'NEVO-3340',source:'gps',lastPing:'8 min ago'}
   ]},
- 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:3,current:3,daysBelow:0,dailyLow:3,lat:33.9550,lng:-117.2550,
+ 'LGB5':{id:'LGB5',name:'Amazon LGB5 – Moreno Valley, CA',account:'Amazon Relay',region:'CA',target:3,current:3,daysBelow:0,lat:33.9550,lng:-117.2550,
   enRoute:[],
+  /* Nothing scheduled — matches its empty enRoute above. */
+  planned:[],
   trailers:[
    {tid:'NEVO-3355',source:'gps',lastPing:'1 min ago'},
    {tid:'NEVO-3361',source:'gps',lastPing:'4 min ago'},
    {tid:'NEVO-3379',source:'gps',lastPing:'9 min ago'}
   ]},
- 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:5,current:1,daysBelow:4,dailyLow:0,lat:33.9200,lng:-117.3100,
+ 'LGB7':{id:'LGB7',name:'Amazon LGB7 – Eastvale, CA',account:'Amazon Relay',region:'CA',target:3,current:1,daysBelow:4,lat:33.9200,lng:-117.3100,
   enRoute:[
    {tid:'NEVO-5175',from:'Amazon LGB5 – Moreno Valley, CA',eta:'3:40 PM'},
    {tid:'NEVO-5182',from:'Perris Ranch, CA',eta:'4:55 PM'}
   ],
+  planned:[
+   {type:'drop',time:'3:40 PM',tid:'NEVO-5175'},
+   {type:'drop',time:'4:55 PM',tid:'NEVO-5182'},
+   {type:'hook',time:'Aug 13, 2026, 6:45 AM',tid:null,load:7694}
+  ],
   trailers:[
    {tid:'NEVO-3402',source:'gps',lastPing:'7 min ago'}
   ]},
- 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',region:'CA',target:3,provisioned:4,current:3,daysBelow:0,dailyLow:2,lat:33.9800,lng:-117.1850,
+ 'BFL1':{id:'BFL1',name:'Amazon BFL1 – Bakersfield, CA',account:'Amazon Relay',region:'CA',target:3,current:3,daysBelow:0,lat:33.9800,lng:-117.1850,
   enRoute:[
    {tid:'NEVO-5199',from:'Perris Ranch, CA',eta:'2:10 PM'}
+  ],
+  planned:[
+   {type:'drop',time:'2:10 PM',tid:'NEVO-5199'},
+   {type:'hook',time:'Aug 13, 2026, 10:20 AM',tid:null,load:7708}
   ],
   trailers:[
    {tid:'NEVO-3510',source:'gps',lastPing:'5 min ago'},
    {tid:'NEVO-3524',source:'gps',lastPing:'13 min ago',pmDue:true},
    {tid:'RYDER-8821',source:'manual',lastPing:'logged 3 hr ago',dvir:'flagged',pmDue:true}
   ]},
- 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,provisioned:3,current:2,daysBelow:0,dailyLow:1,lat:33.9700,lng:-117.3300,
+ 'TSG-FONT':{id:'TSG-FONT',name:'TSG Fontana, CA',account:'Nevoya Fleet Yard',region:'CA',target:2,current:2,daysBelow:0,lat:33.9700,lng:-117.3300,
   enRoute:[
    {tid:'NEVO-5204',from:'Amazon LGB3 – Redlands, CA',eta:'12:30 PM'}
+  ],
+  planned:[
+   {type:'drop',time:'12:30 PM',tid:'NEVO-5204'},
+   {type:'hook',time:'Aug 13, 2026, 9:40 AM',tid:null,load:7691}
   ],
   trailers:[
    {tid:'NEVO-2201',source:'gps',lastPing:'2 min ago'},
@@ -548,6 +576,14 @@ POOL={
 };
 OTHER={
  'ONT-DOCK':{id:'ONT-DOCK',name:'Ontario DC — Customer Dock',account:'Customer-owned',region:'CA',current:2,lat:33.9350,lng:-117.2950,
+  /* A customer dock, not a Nevoya yard, so there's no target/EOD to
+     reconcile against — but pickups still get scheduled here like anywhere
+     else. Both of today's on-site trailers are due back out; which one
+     covers tomorrow's slot isn't assigned yet. */
+  planned:[
+   {type:'hook',time:'3:30 PM',tid:'NEVO-2890'},
+   {type:'hook',time:'Aug 13, 2026, 9:00 AM',tid:null,load:7688}
+  ],
   trailers:[
    {tid:'NEVO-2890',source:'gps',lastPing:'22 min ago',loc:'Ontario, CA'},
    {tid:'NEVO-2901',source:'gps',lastPing:'40 min ago',loc:'Ontario, CA'}
@@ -581,24 +617,40 @@ OTHER={
    "loaded" cleanup); the only loaded portion of the projection comes from
    inbound en-route trailers flagged loaded. Rough first pass, not a real
    feed. */
-function emptyEODCount(l){
- if(typeof l.provisioned!=='number')return null;
- const loadedInbound=(l.enRoute||[]).filter(e=>e.loaded).length;
- return Math.max(0,l.provisioned-loadedInbound);
+/* Illustrative only — per the 8/12 jam, dispatch doesn't yet have real
+   load-assignment data tying a trailer to whether it's loaded or empty
+   (Thomas: "they currently lack the necessary context regarding which
+   loads are assigned to which trailers"). Deterministic hash stands in
+   until that feed exists, skewed toward empty since trailers idling at a
+   yard waiting for their next load are the common case. */
+function pseudoLoaded(tid){
+ let h=0;
+ for(let i=0;i<tid.length;i++)h=(h*23+tid.charCodeAt(i))>>>0;
+ return h%3===0;
+}
+function loadedEmptyHTML(l){
+ if(!l.trailers||!l.trailers.length)return '—';
+ const loaded=l.trailers.filter(t=>pseudoLoaded(t.tid)).length;
+ return '<b>'+loaded+'</b> loaded, <b>'+(l.trailers.length-loaded)+'</b> empty';
 }
 /* "Low" logic is a rough first pass, not final: currently just "exactly one
    trailer short of target" (closer to on-target than a real shortfall) —
    revisit once there's real guidance on what "approaching target" should
    mean (a percentage? a trend over time?). */
-function deriveHealth(l){
+/* Parameterized so a projected/planned count can be graded against target
+   the exact same way Current is — one rule, no risk of the two drifting. */
+function deriveHealthForCount(l,count){
  if(typeof l.target!=='number')return 'No target set';
- if(l.current===0)return 'Critical';
- if(l.current<l.target){
-  if(l.target-l.current===1)return 'Low';
+ if(count===0)return 'Critical';
+ if(count<l.target){
+  if(l.target-count===1)return 'Low';
   return 'Below target';
  }
- if(l.current>l.target)return 'Over target';
+ if(count>l.target)return 'Over target';
  return 'On target';
+}
+function deriveHealth(l){
+ return deriveHealthForCount(l,l.current);
 }
 /* deriveHealth() returns strings like "No target set" — normalize its class distinctly. */
 function healthClass(h){
@@ -714,8 +766,7 @@ function lotGrid(lat,lng,n){
    couldn't actually back up (a live loaded/empty feed). Trailers default to
    DVIR-passed/not-due unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report missing';
-const EOD_TIP='End of day: how many trailers this location is provisioned to have on site by 5:00 PM local time — Pacific, for these California yards.';
-const DAILYLOW_TIP='The lowest on-site count this location hit today — an EOD projection alone can hide a critical mid-day dip. Illustrative for now; not backed by a live intraday feed yet.';
+const LOADEDEMPTY_TIP='How many of the trailers currently on site are loaded vs empty — illustrative for now, not backed by real load-assignment data yet.';
 /* Single source of truth for the DVIR/PM-due/AMZN-hold flag badges — reused
    by the map card, the expanded location's trailers table, and the All
    Trailers list, so a trailer reads the same everywhere instead of drifting
@@ -785,7 +836,7 @@ function renderMap(){
   } else {
    const icon=L.divIcon({className:'',html:'<div class="pin '+healthClass(h)+'">'+(l.current>1?'<span class="pn">'+l.current+'</span>':'')+'</div>',iconSize:[20,20],iconAnchor:[10,20]});
    const marker=L.marker([l.lat,l.lng],{icon}).addTo(MAP);
-   marker.bindTooltip(esc(l.name)+' · '+l.current+(typeof l.provisioned==='number'?' → '+l.provisioned:''),{direction:'top',offset:[0,-18],className:'poolTip'});
+   marker.bindTooltip(esc(l.name)+' · '+l.current,{direction:'top',offset:[0,-18],className:'poolTip'});
    marker.on('click',()=>{MAP.setView([l.lat,l.lng],CLICK_EXPAND_ZOOM);highlightRow(l.id);});
    MARKERS[l.id]=marker;
   }
@@ -923,18 +974,17 @@ function visibleTrailers(l){
  if(groupMatches)return l.trailers;
  return l.trailers.filter(t=>t.tid.toLowerCase().includes(SEARCHTEXT)||(t.loc&&t.loc.toLowerCase().includes(SEARCHTEXT)));
 }
-function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const hasProvisioned=typeof l.provisioned==='number';const expanded=!!EXPANDEDROWS[id]||!!SEARCHTEXT;
- const hasDailyLow=typeof l.dailyLow==='number';
+function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==='number';const expanded=!!EXPANDEDROWS[id]||!!SEARCHTEXT;
  let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
- '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+(hasProvisioned?'<span class="countarrow">'+ICON.arrowRight+'</span>'+l.provisioned+'<span class="emptynote" title="How many of the EOD count will actually be empty (real available capacity) vs loaded">('+emptyEODCount(l)+' empty)</span>':'')+'</div></div>'+
- '<div class="dailylow">'+(hasDailyLow?l.dailyLow:'—')+'</div>'+
+ '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+balanceDeficitHTML(l,l.current)+'</div></div>'+
+ '<div class="loadedempty">'+loadedEmptyHTML(l)+'</div>'+
  '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';
  if(expanded)out+=rowExpandHTML(l);
  return out;}
-function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div class="countarrow-head">Current<span class="countarrow">'+ICON.arrowRight+'</span><span title="'+EOD_TIP+'">EOD <span class="infoq">ⓘ</span></span></div><div title="'+DAILYLOW_TIP+'">Daily Low <span class="infoq">ⓘ</span></div><div>Target</div><div></div></div>';}
+function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div>Current</div><div title="'+LOADEDEMPTY_TIP+'">Loaded/Empty <span class="infoq">ⓘ</span></div><div>Target</div><div></div></div>';}
 function renderList(){renderChips();
  const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
  const poolRows=poolIds.map(id=>[id,POOL[id]]);
@@ -1042,6 +1092,37 @@ function sourcePingHTML(t){
 function loadPillHTML(tid){
  const loadId=pseudoLoadId(tid);
  return '<span class="loadtag"><span class="dot" style="background:'+pseudoLoadColor(loadId)+'"></span>Load '+loadId+'</span>';
+}
+/* A planned hook/drop's load ref: hashed from its trailer id when there is
+   one (loadPillHTML), so it matches that trailer's "Last Load" everywhere
+   else it shows up — falling back to a hand-set override for the rarer
+   case where dispatch already knows the load but not yet which physical
+   trailer will cover it. */
+/* Only worth a callout once the projected balance itself would read Low
+   or worse against target — Over target/On target/No target set stay
+   silent, same severities deriveHealth already uses for Current. Whenever
+   it does show, the pill also states the actual deficit (target minus
+   that balance) rather than making the reader do that subtraction. */
+function balanceDeficitHTML(l,count){
+ if(typeof l.target!=='number'||count>=l.target)return '';
+ return '<span class="underdeficit">(Under target <span class="unum">-'+(l.target-count)+'</span>)</span>';
+}
+function eventLoadHTML(ev){
+ if(ev.tid)return loadPillHTML(ev.tid);
+ if(typeof ev.load==='number')return '<span class="loadtag"><span class="dot" style="background:'+pseudoLoadColor(ev.load)+'"></span>Load '+ev.load+'</span>';
+ return '—';
+}
+/* Planned is seeded soonest-first with just a type (hook/drop) — balance is
+   derived, not hand-typed, so it can't drift out of sync with Current.
+   Current is where the count sits right now, before any of these have
+   happened yet; each entry projects one step forward from there. */
+function plannedWithBalance(l){
+ const evs=l.planned||[];
+ let bal=l.current;
+ return evs.map(e=>{
+  bal=(e.type==='drop')?bal+1:bal-1;
+  return {...e,balance:bal};
+ });
 }
 /* Real TrailerType values from the apollo app's trailer filter panel. Most
    seeded trailers don't carry an explicit type, so we skew a deterministic
@@ -1211,19 +1292,18 @@ function rowExpandHTML(l){
      '</div>';
    }).join('');
  }
- /* En route only applies to Trailer Pool locations — Other Locations and
-    GPS/Unknown don't carry an EOD target, so there's nothing to be "on the
-    way" toward. */
- if(typeof l.enRoute!=='undefined'){
-  html+='<div class="sect" style="margin-top:14px"><span title="'+EOD_TIP+'">EN ROUTE — ARRIVING BY EOD <span class="infoq">ⓘ</span></span><span>'+l.enRoute.length+'</span></div>';
-  if(!l.enRoute.length){
-   html+='<div class="emptytrailers">Nothing currently en route.</div>';
+ /* Planned only applies to a single physical location — GPS/Unknown is a
+    catch-all spanning whatever scattered spots its trailers actually sit
+    at, so there's no one yard to schedule hook/drop activity against. */
+ if(typeof l.planned!=='undefined'){
+  const evs=plannedWithBalance(l);
+  html+='<div class="sect" style="margin-top:14px"><span title="Planned activity at this location over the next 24 hours.">PLANNED <span class="infoq">ⓘ</span></span><span>'+evs.length+'</span></div>';
+  if(!evs.length){
+   html+='<div class="emptytrailers">Nothing currently planned.</div>';
   } else {
-   html+='<div class="erow head"><div>Trailer</div><div>Status</div><div>From</div><div>ETA</div><div>Last Load</div></div>'+
-    l.enRoute.map(e=>{
-     const r={t:e,locId:l.id,account:l.account,isPool:true,transit:true};
-     const st=deriveTrailerStatus(r,false);
-     return '<div class="erow"><div>'+esc(e.tid)+'</div><div><span class="pill '+st.cls+'">'+st.label+'</span></div><div class="from">'+esc(e.from)+'</div><div class="eta">'+esc(e.eta)+'</div><div>'+loadPillHTML(e.tid)+'</div></div>';
+   html+='<div class="erow head"><div>Event</div><div>Time</div><div>Trailer</div><div>Balance</div><div>Load</div></div>'+
+    evs.map(e=>{
+     return '<div class="erow"><div>'+(e.type==='drop'?'Drop':'Hook')+'</div><div class="time">'+esc(e.time)+'</div><div>'+(e.tid?esc(e.tid):'Unknown')+'</div><div class="bal">'+e.balance+balanceDeficitHTML(l,e.balance)+'</div><div>'+eventLoadHTML(e)+'</div></div>';
     }).join('');
   }
  }
