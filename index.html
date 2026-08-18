@@ -1472,7 +1472,7 @@ function submitModalEdit(id){
 function openCreateTrailerModal(){
  const locs=[...Object.values(POOL),...Object.values(OTHER)];
  const locOptions=locs.map(l=>'<option value="'+l.id+'">'+esc(l.name)+'</option>').join('');
- $('modalbox').innerHTML=dlgHead('Create Trailer')+
+ $('modalbox').innerHTML=dlgHead('Create trailer')+
   '<div class="dbd">'+
    '<div class="ffield"><label>Trailer ID *</label><input type="text" id="in_newtid" placeholder="e.g. NEVO-5001"><div class="hint">Matches the unit ID on the trailer\'s GPS tag or manual log entry.</div></div>'+
    '<div class="ffield"><label>Trailer type</label><select id="in_newtype">'+TRAILER_TYPES.map(ty=>'<option>'+esc(ty)+'</option>').join('')+'</select></div>'+
@@ -1515,7 +1515,7 @@ function openEditTrailerModal(tid,locId){
  const locs=[...Object.values(POOL),...Object.values(OTHER)];
  const locOptions=locs.map(l=>'<option value="'+l.id+'"'+(l.id===locId?' selected':'')+'>'+esc(l.name)+'</option>').join('');
  const v=k=>esc(t[k]==null?'':t[k]);
- $('modalbox').innerHTML=dlgHead('Edit Trailer',esc(tid))+
+ $('modalbox').innerHTML=dlgHead('Edit trailer — '+esc(tid))+
   '<div class="dbd">'+
    '<div class="fsect">Trailer Registration Details</div>'+
    '<div class="ffield"><label>Trailer Name *</label><input type="text" id="m_edittid" value="'+v('tid')+'"></div>'+
