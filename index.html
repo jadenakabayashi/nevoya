@@ -309,6 +309,21 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .ffield textarea{resize:vertical;min-height:80px}
 .ffield input:focus,.ffield select:focus,.ffield textarea:focus{border-color:var(--teal)}
 .ffield .hint{font-size:11px;color:#94A3B8}
+/* Section header inside a long modal body (Edit Trailer) — a rule above
+   every section but the first, same weight as a field label but bolder. */
+.dbd .fsect{font-size:13px;font-weight:600;color:var(--ink);padding-top:14px;border-top:1px solid var(--border-muted)}
+.dbd .fsect:first-child{padding-top:0;border-top:none}
+/* Two related fields sharing one row (License Plate Number/State, Make/
+   Model, ...) — .ffield's existing flex:1 already assumes a flex-row
+   parent, so this is the only new rule needed. */
+.ffieldrow{display:flex;gap:10px}
+.ffieldrow .ffield{margin-bottom:0}
+.radiorow{display:flex;gap:22px;padding:2px 0}
+.radioopt{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;color:var(--text-dark)}
+.radioopt input[type=radio]{width:18px;height:18px;accent-color:var(--teal);cursor:pointer;margin:0}
+.dollarinput{position:relative}
+.dollarinput input{padding-left:22px!important}
+.dollarinput .dsign{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:13.5px;pointer-events:none}
 .toast{position:fixed;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
 svg.ic{display:block}
 /* Dialog (confirmed Figma spec, node 80:208 — see nevoya-library.md): header
@@ -1144,6 +1159,10 @@ function plannedWithBalance(l){
    pseudo-type toward Dry Box (typical for a general-freight/Amazon relay
    pool) with a handful of others for the filter to have something to do. */
 const TRAILER_TYPES=['Dry Box','Reefer','Flatbed','Step Deck','Tanker','Low Boy','Intermodal Chassis','Auto Hauler','Livestock','Dump Tipper','Curtain Side','Stake','Construction','Other'];
+/* Edit Trailer modal reference fields — plate-state list and common
+   physical trailer lengths, used by openEditTrailerModal. */
+const US_STATES=['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
+const TRAILER_LENGTHS=["28'","40'","45'","48'","53'"];
 function pseudoType(t){
  if(t.type)return t.type;
  let h=0;
@@ -1472,43 +1491,109 @@ function submitCreateTrailer(){
 }
 
 /* ---------- edit trailer modal — the pencil on each All Trailers row.
-   Same field set as Create Trailer (its natural counterpart), pre-filled
-   with the trailer's current values. Location move only offered when the
-   trailer currently sits in a POOL/OTHER location's trailers[] — GPS/Unknown
-   and en-route rows don't have a simple single-array move to make. ---------- */
+   Field set matches the real Apollo Edit Trailer form (registration/plate/
+   make-model-year, trailer details, axle & weight, financial, notes) —
+   Location and Source are additions of ours (this prototype's own
+   pool-membership concept, not in that reference) kept alongside it since
+   they're already functional. Most of these fields have no seed data behind
+   them yet, so they render empty/placeholder like an incomplete real record
+   would, rather than inventing fake VINs/makes/models to fill them. Location
+   move only offered when the trailer currently sits in a POOL/OTHER
+   location's trailers[] — GPS/Unknown and en-route rows don't have a simple
+   single-array move to make. ---------- */
 function openEditTrailerModal(tid,locId){
  const t=trailerByTid(tid);
  if(!t)return;
  const loc=POOL[locId]||OTHER[locId];
  const locs=[...Object.values(POOL),...Object.values(OTHER)];
  const locOptions=locs.map(l=>'<option value="'+l.id+'"'+(l.id===locId?' selected':'')+'>'+esc(l.name)+'</option>').join('');
- $('modalbox').innerHTML=dlgHead('Edit trailer — '+esc(tid))+
+ const v=k=>esc(t[k]==null?'':t[k]);
+ $('modalbox').innerHTML=dlgHead('Edit Trailer')+
   '<div class="dbd">'+
-   '<div class="ffield"><label>Trailer type</label><select id="m_edittype">'+TRAILER_TYPES.map(ty=>'<option'+(ty===pseudoType(t)?' selected':'')+'>'+esc(ty)+'</option>').join('')+'</select></div>'+
+   '<div class="fsect">Trailer Registration Details</div>'+
+   '<div class="ffield"><label>Trailer Name *</label><input type="text" id="m_edittid" value="'+v('tid')+'"></div>'+
+   '<div class="ffield"><label>VIN *</label><input type="text" id="m_editvin" value="'+v('vin')+'" placeholder="1UYVS2530L3090513"></div>'+
+   '<div class="ffieldrow">'+
+    '<div class="ffield"><label>License Plate Number *</label><input type="text" id="m_editplate" value="'+v('plateNumber')+'"></div>'+
+    '<div class="ffield"><label>License Plate State *</label><select id="m_editplatestate"><option value="">Select</option>'+US_STATES.map(s=>'<option'+(t.plateState===s?' selected':'')+'>'+s+'</option>').join('')+'</select></div>'+
+   '</div>'+
+   '<div class="ffieldrow">'+
+    '<div class="ffield"><label>Make *</label><input type="text" id="m_editmake" value="'+v('make')+'" placeholder="Utility Trailer Manufacturer"></div>'+
+    '<div class="ffield"><label>Model *</label><input type="text" id="m_editmodel" value="'+v('model')+'" placeholder="Utility Trailer Manufacturer"></div>'+
+   '</div>'+
+   '<div class="ffieldrow">'+
+    '<div class="ffield"><label>Year *</label><input type="number" id="m_edityear" value="'+v('year')+'" placeholder="2020"></div>'+
+    '<div class="ffield"><label>Trailer Weight (lbs) *</label><input type="number" id="m_editweight" value="'+v('weightLbs')+'"></div>'+
+   '</div>'+
+   '<div class="fsect">Trailer Details</div>'+
+   '<div class="ffield"><label>Trailer Type *</label><select id="m_edittype">'+TRAILER_TYPES.map(ty=>'<option'+(ty===pseudoType(t)?' selected':'')+'>'+esc(ty)+'</option>').join('')+'</select></div>'+
+   '<div class="ffieldrow">'+
+    '<div class="ffield"><label>Region</label><select id="m_editregion"><option value="">Select Region</option><option value="AZ"'+(t.region==='AZ'?' selected':'')+'>Arizona</option><option value="CA"'+(t.region==='CA'?' selected':'')+'>California</option><option value="TX"'+(t.region==='TX'?' selected':'')+'>Texas</option></select></div>'+
+    '<div class="ffield"><label>Length</label><select id="m_editlength"><option value="">Select</option>'+TRAILER_LENGTHS.map(l=>'<option'+(t.length===l?' selected':'')+'>'+l+'</option>').join('')+'</select></div>'+
+   '</div>'+
+   '<div class="fsect">Location &amp; Tracking</div>'+
    (loc?'<div class="ffield"><label>Location</label><select id="m_editloc">'+locOptions+'</select></div>':'')+
    '<div class="ffield"><label>Source</label><select id="m_editsource"><option value="gps"'+(t.source==='gps'?' selected':'')+'>GPS</option><option value="manual"'+(t.source==='manual'?' selected':'')+'>Manual</option></select><div class="hint">Manual means no live GPS feed — tracked by hand, like a rental.</div></div>'+
+   '<div class="fsect">Axle &amp; Weight</div>'+
+   '<div class="ffieldrow">'+
+    '<div class="ffield"><label>Axle</label><input type="number" id="m_editaxle" value="'+v('axleCount')+'"></div>'+
+    '<div class="ffield"><label>Gross Vehicle Weight Rating</label><input type="text" id="m_editgvwr" value="'+v('gvwr')+'" placeholder="Enter Gross Vehicle Weight Rating"></div>'+
+   '</div>'+
+   '<div class="ffield"><label>Gross Axle Weight Rating</label><input type="text" id="m_editgawr" value="'+v('gawr')+'" placeholder="Enter Gross Axle Weight Rating"></div>'+
+   '<div class="fsect">Financial Information</div>'+
+   '<div class="radiorow">'+
+    '<label class="radioopt"><input type="radio" name="m_editownership" value="leased"'+(t.ownership!=='owned'?' checked':'')+'>Leased</label>'+
+    '<label class="radioopt"><input type="radio" name="m_editownership" value="owned"'+(t.ownership==='owned'?' checked':'')+'>Owned</label>'+
+   '</div>'+
+   '<div class="ffieldrow">'+
+    '<div class="ffield"><label>Monthly Financial Cost</label><div class="dollarinput"><span class="dsign">$</span><input type="number" id="m_editfincost" value="'+v('monthlyFinancialCost')+'" placeholder="Enter Monthly Financial Cost"></div></div>'+
+    '<div class="ffield"><label>Monthly Insurance Cost</label><div class="dollarinput"><span class="dsign">$</span><input type="number" id="m_editinscost" value="'+v('monthlyInsuranceCost')+'" placeholder="Enter Monthly Insurance Cost"></div></div>'+
+   '</div>'+
+   '<div class="fsect">Notes</div>'+
+   '<div class="ffield"><textarea id="m_editnotes" rows="3" placeholder="Notes">'+v('notes')+'</textarea></div>'+
   '</div>'+
-  '<div class="dft"><div class="grp"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" onclick="submitEditTrailer(\''+tid+'\',\''+locId+'\')">Save changes</button></div></div>';
+  '<div class="dft"><div class="grp"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" onclick="submitEditTrailer(\''+tid+'\',\''+locId+'\')">Save Changes</button></div></div>';
  openModal();
 }
 function submitEditTrailer(tid,oldLocId){
  const t=trailerByTid(tid);
  if(!t){closeModal();return;}
+ const newTid=$('m_edittid').value.trim();
+ if(!newTid){toast('Trailer name is required.');return;}
+ if(newTid!==tid&&trailerByTid(newTid)){toast('A trailer named '+newTid+' already exists.');return;}
+ t.tid=newTid;
+ t.vin=$('m_editvin').value.trim();
+ t.plateNumber=$('m_editplate').value.trim();
+ t.plateState=$('m_editplatestate').value;
+ t.make=$('m_editmake').value.trim();
+ t.model=$('m_editmodel').value.trim();
+ t.year=$('m_edityear').value?parseInt($('m_edityear').value,10):null;
+ t.weightLbs=$('m_editweight').value?parseInt($('m_editweight').value,10):null;
  t.type=$('m_edittype').value;
+ t.region=$('m_editregion').value||null;
+ t.length=$('m_editlength').value||null;
  t.source=$('m_editsource').value;
+ t.axleCount=$('m_editaxle').value?parseInt($('m_editaxle').value,10):null;
+ t.gvwr=$('m_editgvwr').value.trim();
+ t.gawr=$('m_editgawr').value.trim();
+ const ownEl=document.querySelector('input[name="m_editownership"]:checked');
+ t.ownership=ownEl?ownEl.value:'leased';
+ t.monthlyFinancialCost=$('m_editfincost').value?parseFloat($('m_editfincost').value):null;
+ t.monthlyInsuranceCost=$('m_editinscost').value?parseFloat($('m_editinscost').value):null;
+ t.notes=$('m_editnotes').value.trim();
  const locSel=$('m_editloc');
  if(locSel&&locSel.value&&locSel.value!==oldLocId){
   const oldLoc=POOL[oldLocId]||OTHER[oldLocId];
   const newLoc=POOL[locSel.value]||OTHER[locSel.value];
   if(oldLoc){
-   const idx=oldLoc.trailers.findIndex(x=>x.tid===tid);
+   const idx=oldLoc.trailers.findIndex(x=>x.tid===newTid);
    if(idx>=0){oldLoc.trailers.splice(idx,1);oldLoc.current=Math.max(0,(oldLoc.current||0)-1);}
   }
   if(newLoc){newLoc.trailers.push(t);newLoc.current=(newLoc.current||0)+1;}
  }
  closeModal();
  renderList();
- toast('Trailer '+tid+' updated.');
+ toast('Trailer '+newTid+' updated.');
 }
 
 /* ---------- boot ---------- */
