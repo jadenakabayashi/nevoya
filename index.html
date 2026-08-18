@@ -173,6 +173,15 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    sticks just underneath it as you scroll past. Sechead keeps a light tint
    (like lanes' grouphead) so it reads as a section band on the white card. */
 .colhead{display:grid;grid-template-columns:1.15fr 1fr .8fr 1.1fr .5fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+/* Sortable column headers (both the pools table's .colhead and All Trailers'
+   .atcolhead) — arrow is invisible until hover/active so unsorted columns
+   don't visually clutter the row of labels. */
+.colhead>div.sortable,.atcolhead>div.sortable{cursor:pointer;user-select:none;display:flex;align-items:center;gap:3px}
+.sortable:hover{color:var(--text-dark)}
+.sortarrow{display:inline-flex;opacity:0;transition:opacity .12s;color:var(--gray)}
+.sortable:hover .sortarrow{opacity:.5}
+.sortable.active .sortarrow{opacity:1;color:var(--teal)}
+.sortable.active.desc .sortarrow{transform:rotate(180deg)}
 .poolrow{display:grid;grid-template-columns:1.15fr 1fr .8fr 1.1fr .5fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
@@ -803,7 +812,9 @@ function lotGrid(lat,lng,n){
    couldn't actually back up (a live loaded/empty feed). Trailers default to
    DVIR-passed/not-due unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report missing';
-const LOADEDEMPTY_TIP='How many of the trailers currently on site are loaded vs empty — illustrative for now, not backed by real load-assignment data yet.';
+/* Placeholder — real copy explaining how Health is derived (target vs.
+   current, EOD, etc.) still needs to be written. */
+const HEALTH_TIP='Placeholder — health tooltip content coming soon.';
 /* Single source of truth for the DVIR/PM-due/AMZN-hold flag badges — reused
    by the map card, the expanded location's trailers table, and the All
    Trailers list, so a trailer reads the same everywhere instead of drifting
@@ -974,6 +985,42 @@ function selectTrailerFromList(tid,locId){
 
 /* ---------- list ---------- */
 let CHIPFILTER='all',EXPANDEDROWS={};
+/* Column sorting — pools table and All Trailers table each get their own
+   independent sort state since they're unrelated column sets. dir: 1=asc,
+   -1=desc. Clicking the already-active column flips direction; clicking a
+   different one resets to ascending. */
+let POOLSORT_COL=null,POOLSORT_DIR=1;
+function setPoolSort(col){
+ if(POOLSORT_COL===col)POOLSORT_DIR*=-1;else{POOLSORT_COL=col;POOLSORT_DIR=1;}
+ renderList();
+}
+function sortCellClass(col,activeCol,dir){
+ return 'sortable'+(activeCol===col?' active':'')+(activeCol===col&&dir===-1?' desc':'');
+}
+const SORT_ARROW='<span class="sortarrow">'+ICON.chevronDown+'</span>';
+/* Ascending severity so a plain click surfaces what needs attention first:
+   Critical (0 on site) worst, No target set last (nothing to be behind on). */
+const HEALTH_RANK={'Critical':0,'Below target':1,'Low':2,'On target':3,'Over target':4,'No target set':5};
+function poolSortValue(l,col){
+ switch(col){
+  case 'name':return (l.name||'').toLowerCase();
+  case 'health':return HEALTH_RANK[deriveHealth(l)]??99;
+  case 'current':return l.current||0;
+  case 'loadedempty':return (l.trailers||[]).filter(t=>pseudoLoaded(t.tid)).length;
+  case 'target':return typeof l.target==='number'?l.target:-1;
+  default:return 0;
+ }
+}
+function sortPoolRows(rows){
+ if(!POOLSORT_COL)return rows;
+ const col=POOLSORT_COL,dir=POOLSORT_DIR;
+ return [...rows].sort((a,b)=>{
+  const va=poolSortValue(a[1],col),vb=poolSortValue(b[1],col);
+  if(va<vb)return -dir;
+  if(va>vb)return dir;
+  return 0;
+ });
+}
 function chipCounts(){const vals=Object.values(POOL);
  return{all:vals.length,ontarget:vals.filter(l=>deriveHealth(l)==='On target').length,
   low:vals.filter(l=>deriveHealth(l)==='Low').length,
@@ -1021,16 +1068,26 @@ function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==
  '<div class="chev2">'+ICON.chevronRight+'</div></div>';
  if(expanded)out+=rowExpandHTML(l);
  return out;}
-function colHead(){return '<div class="colhead"><div>Trailer pool</div><div>Health</div><div>Current</div><div title="'+LOADEDEMPTY_TIP+'">Loaded/Empty <span class="infoq">ⓘ</span></div><div>Target</div><div></div></div>';}
+function colHead(){
+ const c=POOLSORT_COL,d=POOLSORT_DIR;
+ return '<div class="colhead">'+
+  '<div class="'+sortCellClass('name',c,d)+'" onclick="setPoolSort(\'name\')">Trailer pool'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('health',c,d)+'" title="'+HEALTH_TIP+'" onclick="setPoolSort(\'health\')">Health <span class="infoq">ⓘ</span>'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('current',c,d)+'" onclick="setPoolSort(\'current\')">Current'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('loadedempty',c,d)+'" onclick="setPoolSort(\'loadedempty\')">Loaded/Empty'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('target',c,d)+'" onclick="setPoolSort(\'target\')">Target'+SORT_ARROW+'</div>'+
+  '<div></div></div>';
+}
 function renderList(){renderChips();
  const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
  const poolRows=poolIds.map(id=>[id,POOL[id]]);
  const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>matchesRegion(l)&&matchesSearch(l));
  const unknownRows=(GPSUNKNOWN.current>0&&matchesSearch(GPSUNKNOWN))?[[GPSUNKNOWN.id,GPSUNKNOWN]]:[];
- const body=[...poolRows,...otherRows,...unknownRows].map(([id,l])=>rowHTML(id,l)).join('');
+ const allRows=sortPoolRows([...poolRows,...otherRows,...unknownRows]);
+ const body=allRows.map(([id,l])=>rowHTML(id,l)).join('');
  $('listwrap').innerHTML=colHead()+body;
  renderMap();
- if(SEARCHTEXT)zoomToSearchMatches([...poolRows,...otherRows,...unknownRows].map(([id,l])=>l));
+ if(SEARCHTEXT)zoomToSearchMatches(allRows.map(([id,l])=>l));
  else if(AUTOZOOM)fitAllMarkers();
  renderAllTrailers();
 }
@@ -1185,6 +1242,27 @@ function pseudoType(t){
    boot, see renderTypeOptions), but there's no per-render chip HTML to
    rebuild or a "More" panel to manage. */
 let TYPEFILTER='all',FLAGFILTER='all',STATUSFILTER='all',REGIONFILTER='all',INCLUDEARCHIVED=false;
+/* All Trailers table's own independent sort state — see the pools table's
+   POOLSORT_COL/POOLSORT_DIR above for the shared click/flip-direction idea. */
+let ATSORT_COL=null,ATSORT_DIR=1;
+function setATSort(col){
+ if(ATSORT_COL===col)ATSORT_DIR*=-1;else{ATSORT_COL=col;ATSORT_DIR=1;}
+ renderAllTrailers();
+}
+function atSortValue(r,col){
+ switch(col){
+  case 'tid':return r.t.tid.toLowerCase();
+  case 'source':return (r.t.source||'').toLowerCase();
+  case 'status':return r.st.label.toLowerCase();
+  case 'loc':return (r.locName||'').toLowerCase();
+  /* Mixed semantics here (a plain day count vs. an in-transit ETA clock
+     time) can't be compared meaningfully — just cluster transit rows
+     together rather than interleaving them nonsensically with day counts. */
+  case 'days':return r.transit?-1:pseudoDays(r.t.tid);
+  case 'load':return pseudoLoadId(r.t.tid);
+  default:return 0;
+ }
+}
 /* tid of the row whose "..." menu is currently open, or null. Only one open
    at a time — opening a second closes the first. */
 let OPENROWMENU=null;
@@ -1344,8 +1422,26 @@ function renderAllTrailers(){
   if(SEARCHTEXT&&!(r.t.tid.toLowerCase().includes(SEARCHTEXT)||r.locName.toLowerCase().includes(SEARCHTEXT)))return false;
   return true;
  });
- rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
- const head='<div class="atcolhead"><div>Trailer</div><div>Source</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Load</div><div></div></div>';
+ if(ATSORT_COL){
+  const col=ATSORT_COL,dir=ATSORT_DIR;
+  rows.sort((a,b)=>{
+   const va=atSortValue(a,col),vb=atSortValue(b,col);
+   if(va<vb)return -dir;
+   if(va>vb)return dir;
+   return 0;
+  });
+ } else {
+  rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
+ }
+ const ac=ATSORT_COL,ad=ATSORT_DIR;
+ const head='<div class="atcolhead">'+
+  '<div class="'+sortCellClass('tid',ac,ad)+'" onclick="setATSort(\'tid\')">Trailer'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('source',ac,ad)+'" onclick="setATSort(\'source\')">Source'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('status',ac,ad)+'" onclick="setATSort(\'status\')">Status'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('loc',ac,ad)+'" onclick="setATSort(\'loc\')">Current Location'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('days',ac,ad)+'" onclick="setATSort(\'days\')">At location'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('load',ac,ad)+'" onclick="setATSort(\'load\')">Last Load'+SORT_ARROW+'</div>'+
+  '<div></div></div>';
  if(!rows.length){
   $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
   return;
@@ -1430,7 +1526,7 @@ function rowExpandHTML(l){
     at, so there's no one yard to schedule hook/drop activity against. */
  if(typeof l.planned!=='undefined'){
   const evs=plannedWithBalance(l);
-  html+='<div class="sect" style="margin-top:14px"><span title="Planned activity at this location over the next 24 hours.">PLANNED <span class="infoq">ⓘ</span></span><span>'+evs.length+'</span></div>';
+  html+='<div class="sect" style="margin-top:14px"><span title="Planned activity at this location over the next 24 hours.">PLANNED <span class="infoq">ⓘ</span></span><span></span></div>';
   if(!evs.length){
    html+='<div class="emptytrailers">Nothing currently planned.</div>';
   } else {
