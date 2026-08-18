@@ -308,8 +308,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 /* form */
 .ffield{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
 .ffield label{font-size:12px;color:var(--text-default);font-weight:500}
-.ffield input[type=text],.ffield input[type=number],.ffield select{border:1px solid var(--border-default);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%;color:var(--text-dark)}
-.ffield input:focus,.ffield select:focus{border-color:var(--teal)}
+.ffield input[type=text],.ffield input[type=number],.ffield select,.ffield textarea{border:1px solid var(--border-default);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;background:#fff;width:100%;color:var(--text-dark)}
+.ffield textarea{resize:vertical;min-height:80px}
+.ffield input:focus,.ffield select:focus,.ffield textarea:focus{border-color:var(--teal)}
 .ffield .hint{font-size:11px;color:#94A3B8}
 .toast{position:fixed;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px;font-size:13.5px;z-index:300;max-width:80vw;text-align:center}
 svg.ic{display:block}
@@ -403,9 +404,10 @@ svg.ic{display:block}
             <div class="selectwrap">
               <select id="flagFilter" class="ddselect" onchange="setFlagFilter(this.value)">
                 <option value="all">Select flags</option>
-                <option value="pm">Preventative maintenance</option>
+                <option value="amzn">AMZ hold</option>
+                <option value="pm">PM due</option>
                 <option value="dvir">DVIR</option>
-                <option value="amzn">AMZN hold</option>
+                <option value="oos">Out of service</option>
               </select>
               <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
@@ -1193,14 +1195,44 @@ function trailerByTid(tid){
  if(unk)return unk;
  return ARCHIVED_TRAILERS.find(x=>x.tid===tid)||null;
 }
-function markOutOfService(tid){
+/* Marking out of service prompts a modal (reason + notes) — going back to
+   service doesn't, since there's nothing to capture on the way back in. */
+function handleOOSAction(tid){
  const t=trailerByTid(tid);
  if(!t){closeRowMenu();return;}
- t.outOfService=!t.outOfService;
- const msg=t.outOfService?'Trailer '+tid+' marked out of service.':'Trailer '+tid+' returned to service.';
+ if(t.outOfService)returnToService(tid);
+ else{OPENROWMENU=null;renderAllTrailers();openMarkOOSModal(tid);}
+}
+function returnToService(tid){
+ const t=trailerByTid(tid);
+ if(!t){closeRowMenu();return;}
+ t.outOfService=false;
  OPENROWMENU=null;
  renderList();
- toast(msg);
+ toast('Trailer '+tid+' returned to service.');
+}
+/* Reason options reuse this prototype's established flag vocabulary (the
+   same four options as the Flags filter dropdown) rather than inventing a
+   separate out-of-service-reason taxonomy. */
+const OOS_REASONS=['AMZ hold','PM due','DVIR','Out of service'];
+function openMarkOOSModal(tid){
+ $('modalbox').innerHTML=dlgHead('Mark '+esc(tid)+' Out Of Service')+
+  '<div class="dbd">'+
+   '<div class="ffield"><label>Reason for Out of Service</label><select id="m_oosreason">'+OOS_REASONS.map(r=>'<option>'+esc(r)+'</option>').join('')+'</select></div>'+
+   '<div class="ffield"><label>Additional Notes (Optional)</label><textarea id="m_oosnotes" rows="4"></textarea></div>'+
+  '</div>'+
+  '<div class="dft"><div class="grp"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" onclick="submitMarkOOS(\''+tid+'\')">Mark Out Of Service</button></div></div>';
+ openModal();
+}
+function submitMarkOOS(tid){
+ const t=trailerByTid(tid);
+ if(!t){closeModal();return;}
+ t.outOfService=true;
+ t.oosReason=$('m_oosreason').value;
+ t.oosNotes=$('m_oosnotes').value.trim();
+ closeModal();
+ renderList();
+ toast('Trailer '+tid+' marked out of service — '+t.oosReason+'.');
 }
 /* Illustrative only — no live Samsara integration wired up yet, same as
    every other "no live system yet" stub in this prototype (DVIR review,
@@ -1268,12 +1300,25 @@ function deriveTrailerStatus(r,needsMaint){
 function needsAmznHold(r){return !!r.t.pmDue&&r.account==='Amazon Relay';}
 /* Flags dropdown covers every flag callout that appears elsewhere in this
    file (drawer's trailers-at-location table, map trailer card) — filtering
-   here doesn't require that flag to also render inline on this row. */
+   here doesn't require that flag to also render inline on this row.
+   Sourcing status per flag (not shown in the UI, just context for whatever
+   real settings surface eventually replaces this generic flag table):
+    - AMZ hold: no automated signal exists yet — has to be user-settable.
+    - PM due: user-settable until PM Automation ships (then driven off
+      next_pm_due_date).
+    - DVIR: trailers do get real DVIRs, but whether status is pullable from
+      wherever it's recorded vs. needs to be user-settable like the above
+      two is still an open question — revisit the PRD for how this flag
+      entered scope.
+    - Out of service: already user-settable today via the Mark Out of
+      Service row action; could become automation-set once PM Automation
+      ships, triggered by drop-off at a location. */
 function matchesFlagFilter(r,needsMaint){
  if(FLAGFILTER==='all')return true;
+ if(FLAGFILTER==='amzn')return needsMaint;
  if(FLAGFILTER==='pm')return !!r.t.pmDue;
  if(FLAGFILTER==='dvir')return r.t.dvir==='flagged';
- if(FLAGFILTER==='amzn')return needsMaint;
+ if(FLAGFILTER==='oos')return !!r.t.outOfService;
  return true;
 }
 function renderAllTrailers(){
@@ -1314,7 +1359,7 @@ function renderAllTrailers(){
     '<span class="rowicon'+(OPENROWMENU===r.t.tid?' menuopen':'')+'" title="More actions" onclick="toggleRowMenu(event,\''+r.t.tid+'\')">'+ICON.dots+'</span>'+
     (OPENROWMENU===r.t.tid?
      '<div class="rowmenu" onclick="event.stopPropagation()">'+
-      '<button class="danger" onclick="markOutOfService(\''+r.t.tid+'\')">'+ICON.ban+(r.t.outOfService?'Return to service':'Mark out of service')+'</button>'+
+      '<button class="danger" onclick="handleOOSAction(\''+r.t.tid+'\')">'+ICON.ban+(r.t.outOfService?'Return to service':'Mark out of service')+'</button>'+
       '<button onclick="viewInSamsara(\''+r.t.tid+'\')">'+ICON.externalLink+'View in Samsara</button>'+
      '</div>'
      :'')+
