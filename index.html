@@ -218,6 +218,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .p-delivery{background:var(--cyansoft);color:var(--cyan)}
 .p-transit{background:var(--bluesoft);color:var(--blue)}
 .p-transitempty{background:var(--stonesoft);color:var(--stone)}
+/* Out of service — highest-precedence status, same red weight as Critical:
+   the trailer physically can't be used regardless of where it's parked. */
+.p-oos{background:var(--redsoft);color:var(--red)}
 .lid{background:var(--surface-default);border-radius:6px;padding:3px 9px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
 /* Load chip (Figma node 68:102) — status dot + label, rounded-full pill.
    Use this wherever a load reference is shown; use .lid for plain id chips. */
@@ -233,8 +236,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    while letting Current Location claim the rest. If the combined floors
    ever exceed the available width, #allTrailersList's overflow:auto turns
    that into a horizontal scrollbar instead of squished/overlapping cells. */
-.atcolhead{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
-.atrow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
+.atcolhead{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr) minmax(64px,.5fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
+.atrow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr) minmax(64px,.5fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
 .atrow:hover{background:var(--surface-low)}
 .atrow.archived{opacity:.6}
 .atrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
@@ -249,6 +252,17 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    track wider than its fr share (and shrinking its neighbors) — which is
    what was throwing column widths out of sync row-to-row before this. */
 .atrow>div{min-width:0;overflow:hidden}
+/* .rowactions holds an absolutely-positioned dropdown menu that needs to
+   spill below the row — override the blanket overflow:hidden above. */
+.atrow>div.rowactions{overflow:visible}
+.rowactions{display:flex;align-items:center;justify-content:flex-end;gap:2px;position:relative}
+.rowicon{opacity:0;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;color:var(--gray);cursor:pointer;border-radius:6px}
+.atrow:hover .rowicon,.rowicon.menuopen{opacity:1}
+.rowicon:hover{background:var(--surface-lowest);color:var(--teal)}
+.rowmenu{position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid var(--border-default);border-radius:8px;box-shadow:0 8px 24px rgba(15,23,42,.14);min-width:180px;z-index:60;padding:4px;display:flex;flex-direction:column}
+.rowmenu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:var(--text-dark);border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.rowmenu button:hover{background:var(--surface-lowest)}
+.rowmenu button.danger{color:var(--red)}
 .emptysec{padding:16px;color:var(--gray);font-size:12.5px}
 .infoq{cursor:help;color:var(--gray);font-size:10px}
 .critbanner{background:var(--redsoft);border:1px solid #F3ACAC;border-radius:8px;padding:12px 14px;margin-bottom:16px}
@@ -471,6 +485,11 @@ const ICON = {
   /* fill:currentColor so callers tint via CSS — amber for routine
      maintenance flags, red for a DVIR safety flag. */
   flag:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="2" width="2" height="20" rx="1"/><path d="M6 3.5h12l-3 4.5 3 4.5H6z"/></svg>',
+  /* row-actions kebab — three dots, "more options" */
+  dots:'<svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  externalLink:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>',
+  /* no-entry circle-slash — "mark out of service" */
+  ban:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
 };
 
 /* ---------- seed data (grounded in the Trailer Pool Management Idea doc — P&G/Moreno Valley
@@ -1144,6 +1163,53 @@ function pseudoType(t){
    boot, see renderTypeOptions), but there's no per-render chip HTML to
    rebuild or a "More" panel to manage. */
 let TYPEFILTER='all',FLAGFILTER='all',STATUSFILTER='all',REGIONFILTER='all',INCLUDEARCHIVED=false;
+/* tid of the row whose "..." menu is currently open, or null. Only one open
+   at a time — opening a second closes the first. */
+let OPENROWMENU=null;
+function toggleRowMenu(e,tid){
+ e.stopPropagation();
+ OPENROWMENU=OPENROWMENU===tid?null:tid;
+ renderAllTrailers();
+}
+function closeRowMenu(){
+ if(!OPENROWMENU)return;
+ OPENROWMENU=null;
+ renderAllTrailers();
+}
+document.addEventListener('click',e=>{
+ if(OPENROWMENU&&!e.target.closest('.rowactions'))closeRowMenu();
+});
+/* Looks up the live trailer object by tid across every place one can live —
+   pool/other locations, their en-route lists, GPS/Unknown, and archived —
+   so row actions mutate the same object the row was rendered from. */
+function trailerByTid(tid){
+ for(const l of [...Object.values(POOL),...Object.values(OTHER)]){
+  const found=l.trailers.find(x=>x.tid===tid);
+  if(found)return found;
+  const enFound=(l.enRoute||[]).find(x=>x.tid===tid);
+  if(enFound)return enFound;
+ }
+ const unk=GPSUNKNOWN.trailers.find(x=>x.tid===tid);
+ if(unk)return unk;
+ return ARCHIVED_TRAILERS.find(x=>x.tid===tid)||null;
+}
+function markOutOfService(tid){
+ const t=trailerByTid(tid);
+ if(!t){closeRowMenu();return;}
+ t.outOfService=!t.outOfService;
+ const msg=t.outOfService?'Trailer '+tid+' marked out of service.':'Trailer '+tid+' returned to service.';
+ OPENROWMENU=null;
+ renderList();
+ toast(msg);
+}
+/* Illustrative only — no live Samsara integration wired up yet, same as
+   every other "no live system yet" stub in this prototype (DVIR review,
+   the reposition suggestion banner's "View {location}" button). */
+function viewInSamsara(tid){
+ OPENROWMENU=null;
+ renderAllTrailers();
+ toast('Opening '+tid+' in Samsara — no live integration wired up yet.');
+}
 function renderTypeOptions(){
  $('typeFilter').innerHTML='<option value="all">Select trailer types</option>'+TRAILER_TYPES.map(ty=>'<option value="'+esc(ty)+'">'+esc(ty)+'</option>').join('');
 }
@@ -1178,11 +1244,12 @@ function allTrailerRows(includeArchived){
    Load Pickup / Unknown / At Hub Stop / In Transit - Loaded / In Transit -
    Empty, plus Archived as a separate lifecycle flag (not a physical/transit
    state, so it isn't one of the seven). Precedence, highest first:
-   archived > in-transit > AMZN-held (can't be trusted as Available even
-   though we know exactly where it's sitting) > genuinely unknown location
-   > location-type. */
+   archived > out-of-service > in-transit > AMZN-held (can't be trusted as
+   Available even though we know exactly where it's sitting) > genuinely
+   unknown location > location-type. */
 function deriveTrailerStatus(r,needsMaint){
  if(r.archived)return{key:'archived',label:'Archived',cls:'p-notarget'};
+ if(r.t.outOfService)return{key:'oos',label:'Out of Service',cls:'p-oos'};
  if(r.transit)return r.t.loaded?{key:'transitloaded',label:'In Transit - Loaded',cls:'p-transit'}:{key:'transitempty',label:'In Transit - Empty',cls:'p-transitempty'};
  if(needsMaint)return{key:'unknown',label:'Unknown',cls:'p-unknown'};
  if(r.locId===GPSUNKNOWN.id)return{key:'unknown',label:'Unknown',cls:'p-unknown'};
@@ -1222,7 +1289,7 @@ function renderAllTrailers(){
   return true;
  });
  rows.sort((a,b)=>a.t.tid.localeCompare(b.t.tid));
- const head='<div class="atcolhead"><div>Trailer</div><div>Source</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Load</div></div>';
+ const head='<div class="atcolhead"><div>Trailer</div><div>Source</div><div>Status</div><div>Current Location</div><div>At location</div><div>Last Load</div><div></div></div>';
  if(!rows.length){
   $('allTrailersList').innerHTML=head+'<div class="emptysec">No trailers match these filters.</div>';
   return;
@@ -1242,6 +1309,16 @@ function renderAllTrailers(){
    '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
    '<div class="days2">'+(r.transit?'ETA '+esc(r.eta):days+' day'+(days===1?'':'s'))+'</div>'+
    '<div>'+loadPillHTML(r.t.tid)+'</div>'+
+   '<div class="rowactions">'+
+    '<span class="rowicon" title="Edit trailer" onclick="event.stopPropagation();openEditTrailerModal(\''+r.t.tid+'\',\''+r.locId+'\')">'+ICON.pencil+'</span>'+
+    '<span class="rowicon'+(OPENROWMENU===r.t.tid?' menuopen':'')+'" title="More actions" onclick="toggleRowMenu(event,\''+r.t.tid+'\')">'+ICON.dots+'</span>'+
+    (OPENROWMENU===r.t.tid?
+     '<div class="rowmenu" onclick="event.stopPropagation()">'+
+      '<button class="danger" onclick="markOutOfService(\''+r.t.tid+'\')">'+ICON.ban+(r.t.outOfService?'Return to service':'Mark out of service')+'</button>'+
+      '<button onclick="viewInSamsara(\''+r.t.tid+'\')">'+ICON.externalLink+'View in Samsara</button>'+
+     '</div>'
+     :'')+
+   '</div>'+
    '</div>';
  }).join('');
  $('allTrailersList').innerHTML=head+body;
@@ -1362,6 +1439,46 @@ function submitCreateTrailer(){
  closeModal();
  renderList();
  toast('Trailer '+tid+' created at '+loc.name+'.');
+}
+
+/* ---------- edit trailer modal — the pencil on each All Trailers row.
+   Same field set as Create Trailer (its natural counterpart), pre-filled
+   with the trailer's current values. Location move only offered when the
+   trailer currently sits in a POOL/OTHER location's trailers[] — GPS/Unknown
+   and en-route rows don't have a simple single-array move to make. ---------- */
+function openEditTrailerModal(tid,locId){
+ const t=trailerByTid(tid);
+ if(!t)return;
+ const loc=POOL[locId]||OTHER[locId];
+ const locs=[...Object.values(POOL),...Object.values(OTHER)];
+ const locOptions=locs.map(l=>'<option value="'+l.id+'"'+(l.id===locId?' selected':'')+'>'+esc(l.name)+'</option>').join('');
+ $('modalbox').innerHTML=dlgHead('Edit trailer — '+esc(tid))+
+  '<div class="dbd">'+
+   '<div class="ffield"><label>Trailer type</label><select id="m_edittype">'+TRAILER_TYPES.map(ty=>'<option'+(ty===pseudoType(t)?' selected':'')+'>'+esc(ty)+'</option>').join('')+'</select></div>'+
+   (loc?'<div class="ffield"><label>Location</label><select id="m_editloc">'+locOptions+'</select></div>':'')+
+   '<div class="ffield"><label>Source</label><select id="m_editsource"><option value="gps"'+(t.source==='gps'?' selected':'')+'>GPS</option><option value="manual"'+(t.source==='manual'?' selected':'')+'>Manual</option></select><div class="hint">Manual means no live GPS feed — tracked by hand, like a rental.</div></div>'+
+  '</div>'+
+  '<div class="dft"><div class="grp"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" onclick="submitEditTrailer(\''+tid+'\',\''+locId+'\')">Save changes</button></div></div>';
+ openModal();
+}
+function submitEditTrailer(tid,oldLocId){
+ const t=trailerByTid(tid);
+ if(!t){closeModal();return;}
+ t.type=$('m_edittype').value;
+ t.source=$('m_editsource').value;
+ const locSel=$('m_editloc');
+ if(locSel&&locSel.value&&locSel.value!==oldLocId){
+  const oldLoc=POOL[oldLocId]||OTHER[oldLocId];
+  const newLoc=POOL[locSel.value]||OTHER[locSel.value];
+  if(oldLoc){
+   const idx=oldLoc.trailers.findIndex(x=>x.tid===tid);
+   if(idx>=0){oldLoc.trailers.splice(idx,1);oldLoc.current=Math.max(0,(oldLoc.current||0)-1);}
+  }
+  if(newLoc){newLoc.trailers.push(t);newLoc.current=(newLoc.current||0)+1;}
+ }
+ closeModal();
+ renderList();
+ toast('Trailer '+tid+' updated.');
 }
 
 /* ---------- boot ---------- */
