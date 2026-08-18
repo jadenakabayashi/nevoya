@@ -341,9 +341,15 @@ svg.ic{display:block}
 .dlg .dbd{padding:12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
 .dlg .dft{padding:12px;display:flex;gap:8px;flex:none;border-top:1px solid var(--border-muted)}
 .dlg .dft .grp{flex:1;display:flex;gap:8px;justify-content:flex-end}
-#ovl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:100}
+/* z-index:2000 — comfortably above Leaflet's own stacking (its panes/
+   controls run up to z-index:1000), which otherwise rendered on top of the
+   modal instead of being dimmed behind it. */
+#ovl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:2000}
 #ovl.show{display:flex}
-#ovl .dlg{width:420px;max-width:92vw;max-height:88vh}
+/* Fixed height (not just a max) so every modal — a one-field Edit Target or
+   the long Edit Trailer form — occupies the same footprint; shorter modals
+   just carry more bottom whitespace instead of shrink-wrapping to content. */
+#ovl .dlg{width:420px;max-width:92vw;height:640px;max-height:88vh}
 /* Row-hover edit-target affordance — same "reveal on row hover" idiom as the
    lanes prototype's .provlink, just a pencil icon-button instead of a link.
    stopPropagation keeps the click from also firing the row's own onclick
@@ -1508,7 +1514,7 @@ function openEditTrailerModal(tid,locId){
  const locs=[...Object.values(POOL),...Object.values(OTHER)];
  const locOptions=locs.map(l=>'<option value="'+l.id+'"'+(l.id===locId?' selected':'')+'>'+esc(l.name)+'</option>').join('');
  const v=k=>esc(t[k]==null?'':t[k]);
- $('modalbox').innerHTML=dlgHead('Edit Trailer')+
+ $('modalbox').innerHTML=dlgHead('Edit Trailer',esc(tid))+
   '<div class="dbd">'+
    '<div class="fsect">Trailer Registration Details</div>'+
    '<div class="ffield"><label>Trailer Name *</label><input type="text" id="m_edittid" value="'+v('tid')+'"></div>'+
