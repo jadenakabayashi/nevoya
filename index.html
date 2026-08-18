@@ -218,9 +218,6 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .p-delivery{background:var(--cyansoft);color:var(--cyan)}
 .p-transit{background:var(--bluesoft);color:var(--blue)}
 .p-transitempty{background:var(--stonesoft);color:var(--stone)}
-/* Out of service — highest-precedence status, same red weight as Critical:
-   the trailer physically can't be used regardless of where it's parked. */
-.p-oos{background:var(--redsoft);color:var(--red)}
 .lid{background:var(--surface-default);border-radius:6px;padding:3px 9px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
 /* Load chip (Figma node 68:102) — status dot + label, rounded-full pill.
    Use this wherever a load reference is shown; use .lid for plain id chips. */
@@ -407,7 +404,6 @@ svg.ic{display:block}
                 <option value="amzn">AMZ hold</option>
                 <option value="pm">PM due</option>
                 <option value="dvir">DVIR</option>
-                <option value="oos">Out of service</option>
               </select>
               <svg class="ic chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
@@ -490,8 +486,6 @@ const ICON = {
   /* row-actions kebab — three dots, "more options" */
   dots:'<svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
   externalLink:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>',
-  /* no-entry circle-slash — "mark out of service" */
-  ban:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
 };
 
 /* ---------- seed data (grounded in the Trailer Pool Management Idea doc — P&G/Moreno Valley
@@ -1195,44 +1189,36 @@ function trailerByTid(tid){
  if(unk)return unk;
  return ARCHIVED_TRAILERS.find(x=>x.tid===tid)||null;
 }
-/* Marking out of service prompts a modal (reason + notes) — going back to
-   service doesn't, since there's nothing to capture on the way back in. */
-function handleOOSAction(tid){
- const t=trailerByTid(tid);
- if(!t){closeRowMenu();return;}
- if(t.outOfService)returnToService(tid);
- else{OPENROWMENU=null;renderAllTrailers();openMarkOOSModal(tid);}
-}
-function returnToService(tid){
- const t=trailerByTid(tid);
- if(!t){closeRowMenu();return;}
- t.outOfService=false;
+/* Flag trailer — reuses the same three-option flag vocabulary as the Flags
+   filter dropdown (AMZ hold / PM due / DVIR). Submitting sets whichever
+   underlying field that reason actually drives, same fields used everywhere
+   else in this file (maintBadgeHTML, dvirBadgeHTML, needsAmznHold) — this
+   isn't a separate "out of service" state, it's just another way to set
+   those flags by hand until the real automation described in
+   matchesFlagFilter's comment above ships. */
+const FLAG_REASONS=['AMZ hold','PM due','DVIR'];
+function openFlagTrailerModal(tid){
  OPENROWMENU=null;
- renderList();
- toast('Trailer '+tid+' returned to service.');
-}
-/* Reason options reuse this prototype's established flag vocabulary (the
-   same four options as the Flags filter dropdown) rather than inventing a
-   separate out-of-service-reason taxonomy. */
-const OOS_REASONS=['AMZ hold','PM due','DVIR','Out of service'];
-function openMarkOOSModal(tid){
- $('modalbox').innerHTML=dlgHead('Mark '+esc(tid)+' Out Of Service')+
+ renderAllTrailers();
+ $('modalbox').innerHTML=dlgHead('Flag trailer — '+esc(tid))+
   '<div class="dbd">'+
-   '<div class="ffield"><label>Reason for Out of Service</label><select id="m_oosreason">'+OOS_REASONS.map(r=>'<option>'+esc(r)+'</option>').join('')+'</select></div>'+
-   '<div class="ffield"><label>Additional Notes (Optional)</label><textarea id="m_oosnotes" rows="4"></textarea></div>'+
+   '<div class="ffield"><label>Reason for flag</label><select id="m_flagreason">'+FLAG_REASONS.map(r=>'<option>'+esc(r)+'</option>').join('')+'</select></div>'+
+   '<div class="ffield"><label>Additional Notes (Optional)</label><textarea id="m_flagnotes" rows="4"></textarea></div>'+
   '</div>'+
-  '<div class="dft"><div class="grp"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" onclick="submitMarkOOS(\''+tid+'\')">Mark Out Of Service</button></div></div>';
+  '<div class="dft"><div class="grp"><button class="abtn" onclick="closeModal()">Cancel</button><button class="abtn primary" onclick="submitFlagTrailer(\''+tid+'\')">Flag Trailer</button></div></div>';
  openModal();
 }
-function submitMarkOOS(tid){
+function submitFlagTrailer(tid){
  const t=trailerByTid(tid);
  if(!t){closeModal();return;}
- t.outOfService=true;
- t.oosReason=$('m_oosreason').value;
- t.oosNotes=$('m_oosnotes').value.trim();
+ const reason=$('m_flagreason').value;
+ if(reason==='PM due')t.pmDue=true;
+ else if(reason==='DVIR')t.dvir='flagged';
+ else if(reason==='AMZ hold')t.amznHold=true;
+ t.flagNotes=$('m_flagnotes').value.trim();
  closeModal();
  renderList();
- toast('Trailer '+tid+' marked out of service — '+t.oosReason+'.');
+ toast('Trailer '+tid+' flagged — '+reason+'.');
 }
 /* Illustrative only — no live Samsara integration wired up yet, same as
    every other "no live system yet" stub in this prototype (DVIR review,
@@ -1276,12 +1262,11 @@ function allTrailerRows(includeArchived){
    Load Pickup / Unknown / At Hub Stop / In Transit - Loaded / In Transit -
    Empty, plus Archived as a separate lifecycle flag (not a physical/transit
    state, so it isn't one of the seven). Precedence, highest first:
-   archived > out-of-service > in-transit > AMZN-held (can't be trusted as
-   Available even though we know exactly where it's sitting) > genuinely
-   unknown location > location-type. */
+   archived > in-transit > AMZN-held (can't be trusted as Available even
+   though we know exactly where it's sitting) > genuinely unknown location
+   > location-type. */
 function deriveTrailerStatus(r,needsMaint){
  if(r.archived)return{key:'archived',label:'Archived',cls:'p-notarget'};
- if(r.t.outOfService)return{key:'oos',label:'Out of Service',cls:'p-oos'};
  if(r.transit)return r.t.loaded?{key:'transitloaded',label:'In Transit - Loaded',cls:'p-transit'}:{key:'transitempty',label:'In Transit - Empty',cls:'p-transitempty'};
  if(needsMaint)return{key:'unknown',label:'Unknown',cls:'p-unknown'};
  if(r.locId===GPSUNKNOWN.id)return{key:'unknown',label:'Unknown',cls:'p-unknown'};
@@ -1290,14 +1275,15 @@ function deriveTrailerStatus(r,needsMaint){
  if(r.isPool)return{key:'atpickup',label:'At Load Pickup',cls:'p-pickup'};
  return{key:'atdelivery',label:'At Load Delivery',cls:'p-delivery'};
 }
-/* "AMZN hold" is an Amazon-defined attribute we don't have a real feed for
-   yet — illustrated here by reusing the same trailers already marked pmDue
-   in the seed data, since those are the ones that plausibly need it. Only
-   ever shown at Amazon-account locations — Amazon can't hold a trailer
+/* "AMZN hold" is an Amazon-defined attribute with no real feed yet — true
+   when either hand-set via the row's Flag Trailer action (t.amznHold) or,
+   absent that, illustrated by reusing the same trailers already marked
+   pmDue in the seed data, since those are the ones that plausibly need it.
+   Only ever shown at Amazon-account locations — Amazon can't hold a trailer
    sitting at a Nevoya yard or a customer dock. A held trailer's Status
    reads Unknown rather than Available: we know where it's parked, but not
    whether Amazon will actually accept it back into service. */
-function needsAmznHold(r){return !!r.t.pmDue&&r.account==='Amazon Relay';}
+function needsAmznHold(r){return !!r.t.amznHold||(!!r.t.pmDue&&r.account==='Amazon Relay');}
 /* Flags dropdown covers every flag callout that appears elsewhere in this
    file (drawer's trailers-at-location table, map trailer card) — filtering
    here doesn't require that flag to also render inline on this row.
@@ -1310,15 +1296,14 @@ function needsAmznHold(r){return !!r.t.pmDue&&r.account==='Amazon Relay';}
       wherever it's recorded vs. needs to be user-settable like the above
       two is still an open question — revisit the PRD for how this flag
       entered scope.
-    - Out of service: already user-settable today via the Mark Out of
-      Service row action; could become automation-set once PM Automation
-      ships, triggered by drop-off at a location. */
+   These three are also the exact reason options on the row's Flag Trailer
+   action (see openFlagTrailerModal) — same vocabulary, not a separate
+   taxonomy. There's no "Out of Service" status in this prototype. */
 function matchesFlagFilter(r,needsMaint){
  if(FLAGFILTER==='all')return true;
  if(FLAGFILTER==='amzn')return needsMaint;
  if(FLAGFILTER==='pm')return !!r.t.pmDue;
  if(FLAGFILTER==='dvir')return r.t.dvir==='flagged';
- if(FLAGFILTER==='oos')return !!r.t.outOfService;
  return true;
 }
 function renderAllTrailers(){
@@ -1359,7 +1344,7 @@ function renderAllTrailers(){
     '<span class="rowicon'+(OPENROWMENU===r.t.tid?' menuopen':'')+'" title="More actions" onclick="toggleRowMenu(event,\''+r.t.tid+'\')">'+ICON.dots+'</span>'+
     (OPENROWMENU===r.t.tid?
      '<div class="rowmenu" onclick="event.stopPropagation()">'+
-      '<button class="danger" onclick="handleOOSAction(\''+r.t.tid+'\')">'+ICON.ban+(r.t.outOfService?'Return to service':'Mark out of service')+'</button>'+
+      '<button onclick="openFlagTrailerModal(\''+r.t.tid+'\')">'+ICON.flag+'Flag trailer</button>'+
       '<button onclick="viewInSamsara(\''+r.t.tid+'\')">'+ICON.externalLink+'View in Samsara</button>'+
      '</div>'
      :'')+
