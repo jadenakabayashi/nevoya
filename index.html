@@ -346,10 +346,11 @@ svg.ic{display:block}
    modal instead of being dimmed behind it. */
 #ovl{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:2000}
 #ovl.show{display:flex}
-/* Fixed height (not just a max) so every modal — a one-field Edit Target or
-   the long Edit Trailer form — occupies the same footprint; shorter modals
-   just carry more bottom whitespace instead of shrink-wrapping to content. */
-#ovl .dlg{width:420px;max-width:92vw;height:640px;max-height:88vh}
+/* Height stays content-driven (auto), not fixed — a one-field Edit Target
+   or Flag Trailer modal should stay compact; max-height is just a safety
+   cap so a long form (Edit Trailer) scrolls internally instead of running
+   off the viewport. */
+#ovl .dlg{width:420px;max-width:92vw;max-height:88vh}
 /* Row-hover edit-target affordance — same "reveal on row hover" idiom as the
    lanes prototype's .provlink, just a pencil icon-button instead of a link.
    stopPropagation keeps the click from also firing the row's own onclick
