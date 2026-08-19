@@ -19,7 +19,8 @@
 --chip-amber-bg:#FEF3C6;--chip-amber-fg:#E17100;
 --chip-red-bg:#FFE2E2;--chip-red-fg:#E7000B;
 --chip-completed-bg:#D0FAE5;--chip-completed-fg:#007A55;
---chip-pending-bg:#FAE8FF;--chip-pending-fg:#C800DE}
+--chip-pending-bg:#FAE8FF;--chip-pending-fg:#C800DE;
+--chip-orange-bg:#FFEDD4;--chip-orange-fg:#CA3500}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(--bg);height:100vh;overflow:hidden;font-size:14px}
 #app{display:flex;height:100vh}
@@ -55,6 +56,11 @@ tbody tr{cursor:pointer}
 tbody tr:hover{background:#F8FAFC}
 tbody tr.sel{background:var(--teal-soft)}
 tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
+.rigsel{font-family:inherit;font-size:13px;color:var(--ink);background:#fff;border:1px solid var(--border-default);border-radius:6px;padding:5px 8px;cursor:pointer;max-width:120px}
+.rigsel:focus{outline:2px solid var(--teal);outline-offset:1px}
+.notes-input{font-family:inherit;font-size:13px;color:var(--ink);background:#fff;border:1px solid var(--border-default);border-radius:6px;padding:5px 8px;width:160px}
+.notes-input:focus{outline:2px solid var(--teal);outline-offset:1px}
+.notes-input::placeholder{color:var(--gray)}
 .lid{background:var(--surface-default);border-radius:16px;padding:4px 8px;font-weight:600;font-size:10px;letter-spacing:.5px;line-height:12px;color:var(--ink2);display:inline-flex;gap:4px;align-items:center}
 .lid .dot{width:8px;height:8px;border-radius:50%;flex:none}
 .lid .dot.p-pending{background:var(--chip-pending-fg)}
@@ -65,12 +71,17 @@ tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
 .lid .dot.p-resched{background:var(--chip-slate-fg)}
 .lid .dot.p-delivered{background:var(--chip-completed-fg)}
 .lid .dot.p-tonu,.lid .dot.p-cancel{background:var(--chip-cancelled-fg)}
+.lid .dot.p-atstop{background:var(--chip-cyan-fg)}
+.lid .dot.p-loaded{background:var(--teal)}
+.lid .dot.p-returned{background:var(--chip-orange-fg)}
 .pill{border-radius:16px;padding:4px 8px;font-size:10px;font-weight:600;letter-spacing:.5px;line-height:12px;display:inline-block}
 .p-pending{background:var(--chip-pending-bg);color:var(--chip-pending-fg)}.p-dispatched{background:var(--chip-dispatched-bg);color:var(--chip-dispatched-fg)}
 .p-transit{background:var(--chip-progress-bg);color:var(--chip-progress-fg)}.p-delayed{background:var(--chip-red-bg);color:var(--chip-red-fg)}
 .p-broker{background:var(--chip-amber-bg);color:var(--chip-amber-fg)}.p-resched{background:var(--chip-slate-bg);color:var(--chip-slate-fg)}
 .p-delivered{background:var(--chip-completed-bg);color:var(--chip-completed-fg)}.p-tonu{background:var(--chip-cancelled-bg);color:var(--chip-cancelled-fg)}.p-cancel{background:var(--chip-cancelled-bg);color:var(--chip-cancelled-fg)}
+.p-atstop{background:var(--chip-cyan-bg);color:var(--chip-cyan-fg)}.p-loaded{background:var(--chip-teal-bg);color:var(--teal)}.p-returned{background:var(--chip-orange-bg);color:var(--chip-orange-fg)}
 .eta-late{color:var(--chip-red-fg);font-weight:500}
+.etato{color:var(--gray);font-size:11px;margin-left:3px}
 .lastu{color:var(--gray);font-size:12px;white-space:normal;max-width:210px}
 /* drawer */
 #drawer{width:0;flex:none;background:#fff;border-left:1px solid var(--line);overflow:hidden;transition:width .18s ease;display:flex;flex-direction:column}
@@ -216,7 +227,7 @@ body.drawer-open #chatdock{right:440px}
         <div class="tabs"><div class="tab on">LOADS</div><div class="tab">INTERNAL MOVES</div><div class="tab">FLAGGED LOADS <span class="cnt" id="flagcnt">3</span></div><div class="tab">CALENDAR</div><div class="tab">DOCUMENTS</div></div>
         <div class="chips" id="filterchips"></div>
         <div id="tblwrap"><table>
-          <thead><tr><th>Load ID</th><th>Status</th><th>Customer</th><th>Driver</th><th>DEL appt</th><th>Live ETA</th><th>Flag</th><th>Last update</th></tr></thead>
+          <thead><tr><th>Load ID</th><th>Status</th><th>Customer</th><th>Driver</th><th>Truck</th><th>Trailer</th><th>Origin Location Name</th><th>Pickup Date and time</th><th>Destination Location Name</th><th>Delivery Date and time</th><th>Live ETA</th><th>Last update</th><th>Notes</th></tr></thead>
           <tbody id="tbody"></tbody>
         </table></div>
       </div>
@@ -272,43 +283,54 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600);}
 let CLOCK='10:45';function setClock(t){CLOCK=t;$('clock').textContent=t;}
 /* ---------- data ---------- */
-const PILL={'Pending':'p-pending','Dispatched':'p-dispatched','In transit':'p-transit','Delayed':'p-delayed','Awaiting broker':'p-broker','Rescheduled':'p-resched','Delivered':'p-delivered','TONU':'p-tonu','Cancelled':'p-cancel'};
+/* Load status taxonomy — Order Received/Scheduled through TONU, per the ops status/trigger table */
+const PILL={'Order Received / Scheduled':'p-pending','Dispatched':'p-dispatched','At Pickup':'p-atstop','Loaded / Picked up':'p-loaded','In Transit to PU':'p-transit','In Transit to DEL':'p-transit','At Delivery':'p-atstop','Delivered':'p-delivered','Cancelled':'p-cancel','Returned':'p-returned','Delayed':'p-delayed','Awaiting Broker Response':'p-broker','Rescheduled':'p-resched','TONU / Missed appt':'p-tonu'};
 /* status→emoji coupling (from mvp1's bot vocabulary; TONU/Cancelled chosen to read distinctly) */
-const SEMOJI={'Pending':'📋','Dispatched':'🚚','In transit':'▶️','Delayed':'⚠️','Awaiting broker':'🔴','Rescheduled':'🚩','Delivered':'✅','TONU':'⛔','Cancelled':'❌'};
+const SEMOJI={'Order Received / Scheduled':'📋','Dispatched':'🚚','At Pickup':'📍','Loaded / Picked up':'📦','In Transit to PU':'▶️','In Transit to DEL':'▶️','At Delivery':'📍','Delivered':'✅','Cancelled':'❌','Returned':'↩️','Delayed':'⚠️','Awaiting Broker Response':'🔴','Rescheduled':'🚩','TONU / Missed appt':'⛔'};
+function statusPhrase(s){const map={'In Transit to PU':'in transit to pickup','In Transit to DEL':'in transit','At Pickup':'at pickup','At Delivery':'at delivery','Loaded / Picked up':'loaded','Order Received / Scheduled':'order received','Awaiting Broker Response':'awaiting broker response','TONU / Missed appt':'marked TONU'};return map[s]||String(s).toLowerCase();}
 const pillHTML=s=>'<span class="pill '+(PILL[s]||'p-transit')+'">'+(SEMOJI[s]?SEMOJI[s]+' ':'')+s+'</span>';
+/* fleet lists for Truck / Trailer assignment dropdowns */
+const FLEET={
+ trucks:['TRK 632','TRK 411','TRK 218','TRK 355','TRK 340','TRK 128','TRK 505'],
+ trailers:['TRL 88141','TRL 77019','TRL 92866','TRL 61220','TRL 61301','TRL 40218','TRL 55902']
+};
+function fleetOptionsHTML(list,selected){
+ return '<option value="—">— Unassigned</option>'+list.map(v=>'<option value="'+v+'"'+(v===selected?' selected':'')+'>'+v+'</option>').join('');}
 let LOADS={};
 function seedLoads(){LOADS={
- 7670:{cust:'International Paper',driver:'Roy Wright',rig:'TRK 632 / TRL 88141',del:'10:57',eta:'11:11 (+14)',late:true,status:'Delayed',flag:'⚠️',last:'ETA slipped +14 min · Samsara · 2 min ago',attention:true,
+ 7670:{cust:'International Paper',driver:'Roy Wright',rig:'TRK 632 / TRL 88141',origin:'Katzen Neite — Pasadena, TX',puDate:'08:14',dest:'Arrive DC 12 — Dallas, TX',etaTo:'DEL',del:'10:57',eta:'11:11 (+14)',late:true,status:'Delayed',flag:'⚠️',last:'ETA slipped +14 min · Samsara · 2 min ago',attention:true,
   tl:[ev('11:02','Late +14 min','Live ETA 11:11 vs appt 10:57 — slip from dwell at pickup','SAMSARA','⚠️','4 min ago',1),
       ev('10:41','Arrived','Checked in at consignee · Arrive DC 12, Dallas TX','SAMSARA','📍','35 min ago'),
       ev('10:12','Customer note','Dock can flex 15 minutes — no reschedule needed','APOLLO','💬','1 h ago'),
       ev('09:36','Dwell 52 min','Held at shipper dock past scheduled window','SAMSARA','⏱','2 h ago',1),
       ev('08:14','Picked up','BOL scanned — Katzen Neite, Pasadena TX','SAMSARA','📦','3 h ago'),
       ev('07:02','Created','Tendered by International Paper · order 448811207','APOLLO','📋','4 h ago')]},
- 7691:{cust:'C.H. Robinson',driver:'Unassigned',rig:'— / —',del:'Jul 15 · 13:30',eta:'—',status:'Awaiting broker',flag:'🔴',last:'Reschedule request sent · Front · 32 min ago',attention:true,
+ 7691:{cust:'C.H. Robinson',driver:'Unassigned',rig:'— / —',origin:'TBD — pending broker confirmation',puDate:'TBD',dest:'Consignee DC — Plano, TX',etaTo:'DEL',del:'Jul 15 · 13:30',eta:'—',status:'Awaiting Broker Response',flag:'🔴',last:'Reschedule request sent · Front · 32 min ago',attention:true,
   tl:[ev('10:13','Awaiting broker — 32 min','Reschedule request sent 09:41 · no reply · follow-up timer running','FRONT','🔴','now',1),
       ev('09:41','Reschedule requested','Appt confirm asked of CHR — order 559952733','FRONT','📨','32 min ago'),
       ev('07:15','Created','Tendered by C.H. Robinson · driver Unassigned','APOLLO','📋','3 h ago')]},
- 7690:{cust:'Uber Freight',driver:'Marcus Follins',rig:'TRK 411 / TRL 77019',del:'17:30',eta:'16:54',status:'Rescheduled',flag:'🚩',last:'Appt moved 15:00 → 17:30 · Front · 18 min ago',attention:true,
+ 7690:{cust:'Uber Freight',driver:'Marcus Follins',rig:'TRK 411 / TRL 77019',origin:'Origin Facility — Waco, TX',puDate:'08:45',dest:'Uber Freight DC — Fort Worth, TX',etaTo:'DEL',del:'17:30',eta:'16:54',status:'Rescheduled',flag:'🚩',last:'Appt moved 15:00 → 17:30 · Front · 18 min ago',attention:true,
   tl:[ev('10:27','Rescheduled','DEL appt 15:00 → 17:30 · “Confirmed for 17:30 today — thanks for flexing” · Fort Worth TX','FRONT','🚩','18 min ago',1),
       ev('08:31','Dispatched','Marcus Follins · TRK 411 assigned','APOLLO','🚚','2 h ago')]},
- 7644:{cust:'Arrive Logistics',driver:'Bruce Handy',rig:'TRK 218 / TRL 92866',del:'14:30',eta:'16:05',status:'Delivered',flag:'✅',last:'POD signed · R. Alvarez at dock 4 · 1 h ago',delivered:true,
-  tl:[ev('17:04','POD signed','Signed by R. Alvarez at dock 4','SAMSARA','🧾','1 h ago'),
+ 7644:{cust:'Arrive Logistics',driver:'Bruce Handy',rig:'TRK 218 / TRL 92866',origin:'TS Packaging — Garland, TX',puDate:'08:14',dest:'Arrive DC 12 — Dallas, TX',etaTo:'DEL',del:'14:30',eta:'16:05',status:'Delivered',flag:'✅',last:'POD texted from driver · Bruce Handy · 1 h ago',delivered:true,
+  tl:[ev('17:04','POD texted from driver','Bruce Handy texted photo POD from dock 4','SAMSARA','🧾','1 h ago'),
       ev('16:58','Arrived','Checked in at consignee — Arrive DC 12, Dallas TX','SAMSARA','📍','1 h ago'),
       ev('14:38','Broker reply','Dock 4 confirmed for late arrival — no detention charged','FRONT','💬','3 h ago'),
       {conflict:true,t:'13:05',rt:'5 h ago'},
       ev('11:20','In transit','Departed pickup — I-45 N, 212 mi remaining','SAMSARA','▶️','6 h ago'),
       ev('08:14','Picked up','BOL scanned — TS Packaging, Garland TX','SAMSARA','📦','9 h ago')]},
- 7692:{cust:'RXO Inc.',driver:'Tanya Tye',rig:'TRK 355 / TRL 61220',del:'18:15',eta:'17:48',status:'In transit',flag:'',last:'Departed Houston yard · Samsara · 5 min ago',
+ 7692:{cust:'RXO Inc.',driver:'Tanya Tye',rig:'TRK 355 / TRL 61220',origin:'RXO Yard — Houston, TX',puDate:'11:40',dest:'RXO DC 3 — Beaumont, TX',etaTo:'DEL',del:'18:15',eta:'17:48',status:'In Transit to DEL',flag:'',last:'Departed Houston yard · Samsara · 5 min ago',
   tl:[ev('12:11','In transit','Departed Houston yard — ETA 17:48','SAMSARA','▶️','5 min ago')]},
- 7689:{cust:'RXO Inc.',driver:'Itzia Warren',rig:'TRK 340 / TRL 61301',del:'19:00',eta:'18:22',status:'In transit',flag:'',last:'On I-10 E · 148 mi out · Samsara · 3 min ago',
+ 7689:{cust:'RXO Inc.',driver:'Itzia Warren',rig:'TRK 340 / TRL 61301',origin:'RXO Yard — Houston, TX',puDate:'10:15',dest:'RXO DC 5 — Lake Charles, LA',etaTo:'DEL',del:'19:00',eta:'18:22',status:'In Transit to DEL',flag:'',last:'On I-10 E · 148 mi out · Samsara · 3 min ago',
   tl:[ev('12:40','In transit','On I-10 E — 148 mi to consignee','SAMSARA','▶️','3 min ago')]},
- 7665:{cust:'Amazon Relay',driver:'Unassigned',rig:'— / (open question for eng!)',del:'Jul 14 · 09:30 PDT',eta:'—',status:'Pending',flag:'',last:'Tendered · needs driver · Apollo · 2 h ago',
-  tl:[ev('06:10','Created','Tendered by Amazon Relay · needs driver · trailer: (open question for eng!)','APOLLO','📋','2 h ago')]}
-};}
+ 7665:{cust:'Amazon Relay',driver:'Unassigned',rig:'— / —',origin:'Amazon Relay FC — San Antonio, TX',puDate:'TBD',dest:'Amazon Relay DC — Austin, TX',etaTo:'DEL',del:'Jul 14 · 09:30 PDT',eta:'—',status:'Order Received / Scheduled',flag:'',last:'Tendered · needs driver · Apollo · 2 h ago',
+  tl:[ev('06:10','Created','Tendered by Amazon Relay · needs driver · trailer: TBD','APOLLO','📋','2 h ago')]}
+};
+ Object.values(LOADS).forEach(L=>{const rp=rigParts(L.rig);if(!L.truck)L.truck=rp.truck;if(!L.trailer)L.trailer=rp.trailer;if(L.notes===undefined)L.notes='';});}
 function ev(t,title,desc,src,ic,rt,warn){return{t,title,desc,src,ic,rt,warn:!!warn};}
 let FILTER='all', SELECTED=null, conflictResolved=false;
 /* ---------- loads table ---------- */
+function rigParts(rig){const parts=(rig||'').split(' / ');return{truck:parts[0]||'—',trailer:parts[1]||'—'};}
 function chipsHTML(){
  const n=Object.keys(LOADS).length, att=Object.values(LOADS).filter(l=>l.attention).length, del=Object.values(LOADS).filter(l=>l.delivered).length;
  $('boardsub').textContent=n+' live loads on the board · '+att+' need attention';
@@ -320,14 +342,19 @@ function renderTable(){
   return '<tr class="'+(SELECTED==id?'sel':'')+'" onclick="openDrawer('+id+')">'+
   '<td><span class="lid"><span class="dot '+(PILL[L.status]||'p-transit')+'"></span>Load '+id+'</span></td>'+
   '<td>'+pillHTML(L.status)+'</td>'+
-  '<td>'+L.cust+'</td><td>'+esc(L.driver)+'</td><td>'+L.del+'</td>'+
-  '<td class="'+(L.late?'eta-late':'')+'">'+L.eta+'</td><td>'+(L.flag||'—')+'</td>'+
-  '<td class="lastu">'+esc(L.last)+'</td></tr>';}).join('');
+  '<td>'+L.cust+'</td><td>'+esc(L.driver)+'</td>'+
+  '<td><select class="rigsel" onclick="event.stopPropagation()" onchange="LOADS['+id+'].truck=this.value">'+fleetOptionsHTML(FLEET.trucks,L.truck)+'</select></td>'+
+  '<td><select class="rigsel" onclick="event.stopPropagation()" onchange="LOADS['+id+'].trailer=this.value">'+fleetOptionsHTML(FLEET.trailers,L.trailer)+'</select></td>'+
+  '<td>'+esc(L.origin||'—')+'</td><td>'+esc(L.puDate||'—')+'</td>'+
+  '<td>'+esc(L.dest||'—')+'</td><td>'+esc(L.del||'—')+'</td>'+
+  '<td class="'+(L.late?'eta-late':'')+'">'+L.eta+(L.eta!=='—'?'<span class="etato">to '+(L.etaTo||'DEL')+'</span>':'')+'</td>'+
+  '<td class="lastu">'+esc(L.last)+'</td>'+
+  '<td><input type="text" class="notes-input" value="'+esc(L.notes||'')+'" placeholder="Add a note…" onclick="event.stopPropagation()" oninput="LOADS['+id+'].notes=this.value"></td></tr>';}).join('');
  $('flagcnt').textContent=Object.values(LOADS).filter(l=>l.attention).length;
  renderChips();}
 function renderChips(){
  $('livechips').innerHTML=Object.keys(LOADS).map(id=>{const L=LOADS[id];
-  return '<span class="lchip" onclick="collapseChat();showView(\'loads\');openDrawer('+id+')">'+(L.flag||'')+' '+id+' · '+(L.status==='In transit'?'in transit':L.status.toLowerCase())+'</span>';}).join('');}
+  return '<span class="lchip" onclick="collapseChat();showView(\'loads\');openDrawer('+id+')">'+(L.flag||'')+' '+id+' · '+statusPhrase(L.status)+'</span>';}).join('');}
 /* ---------- drawer ---------- */
 function openDrawer(id){SELECTED=id;const L=LOADS[id];
  $('drawer').classList.add('open');document.body.classList.add('drawer-open');
@@ -360,8 +387,8 @@ function openShare(id){const L=LOADS[id];
  $('ovl').classList.add('show');}
 function shareText(id){const L=LOADS[id];
  if(id==7670)return 'Quick update on load 7670 — in transit, running about 14 min behind schedule.\nETA 11:11 AM CT (appt 10:57 AM).\n• Picked up · Pasadena TX — 08:14 AM\n• Delivery · Dallas TX — ETA 11:11 AM\n— Nevoya Dispatch';
- if(id==7644)return 'Load 7644 delivered 4:58 PM. POD signed 5:04 PM and available on the portal.\nThe rebooked 4:30 appointment was met after the morning I-45 closure.\n— Nevoya Dispatch';
- return 'Update on load '+id+' — '+L.status.toLowerCase()+'. DEL appt '+L.del+(L.eta!=='—'?' · live ETA '+L.eta:'')+'.\n— Nevoya Dispatch';}
+ if(id==7644)return 'Load 7644 delivered 4:58 PM. POD texted from driver 5:04 PM and available on the portal.\nThe rebooked 4:30 appointment was met after the morning I-45 closure.\n— Nevoya Dispatch';
+ return 'Update on load '+id+' — '+statusPhrase(L.status)+'. DEL appt '+L.del+(L.eta!=='—'?' · live ETA '+L.eta:'')+'.\n— Nevoya Dispatch';}
 function closeModal(){$('ovl').classList.remove('show');}
 /* ---------- views ---------- */
 function showView(v){$('ric-loads').classList.add('active');renderTable();}
@@ -420,7 +447,7 @@ $('askinput').addEventListener('input',e=>{const v=e.target.value;
  const m=v.match(/(\d{2,4})$/);
  if(m){const hits=Object.keys(LOADS).filter(id=>id.startsWith(m[1]));
   if(hits.length){$('auto').innerHTML='<div class="ah">LIVE LOADS</div>'+hits.map(id=>{const L=LOADS[id];
-   return '<div class="ai" onmousedown="pickAuto(\''+id+'\')">'+(L.flag||'•')+' <b>'+id+'</b> '+L.cust+'<span class="r">'+(L.late?'<span class="eta-late">'+L.eta+'</span>':(L.status.toLowerCase()))+'</span></div>';}).join('');
+   return '<div class="ai" onmousedown="pickAuto(\''+id+'\')">'+(L.flag||'•')+' <b>'+id+'</b> '+L.cust+'<span class="r">'+(L.late?'<span class="eta-late">'+L.eta+'</span>':statusPhrase(L.status))+'</span></div>';}).join('');
    $('auto').style.display='block';return;}}
  hideAuto();});
 function pickAuto(id){$('askinput').value='status '+id;hideAuto();sendAsk();}
@@ -450,16 +477,16 @@ function patch(id,p,tlEv){Object.assign(LOADS[id],p);if(tlEv)LOADS[id].tl.unshif
 const SCEN={
  S1:{name:'S1 · Happy path — 7644 builds live',blurb:'Watch 7644 go from created to POD in the drawer — the timeline assembles itself.',steps(){
   const seq=[
-   ['08:14',ev('08:14','Picked up','BOL scanned — TS Packaging, Garland TX','SAMSARA','📦','just now'),{status:'In transit',eta:'14:30',flag:'',last:'Picked up · Samsara · just now',delivered:false}],
+   ['08:14',ev('08:14','Picked up','BOL scanned — TS Packaging, Garland TX','SAMSARA','📦','just now'),{status:'In Transit to DEL',eta:'14:30',flag:'',last:'Picked up · Samsara · just now',delivered:false}],
    ['11:20',ev('11:20','In transit','Departed pickup — I-45 N, 212 mi remaining','SAMSARA','▶️','just now'),{}],
    ['14:38',ev('14:38','Broker reply','Dock 4 confirmed for late arrival — no detention charged','FRONT','💬','just now'),{}],
    ['16:58',ev('16:58','Arrived','Checked in at consignee — Arrive DC 12, Dallas TX','SAMSARA','📍','just now'),{}],
-   ['17:04',ev('17:04','POD signed','Signed by R. Alvarez at dock 4','SAMSARA','🧾','just now'),{status:'Delivered',flag:'✅',delivered:true,last:'POD signed · R. Alvarez · just now'}]
+   ['17:04',ev('17:04','POD texted from driver','Bruce Handy texted photo POD from dock 4','SAMSARA','🧾','just now'),{status:'Delivered',flag:'✅',delivered:true,last:'POD texted from driver · Bruce Handy · just now'}]
   ];
   return [step(300,()=>{LOADS[7644].tl=[];LOADS[7644].status='Dispatched';LOADS[7644].flag='';showView('loads');openDrawer(7644);}),
    ...seq.map(x=>step(1500,()=>{setClock(x[0]);patch(7644,x[2],x[1]);}))];}},
  S2:{name:'S2 · Delay → draft ready (the money demo)',blurb:'7670 slips on the board in real time → open Ask Apollo → Draft update → the human sends from Front.',steps(){return [
-  step(300,()=>{showView('loads');patch(7670,{status:'In transit',flag:'',late:false,eta:'10:52',attention:false,last:'On plan · Samsara · just now'});toast('7670 currently on plan — watch it slip');}),
+  step(300,()=>{showView('loads');patch(7670,{status:'In Transit to DEL',flag:'',late:false,eta:'10:52',attention:false,last:'On plan · Samsara · just now'});toast('7670 currently on plan — watch it slip');}),
   step(1800,()=>{setClock('10:58');patch(7670,{eta:'11:04 (+7)',late:true,last:'ETA slipping · Samsara · just now'});}),
   step(1600,()=>{setClock('11:02');patch(7670,{status:'Delayed',flag:'⚠️',attention:true,eta:'11:11 (+14)',last:'ETA slipped +14 min · Samsara · just now'},ev('11:02','Late +14 min','Live ETA 11:11 vs appt 10:57 — slip from dwell at pickup','SAMSARA','⚠️','just now',1));toast('⚠️ 7670 Delayed — auto-flagged (Rule 8)');}),
   step(1800,()=>{expandChat();ask('Draft an update for 7670');})
@@ -469,7 +496,7 @@ const SCEN={
   ...[18,24,29].map((m,i)=>step(1400,()=>{setClock('10:'+(String(m-9).padStart(2,'0')));patch(7691,{last:'Awaiting broker · '+m+' min · Front'});})),
   step(1500,()=>{setClock('10:11');patch(7691,{flag:'⚠️',last:'ESCALATED — broker silent 30 min · Front · now'},ev('10:11','Escalated','Broker silent 30 min — appt at risk (Jul 15 13:30) · owner: Talisha','APOLLO','⚠️','now',1));toast('⚠️ Rule 15 breach — escalated with an owner');})];}},
  S4:{name:'S4 · Reschedule 🚩 — write-back with approval',blurb:'Broker confirms 17:30 for 7690 → Ask Apollo proposes the change → YOU apply it → table + timeline update.',steps(){return [
-  step(300,()=>{patch(7690,{status:'In transit',flag:'',del:'15:00',eta:'16:54',attention:false,last:'On plan · Samsara · 5 min ago'});expandChat();}),
+  step(300,()=>{patch(7690,{status:'In Transit to DEL',flag:'',del:'15:00',eta:'16:54',attention:false,last:'On plan · Samsara · 5 min ago'});expandChat();}),
   step(1200,()=>{ask('Uber Freight confirmed 17:30 for 7690 — update the delivery appt');})
  ];}},
  S5:{name:'S5 · Conflict — human picks (the honesty demo)',blurb:'Open 7644: Samsara 16:10 ≠ plan 14:30 sits in the timeline waiting for YOUR click. Use live or Verify.',steps(){return [
@@ -488,7 +515,7 @@ const SCEN={
  ];}},
  S8:{name:'S8 · TONU — no truck ever came',blurb:'7665 (driver Unassigned, trailer unknown, PDT appt) misses its window → TONU with the evidence trail.',steps(){return [
   step(300,()=>{showView('loads');openDrawer(7665);}),
-  step(1500,()=>{setClock('11:00');patch(7665,{status:'TONU',flag:'🚩',attention:true,last:'TONU — no pickup 90 min into window · Apollo · 11:00'},ev('11:00','Marked TONU','No truck assigned 90 min into PU window · Amazon Relay notified (draft reviewed by Jess) · slot released','APOLLO','🚩','now',1));toast('TONU logged — trail preserved for the broker conversation');})
+  step(1500,()=>{setClock('11:00');patch(7665,{status:'TONU / Missed appt',flag:'🚩',attention:true,last:'TONU — no pickup 90 min into window · Apollo · 11:00'},ev('11:00','Marked TONU','No truck assigned 90 min into PU window · Amazon Relay notified (draft reviewed by Jess) · slot released','APOLLO','🚩','now',1));toast('TONU logged — trail preserved for the broker conversation');})
  ];}},
  S9:{name:'S9 · Cancelled mid-transit',blurb:'RXO cancels 7692 while Tanya is 82 mi out. Timeline closes clean; TONU evidence pack noted.',steps(){return [
   step(300,()=>{showView('loads');openDrawer(7692);}),
@@ -497,7 +524,7 @@ const SCEN={
  S10:{name:'S10 · Triage + the honest all-clear',blurb:'“Which loads need attention?” → three cards. Later the board calms → the empty state that earns trust.',steps(){return [
   step(300,()=>{expandChat();}),
   step(800,()=>{ask('Which loads need attention right now?');}),
-  step(3000,()=>{setClock('16:40');patch(7670,{status:'Delivered',flag:'✅',late:false,attention:false,delivered:true,eta:'11:19',last:'Delivered 11:19 · POD 11:24 · Samsara'});patch(7691,{status:'In transit',flag:'',attention:false,driver:'Sandra Velis',last:'Broker replied · appt confirmed · Front'});patch(7690,{attention:false});}),
+  step(3000,()=>{setClock('16:40');patch(7670,{status:'Delivered',flag:'✅',late:false,attention:false,delivered:true,eta:'11:19',last:'Delivered 11:19 · POD 11:24 · Samsara'});patch(7691,{status:'In Transit to DEL',flag:'',attention:false,driver:'Sandra Velis',last:'Broker replied · appt confirmed · Front'});patch(7690,{attention:false});}),
   step(900,()=>{ask('Which loads need attention right now?');}),
   step(200,()=>{}),
   step(1200,()=>{botStream('✅ <b>All clear.</b> '+Object.keys(LOADS).length+' live loads, all tracking on plan. Last exception resolved 13:12 (7690 reschedule confirmed).<div style="font-size:11.5px;color:#94A3B8;margin-top:6px">as of 16:40 check · quiet boards stay quiet — I only speak on change</div>');})
