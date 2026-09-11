@@ -172,7 +172,7 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    renderList) — it owns top:0/the higher z-index; each group's sechead
    sticks just underneath it as you scroll past. Sechead keeps a light tint
    (like lanes' grouphead) so it reads as a section band on the white card. */
-.colhead{display:grid;grid-template-columns:1.15fr 1fr .8fr 1.1fr .5fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
+.colhead{display:grid;grid-template-columns:1.15fr 1fr .5fr .8fr 1.1fr 20px;gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:2}
 /* Sortable column headers (both the pools table's .colhead and All Trailers'
    .atcolhead) — arrow is invisible until hover/active so unsorted columns
    don't visually clutter the row of labels. */
@@ -182,7 +182,7 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .sortable:hover .sortarrow{opacity:.5}
 .sortable.active .sortarrow{opacity:1;color:var(--teal)}
 .sortable.active.desc .sortarrow{transform:rotate(180deg)}
-.poolrow{display:grid;grid-template-columns:1.15fr 1fr .8fr 1.1fr .5fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
+.poolrow{display:grid;grid-template-columns:1.15fr 1fr .5fr .8fr 1.1fr 20px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);cursor:pointer;font-size:13.5px;background:#fff}
 .poolrow:hover{background:var(--surface-low)}
 .poolrow.flash{background:var(--surface-high)}
 .poolrow .loc{font-weight:500;display:flex;flex-direction:column;gap:1px;min-width:0;color:var(--text-dark)}
@@ -195,7 +195,9 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .poolrow .loadedempty b{font-weight:600;color:var(--ink)}
 .poolrow .target{color:var(--text-default);font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .poolrow .chev2{color:#CBD5E1;transition:transform .15s}
-.poolrow.expanded .chev2{transform:rotate(90deg)}
+/* Closed points down (there's more below), open flips 180° to point up
+   (collapse back up) — chevronDown as the base icon, not chevronRight. */
+.poolrow.expanded .chev2{transform:rotate(180deg)}
 /* Inline expanded-row detail — sits as its own full-width block right under
    the row it belongs to (a flow sibling, not a grid cell), reusing the same
    banner/table components the old drawer view rendered. */
@@ -498,7 +500,6 @@ function hideTip(){$('hovertip').classList.remove('show');}
    apollo app uses via @tabler/icons-react) so we're not relying on emoji for
    in-content chrome. */
 const ICON = {
-  chevronRight:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
   chevronDown:'<svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
   x:'<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
   pencil:'<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
@@ -1062,10 +1063,10 @@ function rowHTML(id,l){const h=deriveHealth(l);const hasTarget=typeof l.target==
  let out='<div class="poolrow'+(expanded?' expanded':'')+'" data-id="'+id+'" onclick="toggleRowExpand(\''+id+'\')">'+
  '<div class="loc"><span class="name">'+esc(l.name)+'</span>'+(l.account?'<span class="acct">'+esc(l.account)+'</span>':'')+'</div>'+
  '<div>'+healthPill(l)+'</div>'+
+ '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
  '<div class="count"><div class="cnums"><b>'+l.current+'</b>'+balanceDeficitHTML(l,l.current)+'</div></div>'+
  '<div class="loadedempty">'+loadedEmptyHTML(l)+'</div>'+
- '<div class="target">'+(hasTarget?l.target:'—')+(hasTarget?'<span class="targetedit" onclick="event.stopPropagation();openEditTargetModal(\''+id+'\')" title="Edit target">'+ICON.pencil+'</span>':'')+'</div>'+
- '<div class="chev2">'+ICON.chevronRight+'</div></div>';
+ '<div class="chev2">'+ICON.chevronDown+'</div></div>';
  if(expanded)out+=rowExpandHTML(l);
  return out;}
 function colHead(){
@@ -1073,9 +1074,9 @@ function colHead(){
  return '<div class="colhead">'+
   '<div class="'+sortCellClass('name',c,d)+'" onclick="setPoolSort(\'name\')">Trailer pool'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('health',c,d)+'" title="'+HEALTH_TIP+'" onclick="setPoolSort(\'health\')">Health <span class="infoq">ⓘ</span>'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('target',c,d)+'" onclick="setPoolSort(\'target\')">Target'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('current',c,d)+'" onclick="setPoolSort(\'current\')">Current'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('loadedempty',c,d)+'" onclick="setPoolSort(\'loadedempty\')">Loaded/Empty'+SORT_ARROW+'</div>'+
-  '<div class="'+sortCellClass('target',c,d)+'" onclick="setPoolSort(\'target\')">Target'+SORT_ARROW+'</div>'+
   '<div></div></div>';
 }
 function renderList(){renderChips();
