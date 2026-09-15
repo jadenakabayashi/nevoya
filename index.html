@@ -22,7 +22,7 @@
   --green:#007A55;--greensoft:#D0FAE5;
   --slate:#1D293D;--slatesoft:#E6EFFA;
   /* Blue Status chip pair (shared/tokens.css --status-bg-blue-in-progress /
-     Icon/blue-in-progress) — reused here for "Over target" and, on trailer
+     Icon/blue-in-progress) — reused here for "Surplus" and, on trailer
      rows, "In Transit - Loaded". */
   --blue:#155DFC;--bluesoft:#DBEAFE;
   /* Violet/cyan/stone Status chip pairs (shared/tokens.css
@@ -125,8 +125,8 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 /* Leaflet divIcon content — the marker itself; Leaflet positions/anchors the
    wrapping .leaflet-marker-icon, so this only needs its own visual shape. */
 .pin{width:20px;height:20px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.35);border:2px solid #fff;display:flex;align-items:center;justify-content:center}
-.pin.p-ontarget{background:var(--green)}
-.pin.p-belowtarget{background:var(--amber)}
+.pin.p-good{background:var(--green)}
+.pin.p-surplus{background:var(--blue)}
 .pin.p-critical{background:var(--red)}
 .pin.p-notarget{background:var(--gray)}
 .pin .pn{transform:rotate(45deg);color:#fff;font-size:10.5px;font-weight:700;line-height:1}
@@ -206,15 +206,13 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
 .rowexpand .sect span:last-child{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none}
 .rowexpand .sect:not(:first-child){margin-top:14px}
 /* Status chip (confirmed Figma spec — source of truth for status pill colors).
-   nowrap: a two-word status like "Below target" must stay on one line, same
+   nowrap: a two-word status like "No target set" must stay on one line, same
    as every pill in the lanes reference — never let a chip wrap. */
 .pill{border-radius:16px;padding:3px 11px;font-size:12px;font-weight:600;display:inline-block;letter-spacing:.2px;white-space:nowrap}
-.p-ontarget{background:var(--greensoft);color:var(--green)}
-.p-belowtarget{background:var(--ambersoft);color:var(--amber)}
-/* Same amber as Below target for now — "Low" is a placeholder status
-   pending real design guidance on how it should read differently. */
-.p-low{background:var(--ambersoft);color:var(--amber)}
-.p-overtarget{background:var(--bluesoft);color:var(--blue)}
+/* Health is now just Critical/Surplus/Good (+ No target set) — see
+   deriveHealth()'s rolling-24h projection. */
+.p-good{background:var(--greensoft);color:var(--green)}
+.p-surplus{background:var(--bluesoft);color:var(--blue)}
 .p-critical{background:var(--redsoft);color:var(--red)}
 .p-notarget{background:var(--slatesoft);color:var(--slate)}
 .p-available{background:var(--greensoft);color:var(--green)}
@@ -244,14 +242,15 @@ body{font-family:Inter,-apple-system,sans-serif;color:var(--ink);background:var(
    while letting Current Location claim the rest. If the combined floors
    ever exceed the available width, #allTrailersList's overflow:auto turns
    that into a horizontal scrollbar instead of squished/overlapping cells. */
-.atcolhead{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr) minmax(64px,.5fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
-.atrow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(120px,.9fr) minmax(140px,1fr) minmax(130px,1.4fr) minmax(75px,.6fr) minmax(95px,.9fr) minmax(64px,.5fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
+.atcolhead{display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(110px,.8fr) minmax(120px,.9fr) minmax(90px,.8fr) minmax(120px,1.2fr) minmax(70px,.55fr) minmax(90px,.85fr) minmax(60px,.5fr);gap:10px;padding:10px 16px;font-size:11px;letter-spacing:.3px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border-muted);background:#fff;position:sticky;top:0;z-index:1}
+.atrow{display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(110px,.8fr) minmax(120px,.9fr) minmax(90px,.8fr) minmax(120px,1.2fr) minmax(70px,.55fr) minmax(90px,.85fr) minmax(60px,.5fr);gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-muted);font-size:13.5px;background:#fff;color:var(--text-dark);cursor:pointer}
 .atrow:hover{background:var(--surface-low)}
 .atrow.archived{opacity:.6}
 .atrow .tid{font-weight:500;color:var(--ink);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0}
 /* Trailer name reads as a link — same affordance as lanes' .provlink — even
    though it doesn't navigate anywhere yet (no detail view to send it to). */
 .atrow .tidlink:hover{text-decoration:underline}
+.atrow .type2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .atrow .loc2{color:var(--text-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .atrow .days2{color:var(--gray);font-size:12.5px;white-space:nowrap}
 /* min-width:0 on every grid-item cell is load-bearing: each .atrow is its
@@ -680,24 +679,29 @@ function loadedEmptyHTML(l){
  const loaded=l.trailers.filter(t=>pseudoLoaded(t.tid)).length;
  return '<b>'+loaded+'</b> loaded, <b>'+(l.trailers.length-loaded)+'</b> empty';
 }
-/* "Low" logic is a rough first pass, not final: currently just "exactly one
-   trailer short of target" (closer to on-target than a real shortfall) —
-   revisit once there's real guidance on what "approaching target" should
-   mean (a percentage? a trend over time?). */
-/* Parameterized so a projected/planned count can be graded against target
-   the exact same way Current is — one rule, no risk of the two drifting. */
-function deriveHealthForCount(l,count){
- if(typeof l.target!=='number')return 'No target set';
- if(count===0)return 'Critical';
- if(count<l.target){
-  if(l.target-count===1)return 'Low';
-  return 'Below target';
- }
- if(count>l.target)return 'Over target';
- return 'On target';
+/* Health grades a rolling 24-hour window starting now, not just the count
+   on site right now: project Current forward through every scheduled
+   drop(+1)/hook(-1) in Planned (itself already a "next 24 hours" list —
+   see the PLANNED section tooltip) and grade the worst point the count
+   hits across that whole trajectory, not just where it ends up.
+   Three outcomes only:
+    - Critical: the projection touches 0 (or goes negative) at some point
+      in the next 24h — this pool will run out of trailers to dispatch.
+    - Surplus: the projection never even comes back down to target — more
+      trailers sitting here than this pool needs across the whole window.
+    - Good: everything else — never empties out, and isn't sitting on
+      excess the whole time either.
+   Locations with no target (customer docks, Unknown location) have
+   nothing to grade against and stay their own "No target set" state. */
+function projectedBalanceSeries(l){
+ return [l.current,...plannedWithBalance(l).map(e=>e.balance)];
 }
 function deriveHealth(l){
- return deriveHealthForCount(l,l.current);
+ if(typeof l.target!=='number')return 'No target set';
+ const minBal=Math.min(...projectedBalanceSeries(l));
+ if(minBal<=0)return 'Critical';
+ if(minBal>l.target)return 'Surplus';
+ return 'Good';
 }
 /* deriveHealth() returns strings like "No target set" — normalize its class distinctly. */
 function healthClass(h){
@@ -813,9 +817,8 @@ function lotGrid(lat,lng,n){
    couldn't actually back up (a live loaded/empty feed). Trailers default to
    DVIR-passed/not-due unless the seed data flags otherwise. */
 const DVIR_TIP='Driver Vehicle Inspection Report missing';
-/* Placeholder — real copy explaining how Health is derived (target vs.
-   current, EOD, etc.) still needs to be written. */
-const HEALTH_TIP='Placeholder — health tooltip content coming soon.';
+/* \n renders as a line break in a native title tooltip. */
+const HEALTH_TIP='Based on a rolling 24-hour projection starting now (Current plus everything scheduled in Planned), not just the count on site right now.\n\nCritical — projected to hit 0 trailers at some point in the next 24 hours.\nSurplus — never projected to come back down to target; more trailers here than this pool needs.\nGood — neither of the above.';
 /* Single source of truth for the DVIR/PM-due/AMZN-hold flag badges — reused
    by the map card, the expanded location's trailers table, and the All
    Trailers list, so a trailer reads the same everywhere instead of drifting
@@ -1000,8 +1003,9 @@ function sortCellClass(col,activeCol,dir){
 }
 const SORT_ARROW='<span class="sortarrow">'+ICON.chevronDown+'</span>';
 /* Ascending severity so a plain click surfaces what needs attention first:
-   Critical (0 on site) worst, No target set last (nothing to be behind on). */
-const HEALTH_RANK={'Critical':0,'Below target':1,'Low':2,'On target':3,'Over target':4,'No target set':5};
+   Critical (projected to run out) worst, No target set last (nothing to
+   be behind on). */
+const HEALTH_RANK={'Critical':0,'Surplus':1,'Good':2,'No target set':3};
 function poolSortValue(l,col){
  switch(col){
   case 'name':return (l.name||'').toLowerCase();
@@ -1023,13 +1027,12 @@ function sortPoolRows(rows){
  });
 }
 function chipCounts(){const vals=Object.values(POOL);
- return{all:vals.length,ontarget:vals.filter(l=>deriveHealth(l)==='On target').length,
-  low:vals.filter(l=>deriveHealth(l)==='Low').length,
-  belowtarget:vals.filter(l=>deriveHealth(l)==='Below target').length,
-  overtarget:vals.filter(l=>deriveHealth(l)==='Over target').length,
-  critical:vals.filter(l=>deriveHealth(l)==='Critical').length};}
+ return{all:vals.length,
+  critical:vals.filter(l=>deriveHealth(l)==='Critical').length,
+  surplus:vals.filter(l=>deriveHealth(l)==='Surplus').length,
+  good:vals.filter(l=>deriveHealth(l)==='Good').length};}
 function renderChips(){const c=chipCounts();
- const defs=[['all','All pools',c.all],['ontarget','On target',c.ontarget],['low','Low',c.low],['belowtarget','Below target',c.belowtarget],['overtarget','Over target',c.overtarget],['critical','Critical',c.critical]];
+ const defs=[['all','All pools',c.all],['critical','Critical',c.critical],['surplus','Surplus',c.surplus],['good','Good',c.good]];
  $('poolchips').innerHTML=defs.map(d=>'<div class="chip'+(CHIPFILTER===d[0]?' on':'')+'" onclick="CHIPFILTER=\''+d[0]+'\';renderList()">'+d[1]+' '+d[2]+'</div>').join('');}
 let SEARCHTEXT='';
 function matchesSearch(l){
@@ -1082,8 +1085,12 @@ function colHead(){
 function renderList(){renderChips();
  const poolIds=Object.keys(POOL).filter(id=>passFilter(POOL[id]));
  const poolRows=poolIds.map(id=>[id,POOL[id]]);
- const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>matchesRegion(l)&&matchesSearch(l));
- const unknownRows=(GPSUNKNOWN.current>0&&matchesSearch(GPSUNKNOWN))?[[GPSUNKNOWN.id,GPSUNKNOWN]]:[];
+ /* OTHER/GPSUNKNOWN have no target, so deriveHealth grades them "No target
+    set" — passFilter (not just region/search) is what correctly drops them
+    out of view whenever a specific Critical/Surplus/Good chip is active,
+    same as any pool that doesn't match. They only show under "All pools". */
+ const otherRows=Object.keys(OTHER).map(id=>[id,OTHER[id]]).filter(([id,l])=>passFilter(l));
+ const unknownRows=(GPSUNKNOWN.current>0&&passFilter(GPSUNKNOWN))?[[GPSUNKNOWN.id,GPSUNKNOWN]]:[];
  const allRows=sortPoolRows([...poolRows,...otherRows,...unknownRows]);
  const body=allRows.map(([id,l])=>rowHTML(id,l)).join('');
  $('listwrap').innerHTML=colHead()+body;
@@ -1193,11 +1200,12 @@ function loadPillHTML(tid){
    else it shows up — falling back to a hand-set override for the rarer
    case where dispatch already knows the load but not yet which physical
    trailer will cover it. */
-/* Only worth a callout once the projected balance itself would read Low
-   or worse against target — Over target/On target/No target set stay
-   silent, same severities deriveHealth already uses for Current. Whenever
-   it does show, the pill also states the actual deficit (target minus
-   that balance) rather than making the reader do that subtraction. */
+/* Only worth a callout once a single step's balance dips under target —
+   a per-step deficit note, distinct from (and more granular than) the
+   Health pill, which grades the whole rolling-24h trajectory at once and
+   only calls a pool out (Critical/Surplus) at the extremes. Whenever this
+   does show, it also states the actual deficit (target minus that
+   balance) rather than making the reader do that subtraction. */
 function balanceDeficitHTML(l,count){
  if(typeof l.target!=='number'||count>=l.target)return '';
  return '<span class="underdeficit">(Under target <span class="unum">-'+(l.target-count)+'</span>)</span>';
@@ -1255,6 +1263,7 @@ function atSortValue(r,col){
   case 'tid':return r.t.tid.toLowerCase();
   case 'source':return (r.t.source||'').toLowerCase();
   case 'status':return r.st.label.toLowerCase();
+  case 'type':return pseudoType(r.t).toLowerCase();
   case 'loc':return (r.locName||'').toLowerCase();
   /* Mixed semantics here (a plain day count vs. an in-transit ETA clock
      time) can't be compared meaningfully — just cluster transit rows
@@ -1439,6 +1448,7 @@ function renderAllTrailers(){
   '<div class="'+sortCellClass('tid',ac,ad)+'" onclick="setATSort(\'tid\')">Trailer'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('source',ac,ad)+'" onclick="setATSort(\'source\')">Source'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('status',ac,ad)+'" onclick="setATSort(\'status\')">Status'+SORT_ARROW+'</div>'+
+  '<div class="'+sortCellClass('type',ac,ad)+'" onclick="setATSort(\'type\')">Type'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('loc',ac,ad)+'" onclick="setATSort(\'loc\')">Current Location'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('days',ac,ad)+'" onclick="setATSort(\'days\')">At location'+SORT_ARROW+'</div>'+
   '<div class="'+sortCellClass('load',ac,ad)+'" onclick="setATSort(\'load\')">Last Load'+SORT_ARROW+'</div>'+
@@ -1459,6 +1469,7 @@ function renderAllTrailers(){
    '</div>'+
    '<div class="srcping">'+sourcePingHTML(r.t)+'</div>'+
    '<div><span class="pill '+r.st.cls+'">'+r.st.label+'</span></div>'+
+   '<div class="type2" title="'+esc(pseudoType(r.t))+'">'+esc(pseudoType(r.t))+'</div>'+
    '<div class="loc2" title="'+esc(r.locName)+'">'+esc(r.locName)+'</div>'+
    '<div class="days2">'+(r.transit?'ETA '+esc(r.eta):days+' day'+(days===1?'':'s'))+'</div>'+
    '<div>'+loadPillHTML(r.t.tid)+'</div>'+
@@ -1489,9 +1500,15 @@ function rowExpandHTML(l){
  const h=deriveHealth(l);
  let html='<div class="rowexpand">';
  if(h==='Critical'){
-  html+='<div class="critbanner"><div class="t">'+ICON.alert+' Critical — 0 trailers on site</div><div class="d">Target is '+l.target+'. '+(l.daysBelow?'Sitting at 0 for '+l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' with nobody watching for it manually.':'Just crossed to 0.')+'</div></div>';
- } else if(h==='Below target'){
-  html+='<div class="critbanner" style="background:var(--ambersoft);border-color:#F3D67C"><div class="t" style="color:var(--amber)">'+ICON.alert+' Below target</div><div class="d" style="color:#7C4A00">'+l.current+' on site against a target of '+l.target+' — '+(l.daysBelow?l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' below target so far.':'just crossed below target.')+'</div></div>';
+  /* Distinguish "already sitting at 0" from "still has trailers now but
+     the next 24h of Planned drops/hooks projects it to 0" — both grade
+     Critical, but they read very differently to a dispatcher. */
+  const atZeroNow=l.current<=0;
+  const title=atZeroNow?'Critical — 0 trailers on site':'Critical — projected to run out within 24 hours';
+  const detail=atZeroNow
+   ?(l.daysBelow?'Sitting at 0 for '+l.daysBelow+' day'+(l.daysBelow>1?'s':'')+' with nobody watching for it manually.':'Just crossed to 0.')
+   :l.current+' on site now, but scheduled hooks outpace drops in Planned below — projected to hit 0 in the next 24 hours.';
+  html+='<div class="critbanner"><div class="t">'+ICON.alert+' '+title+'</div><div class="d">Target is '+l.target+'. '+detail+'</div></div>';
  }
  const vts=visibleTrailers(l);
  html+='<div class="sect"><span>'+(typeof l.target!=='number'?'NO ASSIGNED YARD':'TRAILERS AT THIS YARD')+'</span><span>'+vts.length+'</span></div>';
