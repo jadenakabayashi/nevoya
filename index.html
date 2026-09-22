@@ -213,7 +213,7 @@ svg{display:block;}
 
 .shift-expand{display:none;padding:16px 10px 16px 46px;border-top:1px solid var(--border-muted);}
 .shift-row[data-expanded="true"] .shift-expand{display:block;}
-.stop-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px;}
+.stop-row{display:grid;gap:14px;margin-top:16px;}
 
 /* ---------- Shift timeline (Gantt-style, per Tom's Active Shifts fork) ---------- */
 .shift-timeline{}
@@ -625,7 +625,7 @@ function renderRow(shift, primary){
     </div>` : ''}
     <div class="shift-expand">
       ${renderTimeline(shift)}
-      <div class="stop-row">${shift.stops.map(renderStopCard).join('')}</div>
+      <div class="stop-row" style="grid-template-columns:repeat(${Math.min(shift.stops.length, 4)},minmax(0,1fr))">${shift.stops.map(renderStopCard).join('')}</div>
     </div>
   </div>`;
 }
