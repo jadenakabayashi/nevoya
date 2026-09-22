@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Dispatch Tracking · Apollo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS — pulled from shared/tokens.css + the cached Figma
+   component snapshot (.claude/skills/nevoya-prototype/references/
+   nevoya-library.md). Figma MCP was not reachable this session
+   (no edit access to the design file) — these values come from
+   that last-verified snapshot, same starting point tracking/ and
+   audit-log/ used before their own live-Figma correction passes.
+   Re-verify against a live pull before this ships.
+   ============================================================ */
+:root{
+  --teal:#00786F;
+  --teal-bg:#F0FDFA;
+  --text-default:#314158;
+  --text-dark:#1D293D;
+  --text-heading:#0F172B;
+  --text-muted:#45556C;
+  --text-subtle:#62748E;
+  --border-default:#CAD5E2;
+  --border-muted:#E2E8F0;
+  --bg-lowest:#F6F8FB;
+  --bg-low:#E6EFFA;
+  --bg-default:#E1EAF5;
+  --bg-high:#DAE3ED;
+  --red:#E7000B;
+  --red-bg:#FFE2E2;
+  --amber:#E17100;
+  --amber-bg:#FEF3C6;
+  --emerald:#007A55;
+  --emerald-bg:#D0FAE5;
+  --slate-text:#1D293D;
+  --slate-bg:#E6EFFA;
+  --violet-text:#7F22FE;
+  --violet-bg:#EDE9FE;
+  --stone-text:#44403B;
+  --stone-bg:#F5F5F4;
+  --shadow-xs: 0 1px 3px rgba(0,0,0,.1), 0 0 3px rgba(0,0,0,.05);
+  --radius-sm:8px;
+  --radius-md:10px;
+  --radius-xl:16px;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  color:var(--text-default);
+  background:#fff;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;}
+svg{display:block;}
+
+/* ---------- App shell ---------- */
+.app{display:flex;height:100vh;}
+
+/* ---------- Left icon rail (Navigation component, collapsed) ---------- */
+.rail{
+  width:64px;flex:none;
+  background:#fff;border-right:1px solid var(--border-muted);
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 0;gap:6px;
+}
+.rail-mark{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:15px;margin-bottom:10px;
+}
+.rail-item{
+  width:40px;height:40px;border:none;border-radius:var(--radius-sm);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  color:var(--text-muted);cursor:pointer;
+}
+.rail-item:hover{background:var(--bg-lowest);}
+.rail-item[aria-current="page"]{background:var(--bg-high);color:var(--teal);}
+.rail-item svg{width:20px;height:20px;}
+
+/* ---------- Main column ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;border-bottom:1px solid var(--border-muted);flex:none;
+}
+.breadcrumb{font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:6px;}
+.breadcrumb strong{color:var(--text-heading);font-weight:600;}
+.breadcrumb .sep{color:var(--border-default);}
+
+/* ---------- Buttons (Button component) ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-weight:600;font-size:14px;line-height:1;white-space:nowrap;
+  border-radius:var(--radius-md);padding:10px 16px;border:1px solid transparent;
+  cursor:pointer;transition:background .12s ease,opacity .12s ease;
+}
+.btn svg{width:16px;height:16px;}
+.btn-sm{padding:8px 12px;font-size:13px;border-radius:var(--radius-sm);}
+.btn-primary{background:var(--teal);color:#fff;}
+.btn-primary:hover{opacity:.9;}
+.btn-secondary{background:var(--bg-high);color:var(--text-dark);}
+.btn-secondary:hover{background:#D5DEE8;}
+.btn-outline{background:#fff;color:var(--text-dark);border-color:var(--border-default);}
+.btn-outline:hover{background:var(--bg-lowest);}
+.btn-ghost{background:transparent;color:var(--text-dark);}
+.btn-ghost:hover{background:var(--bg-lowest);}
+.btn-disruptive{background:var(--red);color:#fff;}
+.btn-disruptive:hover{opacity:.9;}
+
+/* ---------- Tabs ---------- */
+.tabbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 24px;border-bottom:1px solid var(--border-muted);flex:none;
+  flex-wrap:wrap;
+}
+.tabs{display:flex;align-items:center;gap:24px;}
+.tab{
+  appearance:none;background:none;border:none;border-bottom:2px solid transparent;
+  padding:14px 2px;font-size:14px;font-weight:500;color:var(--text-default);
+  cursor:pointer;display:flex;align-items:center;gap:8px;margin-bottom:-1px;
+}
+.tab svg{width:16px;height:16px;}
+.tab[aria-selected="true"]{color:var(--teal);font-weight:600;border-bottom-color:var(--teal);}
+.tab .count-chip{
+  background:var(--amber-bg);color:var(--amber);font-weight:600;font-size:10px;
+  letter-spacing:.5px;border-radius:var(--radius-xl);padding:2px 7px;line-height:12px;
+}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 0;}
+.search{
+  display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border-default);
+  border-radius:var(--radius-md);padding:8px 12px;box-shadow:var(--shadow-xs);min-width:230px;
+}
+.search svg{width:16px;height:16px;color:var(--text-muted);flex:none;}
+.search input{border:none;outline:none;font-size:14px;font-family:inherit;color:var(--text-default);width:100%;}
+.search input::placeholder{color:#90A1B9;}
+
+/* ---------- Content / views ---------- */
+.content{flex:1;overflow:auto;padding:20px 24px 40px;background:#fff;}
+.view{display:none;}
+.view[data-active="true"]{display:block;}
+
+/* ---------- Chips ---------- */
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid var(--border-default);background:#fff;border-radius:var(--radius-xl);
+  padding:5px 10px 5px 6px;font-weight:600;font-size:11px;letter-spacing:.3px;color:var(--text-dark);
+  white-space:nowrap;
+}
+.chip.chip-lead{background:var(--bg-lowest);}
+.chip img,.chip svg{width:14px;height:14px;flex:none;}
+.chip-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.status-chip{
+  display:inline-flex;align-items:center;border-radius:var(--radius-xl);
+  font-weight:600;font-size:11px;letter-spacing:.3px;padding:5px 10px;white-space:nowrap;
+}
+.status-onplan{background:var(--teal-bg);color:var(--teal);}
+.status-ahead{background:var(--emerald-bg);color:var(--emerald);}
+.status-behind{background:var(--red-bg);color:var(--red);}
+.status-done{background:var(--emerald-bg);color:var(--emerald);}
+.status-pod-missing{background:var(--red-bg);color:var(--red);}
+.status-unverified{background:var(--amber-bg);color:var(--amber);}
+
+/* ---------- Substrate container (Table token: lowest bg, padded, radius-xl) ---------- */
+.grid-container{background:var(--bg-lowest);border-radius:var(--radius-xl);padding:12px;}
+.grid-header{
+  display:grid;grid-template-columns:24px minmax(260px,1.4fr) 1.2fr 150px 150px 96px;
+  gap:16px;padding:6px 10px;font-size:13px;font-weight:600;color:var(--text-subtle);
+}
+
+/* ---------- Shift row ---------- */
+.shift-row{background:#fff;border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid transparent;overflow:hidden;}
+.shift-row:last-child{margin-bottom:0;}
+.shift-row[data-flagged="true"]{border-color:var(--red);}
+.shift-row-main{
+  display:grid;grid-template-columns:24px minmax(260px,1.4fr) 1.2fr 150px 150px 96px;
+  gap:16px;align-items:center;padding:12px 10px;cursor:pointer;
+}
+.chevron-btn{
+  width:20px;height:20px;border:none;background:none;color:var(--text-muted);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+}
+.chevron-btn svg{width:16px;height:16px;transition:transform .15s ease;}
+.shift-row[data-expanded="true"] .chevron-btn svg{transform:rotate(90deg);}
+.row-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
+.row-route{display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--text-default);min-width:0;}
+.row-route .line{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-route .line svg{width:14px;height:14px;flex:none;color:var(--text-muted);}
+.row-route .leg{font-size:12px;color:var(--text-subtle);}
+.time-col{display:flex;flex-direction:column;gap:2px;font-size:12.5px;line-height:1.35;}
+.time-col .planned{color:var(--text-subtle);}
+.time-col .actual{color:var(--text-dark);font-weight:600;}
+.time-col .actual.risk{color:var(--red);}
+.row-status{display:flex;justify-content:flex-end;}
+
+.row-flagbanner{
+  display:flex;align-items:center;gap:10px;background:var(--red-bg);
+  padding:9px 14px 9px 46px;font-size:13px;color:#8a1c00;border-top:1px solid #fecaca;
+}
+.row-flagbanner svg{width:16px;height:16px;color:var(--red);flex:none;}
+.row-flagbanner .msg{flex:1;color:var(--text-dark);}
+.row-flagbanner .btn{margin-left:auto;}
+
+.shift-expand{display:none;padding:4px 10px 16px 46px;border-top:1px solid var(--border-muted);}
+.shift-row[data-expanded="true"] .shift-expand{display:block;}
+.stop-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px;}
+
+/* ---------- Stop cards ---------- */
+.stop-card{
+  background:#fff;border:1px solid var(--border-default);border-radius:var(--radius-md);
+  border-top:3px solid var(--border-default);padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.stop-card.done{border-top-color:var(--emerald);}
+.stop-card.blocking{border-top-color:var(--red);}
+.stop-card.needs-human{border-top-color:var(--amber);}
+.stop-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.stop-card-title{font-weight:600;font-size:14px;color:var(--text-heading);}
+.stop-kv{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);}
+.stop-kv b{color:var(--text-dark);font-weight:600;}
+.stop-note{
+  font-size:12.5px;color:var(--text-muted);background:var(--bg-lowest);
+  border-radius:var(--radius-sm);padding:8px 10px;line-height:1.4;
+}
+.stop-actions{display:flex;gap:8px;margin-top:2px;}
+
+/* ---------- Flags view ---------- */
+.flag-row{
+  display:flex;align-items:flex-start;gap:14px;background:#fff;
+  border-left:4px solid var(--border-default);border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow-xs);
+}
+.flag-row.sev-red{border-left-color:var(--red);}
+.flag-row.sev-amber{border-left-color:var(--amber);}
+.flag-icon{width:22px;height:22px;flex:none;margin-top:1px;}
+.flag-row.sev-red .flag-icon{color:var(--red);}
+.flag-row.sev-amber .flag-icon{color:var(--amber);}
+.flag-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+.flag-title{font-size:14px;font-weight:600;color:var(--text-heading);}
+.flag-badges{display:flex;gap:6px;flex-wrap:wrap;}
+.flag-sub{font-size:12.5px;color:var(--text-muted);}
+.flag-actions{display:flex;gap:8px;flex:none;padding-top:2px;}
+.flags-quiet{
+  margin-top:4px;padding:12px 16px;color:var(--text-subtle);font-size:13px;
+  display:flex;align-items:center;gap:8px;
+}
+.flags-quiet b{color:var(--text-dark);}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(15,23,43,.45);display:none;
+  align-items:center;justify-content:center;z-index:50;
+}
+.modal-overlay[data-open="true"]{display:flex;}
+.modal{background:#fff;border-radius:var(--radius-md);width:440px;max-width:90vw;box-shadow:0 20px 40px rgba(0,0,0,.2);}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border-muted);display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{margin:0;font-size:16px;color:var(--text-heading);}
+.modal-body{padding:16px 20px;font-size:13px;color:var(--text-muted);}
+.modal-body textarea{
+  width:100%;min-height:90px;border:1px solid var(--border-default);border-radius:var(--radius-sm);
+  padding:10px;font-family:inherit;font-size:13px;color:var(--text-default);resize:vertical;margin-top:8px;
+}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border-muted);display:flex;justify-content:flex-end;gap:8px;}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--text-heading);color:#fff;padding:10px 18px;border-radius:var(--radius-sm);
+  font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:60;
+}
+.toast[data-show="true"]{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Left icon rail -->
+  <nav class="rail" aria-label="Primary">
+    <div class="rail-mark">N</div>
+    <button class="rail-item" title="Loads"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 10h16" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <button class="rail-item" title="Lanes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18c4-10 12-10 16 0" stroke="currentColor" stroke-width="1.6"/><circle cx="4" cy="18" r="1.6" fill="currentColor"/><circle cx="20" cy="18" r="1.6" fill="currentColor"/></svg></button>
+    <button class="rail-item" aria-current="page" title="Live tracking"><img src="assets/truck.svg" alt="" width="20" height="20"/></button>
+    <button class="rail-item" title="Trailer pool"><img src="assets/trailer.svg" alt="" width="20" height="20"/></button>
+    <button class="rail-item" title="Drivers"><img src="assets/driver.svg" alt="" width="20" height="20"/></button>
+    <button class="rail-item" title="Settings"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14 3h-4l-.6 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2L10 21h4l.6-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
+  </nav>
+
+  <div class="main">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="breadcrumb">Dispatch <span class="sep">/</span> Texas <span class="sep">/</span> <strong>Live Tracking</strong></div>
+      <button class="btn btn-outline" id="btn-handoff">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h16M4 19h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Handoff notes
+      </button>
+    </header>
+
+    <!-- Tabs + toolbar -->
+    <div class="tabbar">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="flags" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 2 20h20L12 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16.7" r="1" fill="currentColor"/></svg>
+          Flags <span class="count-chip" id="flag-count">7</span>
+        </button>
+        <button class="tab" role="tab" data-tab="driver" aria-selected="false">Driver</button>
+        <button class="tab" role="tab" data-tab="load" aria-selected="false">Load</button>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-outline btn-sm">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Filter
+        </button>
+        <button class="btn btn-outline btn-sm">Sort: delivery</button>
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="text" placeholder="Search driver, load, truck…" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <section class="view" data-view="flags" data-active="true">
+        <div id="flags-list"></div>
+        <div class="flags-quiet" id="flags-quiet"></div>
+      </section>
+
+      <section class="view" data-view="driver">
+        <div class="grid-container">
+          <div class="grid-header">
+            <span></span><span>Driver</span><span>Route</span><span>Pickup</span><span>Delivery</span><span>Status</span>
+          </div>
+          <div id="rows-driver"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="load">
+        <div class="grid-container">
+          <div class="grid-header">
+            <span></span><span>Load</span><span>Route</span><span>Pickup</span><span>Delivery</span><span>Status</span>
+          </div>
+          <div id="rows-load"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Handoff notes modal -->
+<div class="modal-overlay" id="handoff-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Shift handoff notes</h3>
+      <button class="btn btn-ghost btn-sm" id="handoff-close" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      Leave a note for the next dispatcher — open flags carry over automatically, this is for anything that doesn't.
+      <textarea placeholder="e.g. Roland's load 7912 is running behind, already gave the customer a heads up…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="handoff-cancel">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="handoff-save">Save note</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DATA — grounded in shared/knowledge/graph.json: TX region,
+   Waco (Envases) -> Houston (Coke) lane, CDT, real driver-name
+   conventions. One coherent story (Roland Martinez / Load 7912)
+   drives all 7 flags, matching the PRDs' "spend time on the two
+   problems, not all twelve drivers" framing.
+   ============================================================ */
+const ICONS = {
+  chevron: `<svg viewBox="0 0 24 24" fill="none"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  pin: `<img src="assets/location-pin.svg" alt="" width="14" height="14"/>`,
+  arrow: `<svg viewBox="0 0 24 24" fill="none"><path d="M4 12h15M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  driver: `<img src="assets/driver.svg" alt="" width="14" height="14"/>`,
+  truck: `<img src="assets/truck.svg" alt="" width="14" height="14"/>`,
+  trailer: `<img src="assets/trailer.svg" alt="" width="14" height="14"/>`,
+  alertTriangle: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3 2 21h20L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.7" r="1.1" fill="currentColor"/></svg>`,
+};
+
+const DRIVERS = {
+  jennie:{ name:'Jennie Andros', truck:'4210', trailer:'77241' },
+  roland:{ name:'Roland Martinez', truck:'4654', trailer:'08867' },
+  bruce:{ name:'Bruce Handy', truck:'4188', trailer:'55302' },
+  emily:{ name:'Emily Duarte', truck:'5108', trailer:'66210' },
+};
+
+const SHIFTS = [
+  { id:'jennie-7625', driver:'jennie', load:'7625',
+    origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'1/2',
+    puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 04:47 CDT',
+    delPlanned:'DEL app 08:30 CDT', eta:'ETA 08:24 CDT', risk:false, status:'ahead' },
+
+  { id:'roland-7912', driver:'roland', load:'7912',
+    origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'2/3',
+    puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 05:12 CDT',
+    delPlanned:'DEL app 08:30 CDT', eta:'ETA 09:48 CDT', risk:true, status:'behind',
+    flagged:true, flagText:'Delivery appt window closes in 14 min — running 1h12m behind', flagAction:'Pull &amp; reassign' },
+
+  { id:'bruce-7734', driver:'bruce', load:'7734',
+    origin:'Envases – Waco, TX', dest:'Dallas, TX Local', leg:'1/1',
+    puPlanned:'PU app 05:00–06:00 CDT', puActual:'PU 05:06 CDT',
+    delPlanned:'DEL app 07:45 CDT', eta:'ETA 07:30 CDT', risk:false, status:'onplan' },
+
+  { id:'emily-9865', driver:'emily', load:'9865',
+    origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'2/3',
+    puPlanned:'PU app 04:15–05:15 CDT', puActual:'PU 04:22 CDT',
+    delPlanned:'DEL app 08:00 CDT', eta:'ETA 07:52 CDT', risk:false, status:'onplan',
+    expandedDefault:true,
+    stops:[
+      { state:'done', badge:'Closed out', badgeClass:'status-done', title:'Envases – Waco, TX (Pickup)',
+        arrived:'04:22', departed:'04:55', pod:'Uploaded 04:56 · verified',
+        note:'Both timestamps present, POD matched to the load. Clears for billing.',
+        actions:[{label:'View POD', kind:'outline'}] },
+      { state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing', title:'Houston, TX – Coke DC (Delivery)',
+        arrived:'07:40', departed:'07:58', pod:'Not uploaded · 1h48m',
+        note:'Driver has moved on to the next stop. Nothing to review — the document does not exist yet.',
+        actions:[{label:'Message driver', kind:'outline'},{label:'Snooze 1h', kind:'ghost'}] },
+      { state:'needs-human', badge:'Unverified', badgeClass:'status-unverified', title:'Houston Yard (Empty return)',
+        arrived:'08:20', departed:'—', pod:'Uploaded 08:24 · unverified',
+        note:'Photo attached but unreadable at the signature block. Uploaded is not the same as valid.',
+        actions:[{label:'Request re-upload', kind:'outline'},{label:'Review POD', kind:'primary'}] },
+    ] },
+];
+
+const FLAGS = [
+  { sev:'red', driver:'roland', load:null,
+    title:'Not checked in — shift started 22 min ago', sub:'Scheduled start 04:30 CDT · no response on last message',
+    actions:[{label:'Call driver', kind:'primary'}] },
+  { sev:'red', driver:'roland', load:'7912',
+    title:'Delivery at risk — appt window closes 14:45, running 1h12m behind', sub:'Cause: 1h04m dwell at Envases Waco, origin of today’s delay',
+    actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
+  { sev:'amber', driver:'roland', load:'7912',
+    title:'Dwelling 1h04m at Envases Waco — no downstream impact yet', sub:'Absorbed by slack ahead of the Houston delivery window',
+    actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
+  { sev:'amber', driver:'roland', load:null,
+    title:'3h40m left on Drive clock — not enough to finish planned shift', sub:'Remaining plan needs ~4h20m of drive time',
+    actions:[{label:'Redispatch remaining legs', kind:'primary'}] },
+  { sev:'amber', driver:'roland', load:'7912',
+    title:'Trailer 08867 not confirmed by driver', sub:'Apollo can’t verify what’s loaded until the driver confirms in VendorFlow',
+    actions:[{label:'Confirm trailer', kind:'primary'}] },
+  { sev:'amber', driver:'roland', load:'7912',
+    title:'Tracking gap — pickup geofence never fired, transit 2h11m vs 1h baseline', sub:'Wrong-truck pattern suspected, not lateness — verify before acting',
+    actions:[{label:'Remove planned stop', kind:'outline'},{label:'Send to ApolloBot', kind:'primary'}] },
+  { sev:'amber', driver:null, load:'7912',
+    title:'POD missing 1h48m after delivery — blocking billing', sub:'Departure timestamp present, driver has since gone off duty',
+    actions:[{label:'Message driver', kind:'outline'},{label:'Review POD', kind:'primary'}] },
+];
+
+/* ---------- Chip renderers ---------- */
+function driverChip(key, lead){
+  const d = DRIVERS[key];
+  return `<span class="chip ${lead?'chip-lead':''}">${ICONS.driver}${d.name}</span>`;
+}
+function loadChip(load, lead){
+  return `<span class="chip ${lead?'chip-lead':''}"><span class="chip-dot" style="background:#155DFC"></span>Load ${load}</span>`;
+}
+function truckChip(key){ return `<span class="chip">${ICONS.truck}${DRIVERS[key].truck}</span>`; }
+function trailerChip(key){ return `<span class="chip">${ICONS.trailer}${DRIVERS[key].trailer}</span>`; }
+
+function statusPill(status){
+  const map = {
+    onplan:['status-onplan','On plan'],
+    ahead:['status-ahead','Ahead'],
+    behind:['status-behind','Behind'],
+  };
+  const [cls,label] = map[status];
+  return `<span class="status-chip ${cls}">${label}</span>`;
+}
+
+/* ---------- Row renderer (shared by Driver + Load views) ---------- */
+function renderRow(shift, primary){
+  const badges = primary === 'load'
+    ? [loadChip(shift.load, true), driverChip(shift.driver), truckChip(shift.driver), trailerChip(shift.driver)]
+    : [driverChip(shift.driver, true), loadChip(shift.load), truckChip(shift.driver), trailerChip(shift.driver)];
+
+  const expandable = !!shift.stops;
+  const expandedAttr = shift.expandedDefault ? 'true' : 'false';
+
+  return `
+  <div class="shift-row" data-flagged="${!!shift.flagged}" data-expanded="${expandedAttr}" data-id="${shift.id}">
+    <div class="shift-row-main" onclick="toggleRow('${shift.id}')">
+      <button class="chevron-btn" aria-label="Expand shift" ${expandable?'':'style="visibility:hidden"'}>${ICONS.chevron}</button>
+      <div class="row-badges">${badges.join('')}</div>
+      <div class="row-route">
+        <div class="line">${ICONS.pin}<span>${shift.origin}</span>${ICONS.arrow}${ICONS.pin}<span>${shift.dest}</span></div>
+        <div class="leg">Leg ${shift.leg}</div>
+      </div>
+      <div class="time-col">
+        <span class="planned">${shift.puPlanned}</span>
+        <span class="actual">${shift.puActual}</span>
+      </div>
+      <div class="time-col">
+        <span class="planned">${shift.delPlanned}</span>
+        <span class="actual ${shift.risk?'risk':''}">${shift.eta}</span>
+      </div>
+      <div class="row-status">${statusPill(shift.status)}</div>
+    </div>
+    ${shift.flagged ? `
+    <div class="row-flagbanner">
+      ${ICONS.alertTriangle}
+      <span class="msg">${shift.flagText}</span>
+      <button class="btn btn-disruptive btn-sm">${shift.flagAction}</button>
+    </div>` : ''}
+    ${expandable ? `
+    <div class="shift-expand">
+      <div class="stop-row">${shift.stops.map(renderStopCard).join('')}</div>
+    </div>` : ''}
+  </div>`;
+}
+
+function renderStopCard(stop){
+  const actionBtn = a => `<button class="btn btn-${a.kind} btn-sm">${a.label}</button>`;
+  return `
+  <div class="stop-card ${stop.state}">
+    <div class="stop-card-head">
+      <span class="stop-card-title">${stop.title}</span>
+      <span class="status-chip ${stop.badgeClass}">${stop.badge}</span>
+    </div>
+    <div class="stop-kv"><span>Arrived</span><b>${stop.arrived}</b></div>
+    <div class="stop-kv"><span>Departed</span><b>${stop.departed}</b></div>
+    <div class="stop-kv"><span>POD</span><b>${stop.pod}</b></div>
+    <div class="stop-note">${stop.note}</div>
+    <div class="stop-actions">${stop.actions.map(actionBtn).join('')}</div>
+  </div>`;
+}
+
+/* ---------- Flag renderer ---------- */
+function renderFlag(f){
+  const badges = [];
+  if (f.driver) badges.push(driverChip(f.driver));
+  if (f.load) badges.push(loadChip(f.load));
+  const actionBtn = a => `<button class="btn btn-${a.kind} btn-sm">${a.label}</button>`;
+  return `
+  <div class="flag-row sev-${f.sev}">
+    <span class="flag-icon">${ICONS.alertTriangle}</span>
+    <div class="flag-body">
+      <div class="flag-title">${f.title}</div>
+      <div class="flag-badges">${badges.join('')}</div>
+      <div class="flag-sub">${f.sub}</div>
+    </div>
+    <div class="flag-actions">${f.actions.map(actionBtn).join('')}</div>
+  </div>`;
+}
+
+/* ---------- Mount ---------- */
+document.getElementById('rows-driver').innerHTML = SHIFTS.map(s => renderRow(s,'driver')).join('');
+document.getElementById('rows-load').innerHTML = SHIFTS.map(s => renderRow(s,'load')).join('');
+document.getElementById('flags-list').innerHTML = FLAGS.map(renderFlag).join('');
+document.getElementById('flag-count').textContent = FLAGS.length;
+const quietCount = SHIFTS.filter(s => !s.flagged).length;
+document.getElementById('flags-quiet').innerHTML =
+  `Quiet: ${quietCount} other shift${quietCount === 1 ? '' : 's'} on plan · no DVIR gaps · no charge risk`;
+
+/* ---------- Expand/collapse ---------- */
+window.toggleRow = function(id){
+  const row = document.querySelector(`.shift-row[data-id="${id}"]`);
+  if (!row) return;
+  const hasStops = row.querySelector('.shift-expand');
+  if (!hasStops) return;
+  const expanded = row.getAttribute('data-expanded') === 'true';
+  row.setAttribute('data-expanded', expanded ? 'false' : 'true');
+};
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+    tab.setAttribute('aria-selected','true');
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.view').forEach(v=>v.setAttribute('data-active', v.dataset.view===target ? 'true':'false'));
+  });
+});
+
+/* ---------- Handoff modal ---------- */
+const modal = document.getElementById('handoff-modal');
+const toast = document.getElementById('toast');
+function showToast(msg){
+  toast.textContent = msg;
+  toast.setAttribute('data-show','true');
+  setTimeout(()=>toast.setAttribute('data-show','false'), 2200);
+}
+document.getElementById('btn-handoff').addEventListener('click', ()=>modal.setAttribute('data-open','true'));
+document.getElementById('handoff-close').addEventListener('click', ()=>modal.setAttribute('data-open','false'));
+document.getElementById('handoff-cancel').addEventListener('click', ()=>modal.setAttribute('data-open','false'));
+document.getElementById('handoff-save').addEventListener('click', ()=>{
+  modal.setAttribute('data-open','false');
+  showToast('Handoff note saved for the next shift');
+});
+modal.addEventListener('click', (e)=>{ if (e.target === modal) modal.setAttribute('data-open','false'); });
+</script>
+</body>
+</html>
