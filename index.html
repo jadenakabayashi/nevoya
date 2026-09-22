@@ -193,8 +193,8 @@ svg{display:block;}
 .chevron-btn svg{width:16px;height:16px;transition:transform .15s ease;}
 .shift-row[data-expanded="true"] .chevron-btn svg{transform:rotate(90deg);}
 .row-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
-.row-route{display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--text-default);min-width:0;}
-.row-route .line{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-route{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-default);min-width:0;}
+.row-route .line{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px;gap:6px;}
 .row-route .line svg{width:14px;height:14px;flex:none;color:var(--text-muted);}
 .row-route .leg{font-size:12px;color:var(--text-subtle);}
 .time-col{display:flex;flex-direction:column;gap:2px;font-size:12.5px;line-height:1.35;}
@@ -450,80 +450,76 @@ const NOW_HOUR = 14 + 31/60;
    not a cross-driver relay count, so it never implies stops we don't show. */
 const SHIFTS = [
   { id:'jennie-7625', driver:'jennie', load:'7625',
-    origin:'Houston, TX – Amazon DC', dest:'Waco, TX – Amazon Station',
     puPlanned:'PU app 04:00–05:00 CDT', puActual:'PU 04:15 CDT',
     delPlanned:'DEL app 07:30 CDT', eta:'ETA 07:00 CDT', risk:false, status:'ahead',
     shiftStart:4.0, hos:{ drive:'6:10', shift:'8:40', cycle:'42:15' },
     stops:[
       { n:'1', type:'pickup', hour:4.25, state:'done', badge:'Closed out', badgeClass:'status-done',
-        title:'Houston, TX – Amazon DC (Pickup)', arrived:'04:15', departed:'04:30', pod:'Uploaded 04:31 · verified',
+        loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'04:15', departed:'04:30', pod:'Uploaded 04:31 · verified',
         note:'Trailer run, single drop. Both timestamps present, clears for billing once delivered.',
         actions:[{label:'View POD', kind:'outline'}] },
       { n:'2', type:'delivery', hour:7.0, state:'done', badge:'Closed out', badgeClass:'status-done',
-        title:'Waco, TX – Amazon Station (Delivery)', arrived:'06:45', departed:'07:00', pod:'Uploaded 07:02 · verified',
+        loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'06:45', departed:'07:00', pod:'Uploaded 07:02 · verified',
         note:'Delivered ahead of the appt window. Load fully closed out.',
         actions:[{label:'View POD', kind:'outline'}] },
     ] },
 
   { id:'roland-7912', driver:'roland', load:'7912',
-    origin:'Envases – Waco, TX', dest:'Houston, TX – Coke',
     puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 05:12 CDT',
     delPlanned:'DEL app 13:45–14:45 CDT', eta:'ETA 14:59 CDT', risk:true, status:'behind',
     flagged:true, flagText:'Delivery appt window closes in 14 min — running 1h12m behind', flagAction:'Pull &amp; reassign',
     shiftStart:3.0, hos:{ drive:'3:40', shift:'5:15', cycle:'38:20', driveTight:true },
     stops:[
       { n:'1', type:'hub', hour:3.17, state:'done', badge:'Closed out', badgeClass:'status-done',
-        title:'Houston Yard (Empty trailer swap)', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
+        loc:'Houston Yard', title:'Houston Yard (Empty trailer swap)', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
         note:'Empty trailer 08867 staged before the drive out to Waco.',
         actions:[{label:'View yard log', kind:'outline'}] },
       { n:'2', type:'pickup', hour:6.24, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true,
-        title:'Envases – Waco, TX (Pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
+        loc:'Envases – Waco, TX', title:'Envases – Waco, TX (Pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
         note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack in the Houston window.',
         actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
       { n:'3', type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true,
-        title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
+        loc:'Houston, TX – Coke', title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
         note:'Appt window closes 14:45 CDT — projected arrival 14:59, 14 min past close. Customer has not yet been notified.',
         actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
       { n:'4', type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-        title:'Houston Yard (Empty trailer return)', arrived:'—', departed:'—', pod:'—',
+        loc:'Houston Yard', title:'Houston Yard (Empty trailer return)', arrived:'—', departed:'—', pod:'—',
         note:'Trailer 08867 returns empty once Coke DC is closed out. Not started yet.',
         actions:[] },
     ] },
 
   { id:'bruce-7734', driver:'bruce', load:'7734',
-    origin:'Houston, TX – RXO Yard', dest:'Houston, TX – RXO Local',
     puPlanned:'PU app 05:00–06:00 CDT', puActual:'PU 05:06 CDT',
     delPlanned:'DEL app 06:30 CDT', eta:'ETA 06:15 CDT', risk:false, status:'onplan',
     shiftStart:5.0, hos:{ drive:'7:30', shift:'9:45', cycle:'51:10' },
     stops:[
       { n:'1', type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done',
-        title:'Houston, TX – RXO Yard (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
+        loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
         note:'Clean pickup, no dwell. Short local hop — clears for billing once delivered.',
         actions:[{label:'View POD', kind:'outline'}] },
       { n:'2', type:'delivery', hour:6.25, state:'done', badge:'Closed out', badgeClass:'status-done',
-        title:'Houston, TX – RXO Local (Delivery)', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
+        loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
         note:'Delivered ahead of the appt window. Both timestamps present, load fully closed out.',
         actions:[{label:'View POD', kind:'outline'}] },
     ] },
 
   { id:'emily-9865', driver:'emily', load:'9865',
-    origin:'Dallas, TX – RXO Cross-dock', dest:'Houston, TX – Costco DC',
     puPlanned:'PU app 04:15–05:15 CDT', puActual:'PU 04:22 CDT',
     delPlanned:'DEL app 08:00 CDT', eta:'ETA 07:52 CDT', risk:false, status:'onplan',
     expandedDefault:true, shiftStart:3.75, hos:{ drive:'6:55', shift:'9:10', cycle:'44:05' },
     stops:[
       { n:'1', type:'pickup', hour:4.37, state:'done', badge:'Closed out', badgeClass:'status-done',
-        title:'Dallas, TX – RXO Cross-dock (Pickup)',
+        loc:'Dallas, TX – RXO Cross-dock', title:'Dallas, TX – RXO Cross-dock (Pickup)',
         arrived:'04:22', departed:'04:55', pod:'Uploaded 04:56 · verified',
         note:'Both timestamps present, POD matched to the load. Clears for billing.',
         actions:[{label:'View POD', kind:'outline'}] },
       { n:'2', type:'delivery', hour:7.67, state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing',
-        title:'Houston, TX – Costco DC (Delivery)',
+        loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Delivery)',
         arrived:'07:40', departed:'07:58', pod:'Not uploaded · 1h48m',
         note:'Driver has moved on to the next stop. Nothing to review — the document does not exist yet.',
         actions:[{label:'Message driver', kind:'outline'},{label:'Snooze 1h', kind:'ghost'}] },
       { n:'3', type:'yard', hour:8.33, state:'needs-human', badge:'Unverified', badgeClass:'status-unverified',
-        title:'Houston Yard (Empty return)',
+        loc:'Houston Yard', title:'Houston Yard (Empty return)',
         arrived:'08:20', departed:'—', pod:'Uploaded 08:24 · unverified',
         note:'Photo attached but unreadable at the signature block. Uploaded is not the same as valid.',
         actions:[{label:'Request re-upload', kind:'outline'},{label:'Review POD', kind:'primary'}] },
@@ -566,6 +562,13 @@ function legFraction(shift){
   return `${current}/${total}`;
 }
 
+/* The route line chains every stop's location, not just the first and
+   last — a shift with 4 stops is 4 locations, not one origin/dest pair,
+   so it stays honest about how many moves are actually in this shift. */
+function renderRouteChain(shift){
+  return shift.stops.map(s => `${ICONS.pin}<span>${s.loc}</span>`).join(ICONS.arrow);
+}
+
 /* ---------- Chip renderers ---------- */
 function driverChip(key, lead){
   const d = DRIVERS[key];
@@ -601,7 +604,7 @@ function renderRow(shift, primary){
       <button class="chevron-btn" aria-label="Expand shift">${ICONS.chevron}</button>
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
-        <div class="line">${ICONS.pin}<span>${shift.origin}</span>${ICONS.arrow}${ICONS.pin}<span>${shift.dest}</span></div>
+        <div class="line">${renderRouteChain(shift)}</div>
         <div class="leg">Leg ${legFraction(shift)}</div>
       </div>
       <div class="time-col">
