@@ -167,6 +167,8 @@ svg{display:block;}
 .status-done{background:var(--emerald-bg);color:var(--emerald);}
 .status-pod-missing{background:var(--red-bg);color:var(--red);}
 .status-unverified{background:var(--amber-bg);color:var(--amber);}
+.status-dwelling{background:var(--amber-bg);color:var(--amber);}
+.status-atrisk{background:var(--red-bg);color:var(--red);}
 
 /* ---------- Substrate container (Table token: lowest bg, padded, radius-xl) ---------- */
 .grid-container{background:var(--bg-lowest);border-radius:var(--radius-xl);padding:12px;}
@@ -208,9 +210,44 @@ svg{display:block;}
 .row-flagbanner .msg{flex:1;color:var(--text-dark);}
 .row-flagbanner .btn{margin-left:auto;}
 
-.shift-expand{display:none;padding:4px 10px 16px 46px;border-top:1px solid var(--border-muted);}
+.shift-expand{display:none;padding:16px 10px 16px 46px;border-top:1px solid var(--border-muted);}
 .shift-row[data-expanded="true"] .shift-expand{display:block;}
-.stop-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px;}
+.stop-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px;}
+
+/* ---------- Shift timeline (Gantt-style, per Tom's Active Shifts fork) ---------- */
+.shift-timeline{}
+.timeline-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.hos-readout{display:flex;gap:18px;}
+.hos-readout .hos-item{font-size:12px;color:var(--text-subtle);display:flex;flex-direction:column;gap:2px;}
+.hos-readout b{color:var(--text-dark);font-size:13px;font-weight:600;}
+.hos-readout b.tight{color:var(--red);}
+.timeline-legend{display:flex;gap:14px;font-size:11.5px;color:var(--text-subtle);}
+.timeline-legend .dot{width:7px;height:7px;border-radius:2px;display:inline-block;margin-right:5px;}
+.dot-yard{background:#CBD5E1;border:1px solid #90A1B9;}
+.dot-pickup{background:#90A1B9;}
+.dot-delivery{background:#0F3D45;}
+.dot-hub{background:#45556C;}
+
+.timeline-axis{position:relative;height:14px;margin-bottom:2px;}
+.timeline-axis span{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--text-subtle);white-space:nowrap;}
+
+.timeline-track{position:relative;height:44px;background:var(--bg-lowest);border-radius:var(--radius-sm);margin-bottom:26px;}
+.timeline-connector{position:absolute;top:50%;height:3px;background:var(--border-default);transform:translateY(-50%);border-radius:2px;}
+.timeline-loadlabel{position:absolute;top:4px;font-size:10.5px;font-weight:600;color:var(--text-muted);transform:translateX(-50%);white-space:nowrap;background:var(--bg-lowest);padding:0 4px;}
+.timeline-marker{
+  position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;
+  box-shadow:0 0 0 2px var(--bg-lowest);cursor:default;
+}
+.marker-pickup{background:#62748E;}
+.marker-delivery{background:#0F3D45;}
+.marker-hub{background:#45556C;}
+.marker-yard{background:#CBD5E1;color:#314158;}
+.marker-flagged{outline:2px solid var(--red);outline-offset:1px;}
+.timeline-now{position:absolute;top:-2px;bottom:-18px;width:2px;background:var(--red);z-index:2;}
+.timeline-now span{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--red);font-weight:700;white-space:nowrap;}
+.timeline-limit{position:absolute;top:-2px;bottom:-18px;width:0;border-left:2px dashed var(--amber);z-index:1;}
+.timeline-limit span{position:absolute;bottom:-15px;left:3px;font-size:10px;color:var(--amber);font-weight:700;white-space:nowrap;}
 
 /* ---------- Stop cards ---------- */
 .stop-card{
@@ -394,38 +431,82 @@ const DRIVERS = {
   emily:{ name:'Emily Duarte', truck:'5108', trailer:'66210' },
 };
 
+/* Shared "now" for every row's timeline — 14:31 CDT. Ties to the flags'
+   "closes in 14 min" (appt closes 14:45) / "running 1h12m behind" math. */
+const NOW_HOUR = 14 + 31/60;
+
 const SHIFTS = [
   { id:'jennie-7625', driver:'jennie', load:'7625',
     origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'1/2',
     puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 04:47 CDT',
-    delPlanned:'DEL app 08:30 CDT', eta:'ETA 08:24 CDT', risk:false, status:'ahead' },
+    delPlanned:'DEL app 08:30 CDT', eta:'ETA 08:24 CDT', risk:false, status:'ahead',
+    shiftStart:4.5, hos:{ drive:'6:10', shift:'8:40', cycle:'42:15' },
+    stops:[
+      { n:'1', type:'pickup', hour:4.78, state:'done', badge:'Closed out', badgeClass:'status-done',
+        title:'Envases – Waco, TX (Pickup)', arrived:'04:47', departed:'05:05', pod:'Uploaded 05:06 · verified',
+        note:'Both timestamps present, POD matched to the load. Clears for billing.',
+        actions:[{label:'View POD', kind:'outline'}] },
+      { n:'2', type:'hub', hour:8.4, state:'done', badge:'Closed out', badgeClass:'status-done',
+        title:'Regional Hub (Relay hand-off)', arrived:'08:11', departed:'08:24', pod:'N/A · relay leg',
+        note:'Handed off to the leg-2 driver at the hub. No POD required on a relay hand-off.',
+        actions:[{label:'View relay log', kind:'outline'}] },
+    ] },
 
   { id:'roland-7912', driver:'roland', load:'7912',
     origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'2/3',
     puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 05:12 CDT',
-    delPlanned:'DEL app 08:30 CDT', eta:'ETA 09:48 CDT', risk:true, status:'behind',
-    flagged:true, flagText:'Delivery appt window closes in 14 min — running 1h12m behind', flagAction:'Pull &amp; reassign' },
+    delPlanned:'DEL app 13:45–14:45 CDT', eta:'ETA 14:59 CDT', risk:true, status:'behind',
+    flagged:true, flagText:'Delivery appt window closes in 14 min — running 1h12m behind', flagAction:'Pull &amp; reassign',
+    shiftStart:4.5, hos:{ drive:'3:40', shift:'5:15', cycle:'38:20', driveTight:true },
+    stops:[
+      { n:'1', type:'hub', hour:5.0, state:'done', badge:'Closed out', badgeClass:'status-done',
+        title:'Houston Yard (Empty trailer pickup)', arrived:'04:42', departed:'05:00', pod:'N/A · yard move',
+        note:'Empty trailer 08867 picked up on schedule ahead of the Waco leg.',
+        actions:[{label:'View yard log', kind:'outline'}] },
+      { n:'2', type:'pickup', hour:6.24, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true,
+        title:'Envases – Waco, TX (Pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
+        note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack in the Houston window.',
+        actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
+      { n:'3', type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true,
+        title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
+        note:'Appt window closes 14:45 CDT — projected arrival 14:59, 14 min past close. Customer has not yet been notified.',
+        actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
+    ] },
 
   { id:'bruce-7734', driver:'bruce', load:'7734',
     origin:'Envases – Waco, TX', dest:'Dallas, TX Local', leg:'1/1',
     puPlanned:'PU app 05:00–06:00 CDT', puActual:'PU 05:06 CDT',
-    delPlanned:'DEL app 07:45 CDT', eta:'ETA 07:30 CDT', risk:false, status:'onplan' },
+    delPlanned:'DEL app 07:45 CDT', eta:'ETA 07:30 CDT', risk:false, status:'onplan',
+    shiftStart:5.0, hos:{ drive:'7:30', shift:'9:45', cycle:'51:10' },
+    stops:[
+      { n:'1', type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done',
+        title:'Envases – Waco, TX (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
+        note:'Clean pickup, no dwell. Clears for billing once delivered.',
+        actions:[{label:'View POD', kind:'outline'}] },
+      { n:'2', type:'delivery', hour:7.5, state:'done', badge:'Closed out', badgeClass:'status-done',
+        title:'Dallas, TX (Local delivery)', arrived:'07:24', departed:'07:36', pod:'Uploaded 07:38 · verified',
+        note:'Delivered ahead of the appt window. Both timestamps present, load fully closed out.',
+        actions:[{label:'View POD', kind:'outline'}] },
+    ] },
 
   { id:'emily-9865', driver:'emily', load:'9865',
     origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'2/3',
     puPlanned:'PU app 04:15–05:15 CDT', puActual:'PU 04:22 CDT',
     delPlanned:'DEL app 08:00 CDT', eta:'ETA 07:52 CDT', risk:false, status:'onplan',
-    expandedDefault:true,
+    expandedDefault:true, shiftStart:4.25, hos:{ drive:'6:55', shift:'9:10', cycle:'44:05' },
     stops:[
-      { state:'done', badge:'Closed out', badgeClass:'status-done', title:'Envases – Waco, TX (Pickup)',
+      { n:'1', type:'pickup', hour:4.37, state:'done', badge:'Closed out', badgeClass:'status-done',
+        title:'Envases – Waco, TX (Pickup)',
         arrived:'04:22', departed:'04:55', pod:'Uploaded 04:56 · verified',
         note:'Both timestamps present, POD matched to the load. Clears for billing.',
         actions:[{label:'View POD', kind:'outline'}] },
-      { state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing', title:'Houston, TX – Coke DC (Delivery)',
+      { n:'2', type:'delivery', hour:7.67, state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing',
+        title:'Houston, TX – Coke DC (Delivery)',
         arrived:'07:40', departed:'07:58', pod:'Not uploaded · 1h48m',
         note:'Driver has moved on to the next stop. Nothing to review — the document does not exist yet.',
         actions:[{label:'Message driver', kind:'outline'},{label:'Snooze 1h', kind:'ghost'}] },
-      { state:'needs-human', badge:'Unverified', badgeClass:'status-unverified', title:'Houston Yard (Empty return)',
+      { n:'3', type:'yard', hour:8.33, state:'needs-human', badge:'Unverified', badgeClass:'status-unverified',
+        title:'Houston Yard (Empty return)',
         arrived:'08:20', departed:'—', pod:'Uploaded 08:24 · unverified',
         note:'Photo attached but unreadable at the signature block. Uploaded is not the same as valid.',
         actions:[{label:'Request re-upload', kind:'outline'},{label:'Review POD', kind:'primary'}] },
@@ -483,13 +564,12 @@ function renderRow(shift, primary){
     ? [loadChip(shift.load, true), driverChip(shift.driver), truckChip(shift.driver), trailerChip(shift.driver)]
     : [driverChip(shift.driver, true), loadChip(shift.load), truckChip(shift.driver), trailerChip(shift.driver)];
 
-  const expandable = !!shift.stops;
   const expandedAttr = shift.expandedDefault ? 'true' : 'false';
 
   return `
   <div class="shift-row" data-flagged="${!!shift.flagged}" data-expanded="${expandedAttr}" data-id="${shift.id}">
-    <div class="shift-row-main" onclick="toggleRow('${shift.id}')">
-      <button class="chevron-btn" aria-label="Expand shift" ${expandable?'':'style="visibility:hidden"'}>${ICONS.chevron}</button>
+    <div class="shift-row-main" onclick="toggleRow(this)">
+      <button class="chevron-btn" aria-label="Expand shift">${ICONS.chevron}</button>
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
         <div class="line">${ICONS.pin}<span>${shift.origin}</span>${ICONS.arrow}${ICONS.pin}<span>${shift.dest}</span></div>
@@ -511,10 +591,56 @@ function renderRow(shift, primary){
       <span class="msg">${shift.flagText}</span>
       <button class="btn btn-disruptive btn-sm">${shift.flagAction}</button>
     </div>` : ''}
-    ${expandable ? `
     <div class="shift-expand">
+      ${renderTimeline(shift)}
       <div class="stop-row">${shift.stops.map(renderStopCard).join('')}</div>
-    </div>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ---------- Timeline visualization (Gantt-style, per Tom's Active Shifts
+   fork referenced in the PRD — HOS readout + a per-shift stop timeline on
+   a shared 24h axis, with a live "Now" line and a per-shift 14h on-duty
+   limit line). Lives inside the expanded row, above the stop cards. ---------- */
+function renderTimeline(shift){
+  const toPct = h => (h / 24 * 100).toFixed(2);
+  const stops = shift.stops;
+  const firstHour = stops[0].hour;
+  const lastHour = stops[stops.length - 1].hour;
+  const connectorLeft = toPct(firstHour);
+  const connectorWidth = (toPct(lastHour) - toPct(firstHour)).toFixed(2);
+  const limitHour = shift.shiftStart + 14;
+  const ticks = [1,4,7,10,13,16,19,22];
+
+  const markers = stops.map(s => `
+    <div class="timeline-marker marker-${s.type} ${s.flagged?'marker-flagged':''}"
+         style="left:${toPct(s.hour)}%" title="${s.title} — ${s.badge}">${s.n}</div>`).join('');
+
+  return `
+  <div class="shift-timeline">
+    <div class="timeline-head">
+      <div class="hos-readout">
+        <span class="hos-item">Drive<b class="${shift.hos.driveTight?'tight':''}">${shift.hos.drive}</b></span>
+        <span class="hos-item">Shift<b>${shift.hos.shift}</b></span>
+        <span class="hos-item">Cycle<b>${shift.hos.cycle}</b></span>
+      </div>
+      <div class="timeline-legend">
+        <span><span class="dot dot-yard"></span>Trailer/yard</span>
+        <span><span class="dot dot-pickup"></span>Pick up</span>
+        <span><span class="dot dot-delivery"></span>Delivery</span>
+        <span><span class="dot dot-hub"></span>Hub</span>
+      </div>
+    </div>
+    <div class="timeline-axis">
+      ${ticks.map(t => `<span style="left:${toPct(t)}%">${String(t).padStart(2,'0')}:00</span>`).join('')}
+    </div>
+    <div class="timeline-track">
+      <div class="timeline-connector" style="left:${connectorLeft}%;width:${connectorWidth}%"></div>
+      <div class="timeline-loadlabel" style="left:${connectorLeft}%">Load ${shift.load}</div>
+      ${markers}
+      <div class="timeline-limit" style="left:${toPct(limitHour)}%"><span>14h</span></div>
+      <div class="timeline-now" style="left:${toPct(NOW_HOUR)}%"><span>Now</span></div>
+    </div>
   </div>`;
 }
 
@@ -561,12 +687,14 @@ const quietCount = SHIFTS.filter(s => !s.flagged).length;
 document.getElementById('flags-quiet').innerHTML =
   `Quiet: ${quietCount} other shift${quietCount === 1 ? '' : 's'} on plan · no DVIR gaps · no charge risk`;
 
-/* ---------- Expand/collapse ---------- */
-window.toggleRow = function(id){
-  const row = document.querySelector(`.shift-row[data-id="${id}"]`);
+/* ---------- Expand/collapse ----------
+   Scoped to the clicked element, not a data-id lookup — each shift renders
+   twice (once per Driver/Load view), so a global id-based selector would
+   always resolve to the first (possibly hidden) copy in the DOM regardless
+   of which view the user is actually looking at. */
+window.toggleRow = function(rowMainEl){
+  const row = rowMainEl.closest('.shift-row');
   if (!row) return;
-  const hasStops = row.querySelector('.shift-expand');
-  if (!hasStops) return;
   const expanded = row.getAttribute('data-expanded') === 'true';
   row.setAttribute('data-expanded', expanded ? 'false' : 'true');
 };
