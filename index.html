@@ -228,26 +228,31 @@ svg{display:block;}
 .dot-delivery{background:#0F3D45;}
 .dot-hub{background:#45556C;}
 
+.timeline-caption{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
 .timeline-axis{position:relative;height:14px;margin-bottom:2px;}
 .timeline-axis span{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--text-subtle);white-space:nowrap;}
 
-.timeline-track{position:relative;height:44px;background:var(--bg-lowest);border-radius:var(--radius-sm);margin-bottom:26px;}
+.timeline-track{position:relative;height:44px;background:var(--bg-lowest);border-radius:var(--radius-sm);}
 .timeline-connector{position:absolute;top:50%;height:3px;background:var(--border-default);transform:translateY(-50%);border-radius:2px;}
-.timeline-loadlabel{position:absolute;top:4px;font-size:10.5px;font-weight:600;color:var(--text-muted);transform:translateX(-50%);white-space:nowrap;background:var(--bg-lowest);padding:0 4px;}
 .timeline-marker{
   position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:6px;
   display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;
-  box-shadow:0 0 0 2px var(--bg-lowest);cursor:default;
+  box-shadow:0 0 0 2px var(--bg-lowest);cursor:default;z-index:2;
 }
 .marker-pickup{background:#62748E;}
 .marker-delivery{background:#0F3D45;}
 .marker-hub{background:#45556C;}
 .marker-yard{background:#CBD5E1;color:#314158;}
 .marker-flagged{outline:2px solid var(--red);outline-offset:1px;}
-.timeline-now{position:absolute;top:-2px;bottom:-18px;width:2px;background:var(--red);z-index:2;}
-.timeline-now span{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--red);font-weight:700;white-space:nowrap;}
-.timeline-limit{position:absolute;top:-2px;bottom:-18px;width:0;border-left:2px dashed var(--amber);z-index:1;}
-.timeline-limit span{position:absolute;bottom:-15px;left:3px;font-size:10px;color:var(--amber);font-weight:700;white-space:nowrap;}
+.timeline-now{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:1;}
+.timeline-limit{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--amber);z-index:1;}
+
+/* Now/limit text labels get their own strip below the track so they never
+   sit on top of the markers above or the stop cards below. */
+.timeline-foot{position:relative;height:14px;margin:6px 0 14px;}
+.timeline-foot span{position:absolute;top:0;transform:translateX(-50%);font-size:10px;font-weight:700;white-space:nowrap;}
+.timeline-foot .foot-now{color:var(--red);}
+.timeline-foot .foot-limit{color:var(--amber);}
 
 /* ---------- Stop cards ---------- */
 .stop-card{
@@ -631,15 +636,19 @@ function renderTimeline(shift){
         <span><span class="dot dot-hub"></span>Hub</span>
       </div>
     </div>
+    <div class="timeline-caption">Load ${shift.load} · Leg ${shift.leg}</div>
     <div class="timeline-axis">
       ${ticks.map(t => `<span style="left:${toPct(t)}%">${String(t).padStart(2,'0')}:00</span>`).join('')}
     </div>
     <div class="timeline-track">
       <div class="timeline-connector" style="left:${connectorLeft}%;width:${connectorWidth}%"></div>
-      <div class="timeline-loadlabel" style="left:${connectorLeft}%">Load ${shift.load}</div>
       ${markers}
-      <div class="timeline-limit" style="left:${toPct(limitHour)}%"><span>14h</span></div>
-      <div class="timeline-now" style="left:${toPct(NOW_HOUR)}%"><span>Now</span></div>
+      <div class="timeline-limit" style="left:${toPct(limitHour)}%"></div>
+      <div class="timeline-now" style="left:${toPct(NOW_HOUR)}%"></div>
+    </div>
+    <div class="timeline-foot">
+      <span class="foot-limit" style="left:${toPct(limitHour)}%">14h</span>
+      <span class="foot-now" style="left:${toPct(NOW_HOUR)}%">Now</span>
     </div>
   </div>`;
 }
