@@ -450,7 +450,7 @@ const NOW_HOUR = 14 + 31/60;
    not a cross-driver relay count, so it never implies stops we don't show. */
 const SHIFTS = [
   { id:'jennie-7625', driver:'jennie', load:'7625',
-    origin:'Houston, TX – Amazon DC', dest:'Waco, TX – Amazon Station', leg:'1/1',
+    origin:'Houston, TX – Amazon DC', dest:'Waco, TX – Amazon Station',
     puPlanned:'PU app 04:00–05:00 CDT', puActual:'PU 04:15 CDT',
     delPlanned:'DEL app 07:30 CDT', eta:'ETA 07:00 CDT', risk:false, status:'ahead',
     shiftStart:4.0, hos:{ drive:'6:10', shift:'8:40', cycle:'42:15' },
@@ -466,7 +466,7 @@ const SHIFTS = [
     ] },
 
   { id:'roland-7912', driver:'roland', load:'7912',
-    origin:'Envases – Waco, TX', dest:'Houston, TX – Coke', leg:'2/3',
+    origin:'Envases – Waco, TX', dest:'Houston, TX – Coke',
     puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 05:12 CDT',
     delPlanned:'DEL app 13:45–14:45 CDT', eta:'ETA 14:59 CDT', risk:true, status:'behind',
     flagged:true, flagText:'Delivery appt window closes in 14 min — running 1h12m behind', flagAction:'Pull &amp; reassign',
@@ -474,11 +474,11 @@ const SHIFTS = [
     stops:[
       { n:'1', type:'hub', hour:3.17, state:'done', badge:'Closed out', badgeClass:'status-done',
         title:'Houston Yard (Empty trailer swap)', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
-        note:'Empty trailer 08867 staged before the drive out to Waco. Leg 1 of 3 for this load.',
+        note:'Empty trailer 08867 staged before the drive out to Waco.',
         actions:[{label:'View yard log', kind:'outline'}] },
       { n:'2', type:'pickup', hour:6.24, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true,
         title:'Envases – Waco, TX (Pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
-        note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack in the Houston window. Leg 2 of 3, in progress.',
+        note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack in the Houston window.',
         actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
       { n:'3', type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true,
         title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
@@ -486,12 +486,12 @@ const SHIFTS = [
         actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
       { n:'4', type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
         title:'Houston Yard (Empty trailer return)', arrived:'—', departed:'—', pod:'—',
-        note:'Leg 3 of 3 — trailer 08867 returns empty once Coke DC is closed out. Not started yet.',
+        note:'Trailer 08867 returns empty once Coke DC is closed out. Not started yet.',
         actions:[] },
     ] },
 
   { id:'bruce-7734', driver:'bruce', load:'7734',
-    origin:'Houston, TX – RXO Yard', dest:'Houston, TX – RXO Local', leg:'1/1',
+    origin:'Houston, TX – RXO Yard', dest:'Houston, TX – RXO Local',
     puPlanned:'PU app 05:00–06:00 CDT', puActual:'PU 05:06 CDT',
     delPlanned:'DEL app 06:30 CDT', eta:'ETA 06:15 CDT', risk:false, status:'onplan',
     shiftStart:5.0, hos:{ drive:'7:30', shift:'9:45', cycle:'51:10' },
@@ -507,7 +507,7 @@ const SHIFTS = [
     ] },
 
   { id:'emily-9865', driver:'emily', load:'9865',
-    origin:'Dallas, TX – RXO Cross-dock', dest:'Houston, TX – Costco DC', leg:'2/2',
+    origin:'Dallas, TX – RXO Cross-dock', dest:'Houston, TX – Costco DC',
     puPlanned:'PU app 04:15–05:15 CDT', puActual:'PU 04:22 CDT',
     delPlanned:'DEL app 08:00 CDT', eta:'ETA 07:52 CDT', risk:false, status:'onplan',
     expandedDefault:true, shiftStart:3.75, hos:{ drive:'6:55', shift:'9:10', cycle:'44:05' },
@@ -554,6 +554,18 @@ const FLAGS = [
     actions:[{label:'Message driver', kind:'outline'},{label:'Review POD', kind:'primary'}] },
 ];
 
+/* ---------- Derived values ----------
+   The leg fraction is never hand-typed — it's computed from the stops
+   array so the row header, the timeline caption, and the stop cards can
+   never drift out of sync with each other. "Current" = how many stops
+   this driver has actually reached (arrived != '—'); "total" = how many
+   stops are on this shift's timeline, reached or not. */
+function legFraction(shift){
+  const total = shift.stops.length;
+  const current = shift.stops.filter(s => s.arrived && s.arrived !== '—').length;
+  return `${current}/${total}`;
+}
+
 /* ---------- Chip renderers ---------- */
 function driverChip(key, lead){
   const d = DRIVERS[key];
@@ -590,7 +602,7 @@ function renderRow(shift, primary){
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
         <div class="line">${ICONS.pin}<span>${shift.origin}</span>${ICONS.arrow}${ICONS.pin}<span>${shift.dest}</span></div>
-        <div class="leg">Leg ${shift.leg}</div>
+        <div class="leg">Leg ${legFraction(shift)}</div>
       </div>
       <div class="time-col">
         <span class="planned">${shift.puPlanned}</span>
@@ -648,7 +660,7 @@ function renderTimeline(shift){
         <span><span class="dot dot-hub"></span>Hub</span>
       </div>
     </div>
-    <div class="timeline-caption">Load ${shift.load} · Leg ${shift.leg}</div>
+    <div class="timeline-caption">Load ${shift.load} · Leg ${legFraction(shift)}</div>
     <div class="timeline-axis">
       ${ticks.map(t => `<span style="left:${toPct(t)}%">${String(t).padStart(2,'0')}:00</span>`).join('')}
     </div>
