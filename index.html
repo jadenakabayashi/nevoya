@@ -174,7 +174,7 @@ svg{display:block;}
 /* ---------- Substrate container (Table token: lowest bg, padded, radius-xl) ---------- */
 .grid-container{background:var(--bg-lowest);border-radius:var(--radius-xl);padding:12px;}
 .grid-header{
-  display:grid;grid-template-columns:24px minmax(240px,1.15fr) 1.65fr 150px 150px 96px;
+  display:grid;grid-template-columns:24px minmax(260px,1.3fr) 2.2fr 100px;
   gap:16px;padding:6px 10px;font-size:13px;font-weight:600;color:var(--text-subtle);
 }
 
@@ -183,7 +183,7 @@ svg{display:block;}
 .shift-row:last-child{margin-bottom:0;}
 .shift-row[data-flagged="true"]{border-color:var(--red);}
 .shift-row-main{
-  display:grid;grid-template-columns:24px minmax(240px,1.15fr) 1.65fr 150px 150px 96px;
+  display:grid;grid-template-columns:24px minmax(260px,1.3fr) 2.2fr 100px;
   gap:16px;align-items:center;padding:12px 10px;cursor:pointer;
 }
 .chevron-btn{
@@ -197,10 +197,6 @@ svg{display:block;}
 .row-route .line{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px;gap:6px;}
 .row-route .line svg{width:14px;height:14px;flex:none;color:var(--text-muted);}
 .row-route .leg{font-size:12px;color:var(--text-subtle);}
-.time-col{display:flex;flex-direction:column;gap:2px;font-size:12.5px;line-height:1.35;}
-.time-col .planned{color:var(--text-subtle);}
-.time-col .actual{color:var(--text-dark);font-weight:600;}
-.time-col .actual.risk{color:var(--red);}
 .row-status{display:flex;justify-content:flex-end;}
 
 .row-flagbanner{
@@ -266,8 +262,11 @@ svg{display:block;}
 .stop-card.needs-human{border-top-color:var(--amber);}
 .stop-card.upcoming{border-top-color:var(--border-default);}
 .stop-card.upcoming .stop-card-title,.stop-card.upcoming .stop-kv b{color:var(--text-subtle);}
-.stop-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.stop-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.stop-card-titles{display:flex;flex-direction:column;gap:2px;}
 .stop-card-title{font-weight:600;font-size:14px;color:var(--text-heading);}
+.stop-card-driver{font-size:11.5px;color:var(--text-subtle);display:flex;align-items:center;gap:4px;}
+.stop-card-driver img{width:12px;height:12px;}
 .stop-kv{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);}
 .stop-kv b{color:var(--text-dark);font-weight:600;}
 .stop-note{
@@ -378,7 +377,7 @@ svg{display:block;}
       <section class="view" data-view="driver">
         <div class="grid-container">
           <div class="grid-header">
-            <span></span><span>Driver</span><span>Route</span><span>Pickup</span><span>Delivery</span><span>Status</span>
+            <span></span><span>Driver</span><span>Route</span><span>Status</span>
           </div>
           <div id="rows-driver"></div>
         </div>
@@ -387,7 +386,7 @@ svg{display:block;}
       <section class="view" data-view="load">
         <div class="grid-container">
           <div class="grid-header">
-            <span></span><span>Load</span><span>Route</span><span>Pickup</span><span>Delivery</span><span>Status</span>
+            <span></span><span>Load</span><span>Route</span><span>Status</span>
           </div>
           <div id="rows-load"></div>
         </div>
@@ -436,6 +435,7 @@ const ICONS = {
 const DRIVERS = {
   jennie:{ name:'Jennie Andros', truck:'4210', trailer:'77241' },
   roland:{ name:'Roland Martinez', truck:'4654', trailer:'08867' },
+  steven:{ name:'Steven Bell', truck:'4390', trailer:'08867' }, // inherits 08867 at the relay hand-off — the trailer travels with the load, not the tractor
   bruce:{ name:'Bruce Handy', truck:'4188', trailer:'55302' },
   emily:{ name:'Emily Duarte', truck:'5108', trailer:'66210' },
 };
@@ -444,129 +444,168 @@ const DRIVERS = {
    "closes in 14 min" (appt closes 14:45) / "running 1h12m behind" math. */
 const NOW_HOUR = 14 + 31/60;
 
-/* Leg convention, kept consistent everywhere: a "leg" is one stop-to-stop
-   segment of THIS driver's own timeline (N stops shown = N-1 legs). The
-   fraction names which segment is current/most-recent relative to Now —
-   not a cross-driver relay count, so it never implies stops we don't show. */
-const SHIFTS = [
-  { id:'jennie-7625', driver:'jennie', load:'7625',
-    puPlanned:'PU app 04:00–05:00 CDT', puActual:'PU 04:15 CDT',
-    delPlanned:'DEL app 07:30 CDT', eta:'ETA 07:00 CDT', risk:false, status:'ahead',
-    shiftStart:4.0, hos:{ drive:'6:10', shift:'8:40', cycle:'42:15' },
-    stops:[
-      { n:'1', type:'pickup', hour:4.25, state:'done', badge:'Closed out', badgeClass:'status-done',
-        loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'04:15', departed:'04:30', pod:'Uploaded 04:31 · verified',
-        note:'Trailer run, single drop. Both timestamps present, clears for billing once delivered.',
-        actions:[{label:'View POD', kind:'outline'}] },
-      { n:'2', type:'delivery', hour:7.0, state:'done', badge:'Closed out', badgeClass:'status-done',
-        loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'06:45', departed:'07:00', pod:'Uploaded 07:02 · verified',
-        note:'Delivered ahead of the appt window. Load fully closed out.',
-        actions:[{label:'View POD', kind:'outline'}] },
-    ] },
+/* ============================================================
+   MOVES — the atomic unit, per the PRDs/Miro: NOT "legs". Each move is
+   one stop a driver makes, tagged with its own `driver` AND `load` (not
+   inherited from a parent "shift" record), because:
+   - a driver can run multiple loads back to back in one shift (Jennie:
+     7625 then 8130), and
+   - a load can span multiple drivers via a relay hand-off (7912: Roland
+     hands off to Steven at Corsicana).
+   The Driver tab groups these by `driver` (a driver's full shift, every
+   load they touch). The Load tab groups these by `load` (a load's full
+   life, every driver who touched it — relay-inclusive). Same data,
+   two groupings, so they can never disagree with each other.
+   ============================================================ */
+const MOVES = [
+  // Jennie — Load 7625 (Houston -> Waco), then Load 8130 back-to-back
+  { driver:'jennie', load:'7625', n:'1', type:'pickup', hour:4.25, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'04:15', departed:'04:30', pod:'Uploaded 04:31 · verified',
+    note:'Trailer run, single drop. Both timestamps present, clears for billing once delivered.',
+    actions:[{label:'View POD', kind:'outline'}] },
+  { driver:'jennie', load:'7625', n:'2', type:'delivery', hour:7.0, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'06:45', departed:'07:00', pod:'Uploaded 07:02 · verified',
+    note:'Delivered ahead of the appt window. Load fully closed out.',
+    actions:[{label:'View POD', kind:'outline'}] },
+  { driver:'jennie', load:'8130', n:'3', type:'pickup', hour:7.4, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Pickup)', arrived:'07:20', departed:'07:24', pod:'Uploaded 07:25 · verified',
+    note:'Second load of the shift, dispatched right off the same stop — trailer swapped in the yard.',
+    actions:[{label:'View POD', kind:'outline'}] },
+  { driver:'jennie', load:'8130', n:'4', type:'delivery', hour:8.5, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Temple, TX – Amazon Station', title:'Temple, TX – Amazon Station (Delivery)', arrived:'08:20', departed:'08:30', pod:'Uploaded 08:31 · verified',
+    note:'Delivered clean. Both of today’s loads are now fully closed out.',
+    actions:[{label:'View POD', kind:'outline'}] },
 
-  { id:'roland-7912', driver:'roland', load:'7912',
-    puPlanned:'PU app 04:30–05:30 CDT', puActual:'PU 05:12 CDT',
-    delPlanned:'DEL app 13:45–14:45 CDT', eta:'ETA 14:59 CDT', risk:true, status:'behind',
-    flagged:true, flagText:'Delivery appt window closes in 14 min — running 1h12m behind', flagAction:'Pull &amp; reassign',
-    shiftStart:3.0, hos:{ drive:'3:40', shift:'5:15', cycle:'38:20', driveTight:true },
-    stops:[
-      { n:'1', type:'hub', hour:3.17, state:'done', badge:'Closed out', badgeClass:'status-done',
-        loc:'Houston Yard', title:'Houston Yard (Empty trailer swap)', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
-        note:'Empty trailer 08867 staged before the drive out to Waco.',
-        actions:[{label:'View yard log', kind:'outline'}] },
-      { n:'2', type:'pickup', hour:6.24, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true,
-        loc:'Envases – Waco, TX', title:'Envases – Waco, TX (Pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
-        note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack in the Houston window.',
-        actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
-      { n:'3', type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true,
-        loc:'Houston, TX – Coke', title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
-        note:'Appt window closes 14:45 CDT — projected arrival 14:59, 14 min past close. Customer has not yet been notified.',
-        actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
-      { n:'4', type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-        loc:'Houston Yard', title:'Houston Yard (Empty trailer return)', arrived:'—', departed:'—', pod:'—',
-        note:'Trailer 08867 returns empty once Coke DC is closed out. Not started yet.',
-        actions:[] },
-    ] },
+  // Roland — Load 7912, Houston Yard -> Waco pickup (dwell) -> relay hand-off at Corsicana
+  { driver:'roland', load:'7912', n:'1', type:'hub', hour:3.17, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Houston Yard', title:'Houston Yard (Empty trailer swap)', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
+    note:'Empty trailer 08867 staged before the drive out to Waco.',
+    actions:[{label:'View yard log', kind:'outline'}] },
+  { driver:'roland', load:'7912', n:'2', type:'pickup', hour:5.9, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true,
+    loc:'Envases – Waco, TX', title:'Envases – Waco, TX (Pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
+    note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack ahead of the relay hand-off.',
+    actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
+  { driver:'roland', load:'7912', n:'3', type:'hub', hour:8.4, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Corsicana Relay Point', title:'Corsicana Relay Point (Hand-off to Steven Bell)', arrived:'08:32', departed:'08:45', pod:'N/A · relay hand-off',
+    note:'Hand-off completed ~55min behind plan, carrying the Waco dwell forward — passed the delay to Steven’s leg into Houston.',
+    actions:[{label:'View relay log', kind:'outline'}] },
 
-  { id:'bruce-7734', driver:'bruce', load:'7734',
-    puPlanned:'PU app 05:00–06:00 CDT', puActual:'PU 05:06 CDT',
-    delPlanned:'DEL app 06:30 CDT', eta:'ETA 06:15 CDT', risk:false, status:'onplan',
-    shiftStart:5.0, hos:{ drive:'7:30', shift:'9:45', cycle:'51:10' },
-    stops:[
-      { n:'1', type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done',
-        loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
-        note:'Clean pickup, no dwell. Short local hop — clears for billing once delivered.',
-        actions:[{label:'View POD', kind:'outline'}] },
-      { n:'2', type:'delivery', hour:6.25, state:'done', badge:'Closed out', badgeClass:'status-done',
-        loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
-        note:'Delivered ahead of the appt window. Both timestamps present, load fully closed out.',
-        actions:[{label:'View POD', kind:'outline'}] },
-    ] },
+  // Steven Bell — back half of the Load 7912 relay
+  { driver:'steven', load:'7912', n:'4', type:'hub', hour:9.3, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Corsicana Relay Point', title:'Corsicana Relay Point (Relay pickup)', arrived:'08:40', departed:'08:50', pod:'N/A · relay hand-off',
+    note:'Picked up trailer 08867 from Roland and continued on toward Houston.',
+    actions:[{label:'View relay log', kind:'outline'}] },
+  { driver:'steven', load:'7912', n:'5', type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true,
+    loc:'Houston, TX – Coke', title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
+    note:'Appt window closes 14:45 CDT — projected arrival 14:59, 14 min past close, carried over from the relay hand-off delay. Customer has not yet been notified.',
+    actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
+  { driver:'steven', load:'7912', n:'6', type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
+    loc:'Houston Yard', title:'Houston Yard (Empty trailer return)', arrived:'—', departed:'—', pod:'—',
+    note:'Trailer 08867 returns empty once Coke DC is closed out. Not started yet.',
+    actions:[] },
 
-  { id:'emily-9865', driver:'emily', load:'9865',
-    puPlanned:'PU app 04:15–05:15 CDT', puActual:'PU 04:22 CDT',
-    delPlanned:'DEL app 08:00 CDT', eta:'ETA 07:52 CDT', risk:false, status:'onplan',
-    shiftStart:3.75, hos:{ drive:'6:55', shift:'9:10', cycle:'44:05' },
-    stops:[
-      { n:'1', type:'pickup', hour:4.37, state:'done', badge:'Closed out', badgeClass:'status-done',
-        loc:'Dallas, TX – RXO Cross-dock', title:'Dallas, TX – RXO Cross-dock (Pickup)',
-        arrived:'04:22', departed:'04:55', pod:'Uploaded 04:56 · verified',
-        note:'Both timestamps present, POD matched to the load. Clears for billing.',
-        actions:[{label:'View POD', kind:'outline'}] },
-      { n:'2', type:'delivery', hour:7.67, state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing',
-        loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Delivery)',
-        arrived:'07:40', departed:'07:58', pod:'Not uploaded · 1h48m',
-        note:'Driver has moved on to the next stop. Nothing to review — the document does not exist yet.',
-        actions:[{label:'Message driver', kind:'outline'},{label:'Snooze 1h', kind:'ghost'}] },
-      { n:'3', type:'yard', hour:8.33, state:'needs-human', badge:'Unverified', badgeClass:'status-unverified',
-        loc:'Houston Yard', title:'Houston Yard (Empty return)',
-        arrived:'08:20', departed:'—', pod:'Uploaded 08:24 · unverified',
-        note:'Photo attached but unreadable at the signature block. Uploaded is not the same as valid.',
-        actions:[{label:'Request re-upload', kind:'outline'},{label:'Review POD', kind:'primary'}] },
-    ] },
+  // Bruce — Load 7734
+  { driver:'bruce', load:'7734', n:'1', type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
+    note:'Clean pickup, no dwell. Short local hop — clears for billing once delivered.',
+    actions:[{label:'View POD', kind:'outline'}] },
+  { driver:'bruce', load:'7734', n:'2', type:'delivery', hour:6.25, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
+    note:'Delivered ahead of the appt window. Both timestamps present, load fully closed out.',
+    actions:[{label:'View POD', kind:'outline'}] },
+
+  // Emily — Load 9865
+  { driver:'emily', load:'9865', n:'1', type:'pickup', hour:4.37, state:'done', badge:'Closed out', badgeClass:'status-done',
+    loc:'Dallas, TX – RXO Cross-dock', title:'Dallas, TX – RXO Cross-dock (Pickup)',
+    arrived:'04:22', departed:'04:55', pod:'Uploaded 04:56 · verified',
+    note:'Both timestamps present, POD matched to the load. Clears for billing.',
+    actions:[{label:'View POD', kind:'outline'}] },
+  { driver:'emily', load:'9865', n:'2', type:'delivery', hour:7.67, state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing',
+    loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Delivery)',
+    arrived:'07:40', departed:'07:58', pod:'Not uploaded · 6h33m',
+    note:'Driver has moved on to the next stop. Nothing to review — the document does not exist yet.',
+    actions:[{label:'Message driver', kind:'outline'},{label:'Snooze 1h', kind:'ghost'}] },
+  { driver:'emily', load:'9865', n:'3', type:'yard', hour:8.33, state:'needs-human', badge:'Unverified', badgeClass:'status-unverified',
+    loc:'Houston Yard', title:'Houston Yard (Empty return)',
+    arrived:'08:20', departed:'—', pod:'Uploaded 08:24 · unverified',
+    note:'Photo attached but unreadable at the signature block. Uploaded is not the same as valid.',
+    actions:[{label:'Request re-upload', kind:'outline'},{label:'Review POD', kind:'primary'}] },
 ];
+
+/* Driver-scoped (not load-scoped) metadata — HOS and the 14h limit are
+   properties of a driver's own shift, so they only ever apply on the
+   Driver tab, never on a Load row that might span two drivers. */
+const DRIVER_META = {
+  jennie:{ shiftStart:4.0, hos:{ drive:'6:10', shift:'8:40', cycle:'42:15' }, status:'ahead' },
+  roland:{ shiftStart:3.0, hos:{ drive:'3:40', shift:'5:15', cycle:'38:20', driveTight:true }, status:'onplan' },
+  steven:{ shiftStart:7.5, hos:{ drive:'8:10', shift:'10:40', cycle:'58:15' }, status:'behind',
+    banner:{ text:'Delivery appt window closes in 14 min — running 1h12m behind (relay hand-off ran ~55min late)', action:'Pull &amp; reassign' } },
+  bruce:{ shiftStart:5.0, hos:{ drive:'7:30', shift:'9:45', cycle:'51:10' }, status:'onplan' },
+  emily:{ shiftStart:3.75, hos:{ drive:'6:55', shift:'9:10', cycle:'44:05' }, status:'onplan' },
+};
+
+/* Load-scoped status — computed from that load's own moves, independent
+   of whatever else the driver(s) on it are doing. */
+const LOAD_META = {
+  '7625':{ status:'ahead' },
+  '8130':{ status:'ahead' },
+  '7912':{ status:'behind',
+    banner:{ text:'Delivery appt window closes in 14 min — running 1h12m behind (relay hand-off ran ~55min late)', action:'Pull &amp; reassign' } },
+  '7734':{ status:'onplan' },
+  '9865':{ status:'onplan' },
+};
+
+const DRIVER_KEYS = [...new Set(MOVES.map(m => m.driver))];
+const LOAD_KEYS = [...new Set(MOVES.map(m => m.load))];
 
 const FLAGS = [
   { sev:'red', driver:'roland', load:null,
     title:'No response to dispatcher message — sent 25 min ago', sub:'Asked about the Waco dwell before it became a delivery problem',
     actions:[{label:'Call driver', kind:'primary'}] },
-  { sev:'red', driver:'roland', load:'7912',
-    title:'Delivery at risk — appt window closes 14:45, running 1h12m behind', sub:'Cause: 1h04m dwell at Envases Waco, origin of today’s delay',
-    actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
+  { sev:'red', driver:'steven', load:'7912',
+    title:'Delivery at risk — appt window closes 14:45, running 1h12m behind', sub:'Cause: 1h04m dwell at Envases Waco carried through the Corsicana relay hand-off',
+    actions:[{label:'Verify in timeline', kind:'outline'},{label:'Notify downstream driver', kind:'disruptive'}] },
   { sev:'amber', driver:'roland', load:'7912',
-    title:'Dwelling 1h04m at Envases Waco — no downstream impact yet', sub:'Absorbed by slack ahead of the Houston delivery window',
+    title:'Dwelling 1h04m at Envases Waco — no downstream impact yet', sub:'Absorbed by slack ahead of the Corsicana relay hand-off',
     actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
   { sev:'amber', driver:'roland', load:null,
     title:'3h40m left on Drive clock — not enough to finish planned shift', sub:'Remaining plan needs ~4h20m of drive time',
-    actions:[{label:'Redispatch remaining legs', kind:'primary'}] },
+    actions:[{label:'Redispatch remaining moves', kind:'primary'}] },
   { sev:'amber', driver:'roland', load:'7912',
     title:'Trailer 08867 not confirmed by driver', sub:'Apollo can’t verify what’s loaded until the driver confirms in VendorFlow',
     actions:[{label:'Confirm trailer', kind:'primary'}] },
   { sev:'amber', driver:'roland', load:'7912',
     title:'Tracking gap — pickup geofence never fired, transit 2h11m vs 1h baseline', sub:'Wrong-truck pattern suspected, not lateness — verify before acting',
     actions:[{label:'Remove planned stop', kind:'outline'},{label:'Send to ApolloBot', kind:'primary'}] },
-  { sev:'amber', driver:null, load:'7912',
-    title:'POD missing 1h48m after delivery — blocking billing', sub:'Departure timestamp present, driver has since gone off duty',
+  { sev:'amber', driver:null, load:'9865',
+    title:'POD missing 6h33m after delivery — blocking billing', sub:'Departure timestamp present at Houston, TX – Costco DC, driver has since moved on',
     actions:[{label:'Message driver', kind:'outline'},{label:'Review POD', kind:'primary'}] },
 ];
 
-/* ---------- Derived values ----------
-   The leg fraction is never hand-typed — it's computed from the stops
-   array so the row header, the timeline caption, and the stop cards can
-   never drift out of sync with each other. "Current" = how many stops
-   this driver has actually reached (arrived != '—'); "total" = how many
-   stops are on this shift's timeline, reached or not. */
-function legFraction(shift){
-  const total = shift.stops.length;
-  const current = shift.stops.filter(s => s.arrived && s.arrived !== '—').length;
-  return `${current}/${total}`;
+/* ---------- Grouping helpers ----------
+   These are the only two ways MOVES ever gets grouped. Everything else
+   (badges, route, timeline, cards) is derived from whichever list one
+   of these returns, so the Driver tab and Load tab can't disagree about
+   what actually happened. */
+function movesForDriver(key){ return MOVES.filter(m => m.driver === key).sort((a,b) => a.hour - b.hour); }
+function movesForLoad(id){ return MOVES.filter(m => m.load === id).sort((a,b) => a.hour - b.hour); }
+function driversOnLoad(id){ return [...new Set(movesForLoad(id).map(m => m.driver))]; }
+function loadsOnDriver(key){ return [...new Set(movesForDriver(key).map(m => m.load))]; }
+
+/* Walks a move list in order and names each new value it hits under
+   `keyFn` — e.g. "Load 7625 → Load 8130" for a two-load shift, or
+   "Roland Martinez → Steven Bell" for a relay load. Collapses to one
+   name when there's only one group. */
+function groupCaption(moves, keyFn, labelFn){
+  const seq = [];
+  moves.forEach(m => { const k = keyFn(m); if (seq[seq.length - 1] !== k) seq.push(k); });
+  return seq.map(labelFn).join(' → ');
 }
 
-/* The route line chains every stop's location, not just the first and
-   last — a shift with 4 stops is 4 locations, not one origin/dest pair,
-   so it stays honest about how many moves are actually in this shift. */
-function renderRouteChain(shift){
-  return shift.stops.map(s => `${ICONS.pin}<span>${s.loc}</span>`).join(ICONS.arrow);
+/* The route line chains every move's location in order — a shift or load
+   with 4 moves is 4 locations, not one origin/dest pair. */
+function renderRouteChain(moves){
+  return moves.map(m => `${ICONS.pin}<span>${m.loc}</span>`).join(ICONS.arrow);
 }
 
 /* ---------- Chip renderers ---------- */
@@ -591,71 +630,85 @@ function statusPill(status){
 }
 
 /* ---------- Row renderer (shared by Driver + Load views) ---------- */
-function renderRow(shift, primary){
-  const badges = primary === 'load'
-    ? [loadChip(shift.load, true), driverChip(shift.driver), truckChip(shift.driver), trailerChip(shift.driver)]
-    : [driverChip(shift.driver, true), loadChip(shift.load), truckChip(shift.driver), trailerChip(shift.driver)];
-
-  const expandedAttr = shift.expandedDefault ? 'true' : 'false';
-
+function renderEntityRow({ id, badges, moves, rowCaption, status, banner, shiftStart, hos, timelineCaption }){
   return `
-  <div class="shift-row" data-flagged="${!!shift.flagged}" data-expanded="${expandedAttr}" data-id="${shift.id}">
+  <div class="shift-row" data-flagged="${!!banner}" data-expanded="false" data-id="${id}">
     <div class="shift-row-main" onclick="toggleRow(this)">
       <button class="chevron-btn" aria-label="Expand shift">${ICONS.chevron}</button>
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
-        <div class="line">${renderRouteChain(shift)}</div>
-        <div class="leg">Leg ${legFraction(shift)}</div>
+        <div class="line">${renderRouteChain(moves)}</div>
+        ${rowCaption ? `<div class="leg">${rowCaption}</div>` : ''}
       </div>
-      <div class="time-col">
-        <span class="planned">${shift.puPlanned}</span>
-        <span class="actual">${shift.puActual}</span>
-      </div>
-      <div class="time-col">
-        <span class="planned">${shift.delPlanned}</span>
-        <span class="actual ${shift.risk?'risk':''}">${shift.eta}</span>
-      </div>
-      <div class="row-status">${statusPill(shift.status)}</div>
+      <div class="row-status">${statusPill(status)}</div>
     </div>
-    ${shift.flagged ? `
+    ${banner ? `
     <div class="row-flagbanner">
       ${ICONS.alertTriangle}
-      <span class="msg">${shift.flagText}</span>
-      <button class="btn btn-disruptive btn-sm">${shift.flagAction}</button>
+      <span class="msg">${banner.text}</span>
+      <button class="btn btn-disruptive btn-sm">${banner.action}</button>
     </div>` : ''}
     <div class="shift-expand">
-      ${renderTimeline(shift)}
-      <div class="stop-row" style="grid-template-columns:repeat(${Math.min(shift.stops.length, 4)},minmax(0,1fr))">${shift.stops.map(renderStopCard).join('')}</div>
+      ${renderTimeline(moves, { shiftStart, hos, groupCaption: timelineCaption })}
+      <div class="stop-row" style="grid-template-columns:repeat(${Math.min(moves.length, 4)},minmax(0,1fr))">${moves.map(renderMoveCard).join('')}</div>
     </div>
   </div>`;
 }
 
+function renderDriverRow(driverKey){
+  const moves = movesForDriver(driverKey);
+  const loads = loadsOnDriver(driverKey);
+  const meta = DRIVER_META[driverKey];
+  const badges = [driverChip(driverKey, true), ...loads.map(l => loadChip(l)), truckChip(driverKey), trailerChip(driverKey)];
+  return renderEntityRow({
+    id:`driver-${driverKey}`, badges, moves,
+    rowCaption: loads.length > 1 ? `${loads.length} loads this shift` : '',
+    status: meta.status, banner: meta.banner,
+    shiftStart: meta.shiftStart, hos: meta.hos,
+    timelineCaption: groupCaption(moves, m => m.load, l => `Load ${l}`),
+  });
+}
+
+function renderLoadRow(loadId){
+  const moves = movesForLoad(loadId);
+  const drivers = driversOnLoad(loadId);
+  const meta = LOAD_META[loadId];
+  const badges = [loadChip(loadId, true), ...drivers.flatMap(d => [driverChip(d), truckChip(d)]), trailerChip(drivers[0])];
+  return renderEntityRow({
+    id:`load-${loadId}`, badges, moves,
+    rowCaption: drivers.length > 1 ? `Relay · ${drivers.length} drivers` : '',
+    status: meta.status, banner: meta.banner,
+    shiftStart: null, hos: null, // HOS/14h are driver-scoped — never shown on a load, which can span drivers
+    timelineCaption: groupCaption(moves, m => m.driver, d => DRIVERS[d].name),
+  });
+}
+
 /* ---------- Timeline visualization (Gantt-style, per Tom's Active Shifts
-   fork referenced in the PRD — HOS readout + a per-shift stop timeline on
-   a shared 24h axis, with a live "Now" line and a per-shift 14h on-duty
-   limit line). Lives inside the expanded row, above the stop cards. ---------- */
-function renderTimeline(shift){
+   fork referenced in the PRD) — HOS readout + 14h limit only render when
+   `hos`/`shiftStart` are given (Driver tab); Load rows omit both since
+   HOS belongs to a driver, not a load that may span more than one. ---------- */
+function renderTimeline(moves, { shiftStart, hos, groupCaption }){
   const toPct = h => (h / 24 * 100).toFixed(2);
-  const stops = shift.stops;
-  const firstHour = stops[0].hour;
-  const lastHour = stops[stops.length - 1].hour;
+  const firstHour = moves[0].hour;
+  const lastHour = moves[moves.length - 1].hour;
   const connectorLeft = toPct(firstHour);
   const connectorWidth = (toPct(lastHour) - toPct(firstHour)).toFixed(2);
-  const limitHour = shift.shiftStart + 14;
+  const limitHour = (shiftStart !== null && shiftStart !== undefined) ? shiftStart + 14 : null;
   const ticks = [1,4,7,10,13,16,19,22];
 
-  const markers = stops.map(s => `
-    <div class="timeline-marker marker-${s.type} ${s.flagged?'marker-flagged':''} ${s.state==='upcoming'?'marker-upcoming':''}"
-         style="left:${toPct(s.hour)}%" title="${s.title} — ${s.badge}">${s.n}</div>`).join('');
+  const markers = moves.map(m => `
+    <div class="timeline-marker marker-${m.type} ${m.flagged?'marker-flagged':''} ${m.state==='upcoming'?'marker-upcoming':''}"
+         style="left:${toPct(m.hour)}%" title="${m.title} — ${m.badge}">${m.n}</div>`).join('');
 
   return `
   <div class="shift-timeline">
     <div class="timeline-head">
+      ${hos ? `
       <div class="hos-readout">
-        <span class="hos-item">Drive<b class="${shift.hos.driveTight?'tight':''}">${shift.hos.drive}</b></span>
-        <span class="hos-item">Shift<b>${shift.hos.shift}</b></span>
-        <span class="hos-item">Cycle<b>${shift.hos.cycle}</b></span>
-      </div>
+        <span class="hos-item">Drive<b class="${hos.driveTight?'tight':''}">${hos.drive}</b></span>
+        <span class="hos-item">Shift<b>${hos.shift}</b></span>
+        <span class="hos-item">Cycle<b>${hos.cycle}</b></span>
+      </div>` : `<div></div>`}
       <div class="timeline-legend">
         <span><span class="dot dot-yard"></span>Trailer/yard</span>
         <span><span class="dot dot-pickup"></span>Pick up</span>
@@ -663,36 +716,39 @@ function renderTimeline(shift){
         <span><span class="dot dot-hub"></span>Hub</span>
       </div>
     </div>
-    <div class="timeline-caption">Load ${shift.load} · Leg ${legFraction(shift)}</div>
+    ${groupCaption ? `<div class="timeline-caption">${groupCaption}</div>` : ''}
     <div class="timeline-axis">
       ${ticks.map(t => `<span style="left:${toPct(t)}%">${String(t).padStart(2,'0')}:00</span>`).join('')}
     </div>
     <div class="timeline-track">
       <div class="timeline-connector" style="left:${connectorLeft}%;width:${connectorWidth}%"></div>
       ${markers}
-      <div class="timeline-limit" style="left:${toPct(limitHour)}%"></div>
+      ${limitHour !== null ? `<div class="timeline-limit" style="left:${toPct(limitHour)}%"></div>` : ''}
       <div class="timeline-now" style="left:${toPct(NOW_HOUR)}%"></div>
     </div>
     <div class="timeline-foot">
-      <span class="foot-limit" style="left:${toPct(limitHour)}%">14h</span>
+      ${limitHour !== null ? `<span class="foot-limit" style="left:${toPct(limitHour)}%">14h</span>` : ''}
       <span class="foot-now" style="left:${toPct(NOW_HOUR)}%">Now</span>
     </div>
   </div>`;
 }
 
-function renderStopCard(stop){
+function renderMoveCard(move){
   const actionBtn = a => `<button class="btn btn-${a.kind} btn-sm">${a.label}</button>`;
   return `
-  <div class="stop-card ${stop.state}">
+  <div class="stop-card ${move.state}">
     <div class="stop-card-head">
-      <span class="stop-card-title">${stop.title}</span>
-      <span class="status-chip ${stop.badgeClass}">${stop.badge}</span>
+      <div class="stop-card-titles">
+        <span class="stop-card-title">${move.title}</span>
+        <span class="stop-card-driver">${ICONS.driver}${DRIVERS[move.driver].name} · Load ${move.load}</span>
+      </div>
+      <span class="status-chip ${move.badgeClass}">${move.badge}</span>
     </div>
-    <div class="stop-kv"><span>Arrived</span><b>${stop.arrived}</b></div>
-    <div class="stop-kv"><span>Departed</span><b>${stop.departed}</b></div>
-    <div class="stop-kv"><span>POD</span><b>${stop.pod}</b></div>
-    <div class="stop-note">${stop.note}</div>
-    <div class="stop-actions">${stop.actions.map(actionBtn).join('')}</div>
+    <div class="stop-kv"><span>Arrived</span><b>${move.arrived}</b></div>
+    <div class="stop-kv"><span>Departed</span><b>${move.departed}</b></div>
+    <div class="stop-kv"><span>POD</span><b>${move.pod}</b></div>
+    <div class="stop-note">${move.note}</div>
+    <div class="stop-actions">${move.actions.map(actionBtn).join('')}</div>
   </div>`;
 }
 
@@ -715,13 +771,13 @@ function renderFlag(f){
 }
 
 /* ---------- Mount ---------- */
-document.getElementById('rows-driver').innerHTML = SHIFTS.map(s => renderRow(s,'driver')).join('');
-document.getElementById('rows-load').innerHTML = SHIFTS.map(s => renderRow(s,'load')).join('');
+document.getElementById('rows-driver').innerHTML = DRIVER_KEYS.map(renderDriverRow).join('');
+document.getElementById('rows-load').innerHTML = LOAD_KEYS.map(renderLoadRow).join('');
 document.getElementById('flags-list').innerHTML = FLAGS.map(renderFlag).join('');
 document.getElementById('flag-count').textContent = FLAGS.length;
-const quietCount = SHIFTS.filter(s => !s.flagged).length;
+const quietCount = DRIVER_KEYS.filter(k => !DRIVER_META[k].banner).length;
 document.getElementById('flags-quiet').innerHTML =
-  `Quiet: ${quietCount} other shift${quietCount === 1 ? '' : 's'} on plan · no DVIR gaps · no charge risk`;
+  `Quiet: ${quietCount} other driver${quietCount === 1 ? '' : 's'} on plan · no DVIR gaps · no charge risk`;
 
 /* ---------- Expand/collapse ----------
    Scoped to the clicked element, not a data-id lookup — each shift renders
