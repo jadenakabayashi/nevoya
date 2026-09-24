@@ -483,61 +483,66 @@ const NOW_HOUR = 14 + 31/60;
    moves, two groupings, so they can't disagree with each other.
    ============================================================ */
 const MOVES = [
-  // Jennie — a busy Amazon regional milk run: 6 back-to-back loads in one
-  // shift, each its own single-move trip (no relay needed). Stress-tests
-  // "a driver can touch many loads per shift" — the whole point of why
-  // move-cards need to be compact, not one full card per stop.
+  // Jennie — a "Regional Runs" driver per the real TX Bible workbook's own
+  // sheet grouping (Houston Local / Regional Runs / Dallas Local): she loops
+  // Houston -> Waco -> Dallas -> Houston -> Waco -> Dallas -> Houston,
+  // 6 Amazon trailer moves in one shift, closing the loop back where she
+  // started. Stress-tests "a driver can touch many loads per shift" — the
+  // whole point of why move-cards need to be compact, not one full card
+  // per stop. Notes vary deliberately (live-load vs. drop-hook, the real
+  // ~30%-of-planning-time Bible trailer-number gap, the 7am bulk ETA
+  // blast) instead of repeating boilerplate across all six.
   { driver:'jennie', load:'7625', trailer:'77241', stops:[
     { type:'pickup', hour:4.25, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'04:15', departed:'04:30', pod:'Uploaded 04:31 · verified',
-      note:'Trailer run, single drop. Both timestamps present, clears for billing once delivered.',
+      note:'Live load — waited on the dock while it loaded; no pre-staged trailer for this one.',
       actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:7.0, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'06:45', departed:'07:00', pod:'Uploaded 07:02 · verified',
-      note:'Delivered ahead of the appt window. Load fully closed out.',
+      note:'Delivered ahead of the appt window. Geofence closed the stop on its own — no manual push needed.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8130', trailer:'81452', stops:[
     { type:'pickup', hour:7.4, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Pickup)', arrived:'07:20', departed:'07:24', pod:'Uploaded 07:25 · verified',
-      note:'Trailer swapped in the yard between loads.',
+      note:'Drop-hook onto a pre-loaded trailer Apollo had no number for until dispatch keyed it manually — the same Bible workaround that eats ~30% of planning time.',
       actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:8.5, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Temple, TX – Amazon Station', title:'Temple, TX – Amazon Station (Delivery)', arrived:'08:20', departed:'08:30', pod:'Uploaded 08:31 · verified',
-      note:'Delivered clean.',
+      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Delivery)', arrived:'08:20', departed:'08:30', pod:'Uploaded 08:31 · verified',
+      note:'Delivered clean, dock 6 — covered by this morning\'s 7am bulk ETA blast, no separate customer update needed.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8214', trailer:'81452', stops:[
     { type:'pickup', hour:8.83, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Temple, TX – Amazon Station', title:'Temple, TX – Amazon Station (Pickup)', arrived:'08:50', departed:'08:55', pod:'Uploaded 08:56 · verified',
-      note:'Third load, same trailer, back out within the hour.', actions:[{label:'View POD', kind:'outline'}] },
+      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Pickup)', arrived:'08:50', departed:'08:55', pod:'Uploaded 08:56 · verified',
+      note:'Back-haul assignment came in mid-route — dispatcher paired it with the return leg to avoid an empty deadhead to Houston.', actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:9.75, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Killeen, TX – Amazon Station', title:'Killeen, TX – Amazon Station (Delivery)', arrived:'09:40', departed:'09:45', pod:'Uploaded 09:46 · verified',
-      note:'Delivered clean.', actions:[{label:'View POD', kind:'outline'}] },
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Delivery)', arrived:'09:40', departed:'09:45', pod:'Uploaded 09:46 · verified',
+      note:'Dropped at the DC dock; yard marshal waved her straight through, no queue.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8299', trailer:'81452', stops:[
     { type:'pickup', hour:10.08, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Killeen, TX – Amazon Station', title:'Killeen, TX – Amazon Station (Pickup)', arrived:'10:00', departed:'10:05', pod:'Uploaded 10:06 · verified',
-      note:'Back-haul toward Waco.', actions:[{label:'View POD', kind:'outline'}] },
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'10:00', departed:'10:05', pod:'Uploaded 10:06 · verified',
+      note:'Second Houston pickup of the day, same dock as this morning\'s — different trailer, no live-load wait this time.', actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:11.33, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'11:15', departed:'11:20', pod:'Uploaded 11:21 · verified',
-      note:'Delivered clean.', actions:[{label:'View POD', kind:'outline'}] },
+      note:'Delivered on schedule — third stop at this station today; dock crew already had her paperwork queued.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8355', trailer:'81452', stops:[
     { type:'pickup', hour:11.67, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Pickup)', arrived:'11:35', departed:'11:40', pod:'Uploaded 11:41 · verified',
-      note:'Same Waco-Temple lane, second run today.', actions:[{label:'View POD', kind:'outline'}] },
+      note:'Picked up the last outbound trailer before the Waco yard\'s shift change.', actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:12.58, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Temple, TX – Amazon Station', title:'Temple, TX – Amazon Station (Delivery)', arrived:'12:30', departed:'12:35', pod:'Uploaded 12:36 · verified',
-      note:'Delivered clean.', actions:[{label:'View POD', kind:'outline'}] },
+      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Delivery)', arrived:'12:30', departed:'12:35', pod:'Uploaded 12:36 · verified',
+      note:'Delivered clean, same dock as the 8130 run — about half of today\'s Amazon freight at this station has come off her trailer.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8410', trailer:'81452', stops:[
     { type:'pickup', hour:12.92, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Temple, TX – Amazon Station', title:'Temple, TX – Amazon Station (Pickup)', arrived:'12:50', departed:'12:55', pod:'Uploaded 12:56 · verified',
-      note:'Sixth and final load of the shift.', actions:[{label:'View POD', kind:'outline'}] },
+      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Pickup)', arrived:'12:50', departed:'12:55', pod:'Uploaded 12:56 · verified',
+      note:'Final pickup of the day — dispatcher timed it to land her back in Houston right at the HOS cutoff, not after it.', actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:14.17, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Round Rock, TX – Amazon Station', title:'Round Rock, TX – Amazon Station (Delivery)', arrived:'14:05', departed:'14:10', pod:'Uploaded 14:11 · verified',
-      note:'Delivered clean. All six loads today fully closed out.', actions:[{label:'View POD', kind:'outline'}] },
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Delivery)', arrived:'14:05', departed:'14:10', pod:'Uploaded 14:11 · verified',
+      note:'Closed the loop back at Houston — six loads, three hubs, zero exceptions. The kind of day this page should stay quiet for.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
 
   // Load 7912 — a real 2-move relay. Roland's move ends by dropping trailer
@@ -576,11 +581,11 @@ const MOVES = [
   { driver:'bruce', load:'7734', trailer:'55302', stops:[
     { type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
-      note:'Clean pickup, no dwell. Short local hop — clears for billing once delivered.',
+      note:'Drop-hook — trailer was already staged at the yard, no wait.',
       actions:[{label:'View POD', kind:'outline'}] },
     { type:'delivery', hour:6.25, state:'done', badge:'Closed out', badgeClass:'status-done',
       loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
-      note:'Delivered ahead of the appt window. Both timestamps present, load fully closed out.',
+      note:'Delivered on the first appointment slot RXO offered — no lumper fee, no detention logged.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
 
