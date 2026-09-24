@@ -679,15 +679,15 @@ function flattenStops(moves){
   return flat;
 }
 
-/* "Move X/Y" — Y is how many moves this move's LOAD has in total (its
-   relay count), X is this move's position among them. Never hand-typed:
+/* "X/Y" — Y is how many moves this move's LOAD has in total (its relay
+   count), X is this move's position among them. Never hand-typed:
    computed from movesForLoad so it can't drift if a relay is added or
-   removed. */
-function moveLabel(move){
+   removed. Used as "Move X/Y" on a move-card and "Leg X/Y" on a row. */
+function moveFraction(move){
   const siblings = movesForLoad(move.load);
-  const idx = siblings.indexOf(move) + 1;
-  return `Move ${idx}/${siblings.length}`;
+  return `${siblings.indexOf(move) + 1}/${siblings.length}`;
 }
+function moveLabel(move){ return `Move ${moveFraction(move)}`; }
 
 /* Walks flattened stops in order and names each new value it hits under
    `keyFn` (applied to the stop's parent move) — e.g. "Load 7625 → Load
@@ -699,10 +699,38 @@ function groupCaption(flatStops, keyFn, labelFn){
   return seq.map(labelFn).join(' → ');
 }
 
-/* The route line chains every stop's location in order — a shift or load
-   with 6 stops is 6 locations, not one origin/dest pair. */
-function renderRouteChain(flatStops){
-  return flatStops.map(s => `${ICONS.pin}<span>${s.loc}</span>`).join(ICONS.arrow);
+/* A load's real origin/destination — where the freight actually gets
+   picked up and finally delivered — regardless of how many moves/relay
+   hand-offs it took to get there. Yard/hub stops are staging, not the
+   shipment's own journey, so they're excluded here (they still show up
+   in the move-cards and the timeline). */
+function loadEndpoints(loadId){
+  const stops = movesForLoad(loadId).flatMap(mv => mv.stops);
+  const pickup = stops.find(s => s.type === 'pickup');
+  const delivery = [...stops].reverse().find(s => s.type === 'delivery');
+  return {
+    origin: pickup ? pickup.loc : stops[0].loc,
+    destination: delivery ? delivery.loc : stops[stops.length - 1].loc,
+  };
+}
+
+/* Which move is "current" for a row's headline (its origin/destination +
+   leg callout) — the one in progress right now if any, else the most
+   recently finished one, else the earliest upcoming one. This is what
+   lets a driver row that's touched 6 loads today still show one
+   coherent "what they're doing" line instead of a 12-stop chain. */
+function currentMove(moves){
+  const scored = moves.map(mv => ({
+    mv,
+    start: mv.stops[0].hour,
+    end: mv.stops[mv.stops.length - 1].hour,
+    open: mv.stops.some(s => s.arrived === '—' || s.departed === '—' || s.state === 'upcoming'),
+  }));
+  const active = scored.find(r => r.start <= NOW_HOUR && (r.end > NOW_HOUR || r.open));
+  if (active) return active.mv;
+  const past = scored.filter(r => r.end <= NOW_HOUR).sort((a, b) => b.end - a.end);
+  if (past.length) return past[0].mv;
+  return scored.slice().sort((a, b) => a.start - b.start)[0].mv;
 }
 
 /* ---------- Chip renderers ---------- */
@@ -727,24 +755,31 @@ function statusPill(status){
 }
 
 /* ---------- Row renderer (shared by Driver + Load views) ----------
+   The route line shows ONE load's real origin -> destination (via
+   currentMove + loadEndpoints), not a chain of every stop across every
+   move — that's what the expanded move-cards and the timeline are for.
+   `legLine` is built by the caller so it can decide whether repeating
+   the load # is useful (it is on a Driver row, which can cover several
+   loads; it's redundant on a Load row, which already leads with it).
    groupByDriver picks which axis the timeline caption and each move
-   group's meta line name: false on the Driver tab (caption groups by
+   card's meta line name: false on the Driver tab (caption groups by
    LOAD, since one driver can run several), true on the Load tab only
    when a load actually has more than one driver (a relay) — otherwise
    there's nothing to disambiguate. */
-function renderEntityRow({ id, badges, moves, rowCaption, status, banner, shiftStart, hos, groupByDriver }){
+function renderEntityRow({ id, badges, moves, legLine, current, status, banner, shiftStart, hos, groupByDriver }){
   const flat = flattenStops(moves);
   const timelineCaption = groupByDriver
     ? groupCaption(flat, mv => mv.driver, d => DRIVERS[d].name)
     : groupCaption(flat, mv => mv.load, l => `Load ${l}`);
+  const { origin, destination } = loadEndpoints(current.load);
   return `
   <div class="shift-row" data-flagged="${!!banner}" data-expanded="false" data-id="${id}">
     <div class="shift-row-main" onclick="toggleRow(this)">
       <button class="chevron-btn" aria-label="Expand shift">${ICONS.chevron}</button>
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
-        <div class="line">${renderRouteChain(flat)}</div>
-        ${rowCaption ? `<div class="leg">${rowCaption}</div>` : ''}
+        <div class="line">${ICONS.pin}<span>${origin}</span>${ICONS.arrow}${ICONS.pin}<span>${destination}</span></div>
+        <div class="leg">${legLine}</div>
       </div>
       <div class="row-status">${statusPill(status)}</div>
     </div>
@@ -767,9 +802,10 @@ function renderDriverRow(driverKey){
   const meta = DRIVER_META[driverKey];
   const trailers = [...new Set(moves.map(m => m.trailer))];
   const badges = [driverChip(driverKey, true), ...loads.map(l => loadChip(l)), truckChip(driverKey), ...trailers.map(trailerChip)];
+  const current = currentMove(moves);
+  const legLine = `Leg ${moveFraction(current)} · Load ${current.load}` + (loads.length > 1 ? ` · ${loads.length} loads this shift` : '');
   return renderEntityRow({
-    id:`driver-${driverKey}`, badges, moves,
-    rowCaption: loads.length > 1 ? `${loads.length} loads this shift` : '',
+    id:`driver-${driverKey}`, badges, moves, legLine, current,
     status: meta.status, banner: meta.banner,
     shiftStart: meta.shiftStart, hos: meta.hos,
     groupByDriver: false,
@@ -782,9 +818,10 @@ function renderLoadRow(loadId){
   const meta = LOAD_META[loadId];
   const trailers = [...new Set(moves.map(m => m.trailer))];
   const badges = [loadChip(loadId, true), ...drivers.flatMap(d => [driverChip(d), truckChip(d)]), ...trailers.map(trailerChip)];
+  const current = currentMove(moves);
+  const legLine = `Leg ${moveFraction(current)}` + (drivers.length > 1 ? ` · Relay · ${drivers.length} drivers` : '');
   return renderEntityRow({
-    id:`load-${loadId}`, badges, moves,
-    rowCaption: drivers.length > 1 ? `Relay · ${drivers.length} drivers` : '',
+    id:`load-${loadId}`, badges, moves, legLine, current,
     status: meta.status, banner: meta.banner,
     shiftStart: null, hos: null, // HOS/14h are driver-scoped — never shown on a load, which can span drivers
     groupByDriver: drivers.length > 1,
