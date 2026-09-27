@@ -197,7 +197,6 @@ svg{display:block;}
 .row-route .line{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px;gap:6px;}
 .row-route .line svg{width:14px;height:14px;flex:none;color:var(--text-muted);}
 .row-now,.row-next{font-size:12px;color:var(--text-subtle);display:flex;align-items:baseline;flex-wrap:wrap;gap:5px;}
-.row-now .now-label{color:var(--text-subtle);}
 .row-now .now-value{color:var(--text-muted);font-weight:600;}
 .row-now .now-arrow{color:var(--border-muted);}
 .row-next .next-label{color:var(--text-subtle);}
@@ -832,12 +831,12 @@ function stopKindLabel(stop){
    finished, else earliest upcoming), NOT necessarily the move the next
    stop below belongs to (a driver can be idle between two moves). */
 function moveNowLine(move){
-  const pickup = move.stops[0];
-  const dropoff = move.stops[move.stops.length - 1];
+  const first = move.stops[0];
+  const last = move.stops[move.stops.length - 1];
   return `
-    <span class="now-label">Pickup</span><span class="now-value">${stopKindLabel(pickup)} · ${pickup.planned}</span>
+    <span class="now-value">${stopKindLabel(first)} · ${first.planned}</span>
     <span class="now-arrow">→</span>
-    <span class="now-label">Dropoff</span><span class="now-value">${stopKindLabel(dropoff)} · ${dropoff.planned}</span>`;
+    <span class="now-value">${stopKindLabel(last)} · ${last.planned}</span>`;
 }
 
 /* The next stop that hasn't happened yet, anywhere in this entity's
