@@ -284,11 +284,19 @@ svg{display:block;}
 .move-card.blocking{border-top-color:var(--red);}
 .move-card.needs-human{border-top-color:var(--amber);}
 .move-card.upcoming{border-top-color:var(--border-default);}
+.move-card.is-current{
+  background:var(--teal-bg);
+  box-shadow:0 0 0 2px var(--teal);
+}
 .move-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.move-card-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.move-position{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text-subtle);}
+.move-position.pos-current{color:var(--teal);}
 .move-label{
   font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--text-dark);
   background:var(--bg-high);padding:4px 10px;border-radius:var(--radius-xl);white-space:nowrap;
 }
+.is-current .move-label{background:#fff;color:var(--teal);}
 .move-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .move-stops{display:flex;flex-direction:column;gap:8px;}
 .move-stop{border-top:1px solid var(--border-muted);padding-top:8px;}
@@ -987,9 +995,20 @@ function renderEntityRow({ id, badges, moves, current, status, banner, shiftStar
     </div>` : ''}
     <div class="shift-expand">
       ${renderTimeline(flat, { shiftStart, hos, groupCaption: timelineCaption })}
-      <div class="move-grid">${moves.map(mv => renderMoveCard(mv, groupByDriver)).join('')}</div>
+      <div class="move-grid">${moves.map(mv => renderMoveCard(mv, groupByDriver, moveTimelinePosition(mv, moves, current))).join('')}</div>
     </div>
   </div>`;
+}
+
+/* Where a move sits relative to whichever one currentMove() picked —
+   drives the Previous/Current/Next framing on its card. Position (not
+   the move's own done/upcoming stops) decides this, so a fully-'done'
+   move can still be "Current" (the most recently finished one, per
+   currentMove()'s own fallback) during an idle gap before the next
+   move starts. */
+function moveTimelinePosition(move, moves, current){
+  if (move === current) return 'current';
+  return moves.indexOf(move) < moves.indexOf(current) ? 'previous' : 'next';
 }
 
 /* Driver column only ever shows the CURRENT assignment — one load, one
@@ -1107,7 +1126,9 @@ function moveOverallState(move){
    6-load shift stays scannable and a flagged move still surfaces full
    detail exactly where it's needed. showDriver only true on a relay
    Load row, where the move's driver isn't otherwise obvious. */
-function renderMoveCard(move, showDriver){
+const MOVE_POSITION_LABELS = { previous:'Previous', current:'Current', next:'Next' };
+
+function renderMoveCard(move, showDriver, position){
   const meta = [
     loadChip(move.load),
     ...(showDriver ? [driverChip(move.driver)] : []),
@@ -1115,9 +1136,12 @@ function renderMoveCard(move, showDriver){
     trailerChip(move.trailer),
   ];
   return `
-  <div class="move-card ${moveOverallState(move)}">
+  <div class="move-card ${moveOverallState(move)} ${position === 'current' ? 'is-current' : ''}">
     <div class="move-card-head">
-      <span class="move-label">${moveLabel(move)}</span>
+      <div class="move-card-title">
+        <span class="move-position pos-${position}">${MOVE_POSITION_LABELS[position]}</span>
+        <span class="move-label">${moveLabel(move)}</span>
+      </div>
       <div class="move-meta">${meta.join('')}</div>
     </div>
     <div class="move-stops">${move.stops.map(renderMoveStopRow).join('')}</div>
