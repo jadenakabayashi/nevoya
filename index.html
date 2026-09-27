@@ -934,16 +934,21 @@ function renderDriverRow(driverKey){
   });
 }
 
+/* Same "current assignment only" rule as the Driver tab: a relay load's
+   badges show whichever driver/truck/trailer is on it RIGHT NOW (via
+   currentMove()), not every driver who's ever touched it. "Relay · N
+   drivers" is the caption that tells you there's more history — the
+   full hand-off chain is what the expanded move-cards are for. */
 function renderLoadRow(loadId){
   const moves = movesForLoad(loadId);
   const drivers = driversOnLoad(loadId);
   const meta = LOAD_META[loadId];
-  const trailers = [...new Set(moves.map(m => m.trailer))];
   const current = currentMove(moves);
   const badges = [
     loadChip(loadId, true),
-    ...drivers.flatMap(d => [driverChip(d), truckChip(d)]),
-    ...trailers.map(trailerChip),
+    driverChip(current.driver),
+    truckChip(current.driver),
+    trailerChip(current.trailer),
     `<span class="chip">Leg ${moveFraction(current)}</span>`,
   ];
   return renderEntityRow({
