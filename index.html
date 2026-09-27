@@ -259,7 +259,7 @@ svg{display:block;}
    expands to show its note + actions, so a quiet 6-load shift stays
    compact and a flagged move still surfaces full detail exactly where
    it's needed. */
-.move-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:16px;}
+.move-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-top:16px;}
 .move-card{
   background:#fff;border:1px solid var(--border-default);border-radius:var(--radius-md);
   border-top:3px solid var(--border-default);padding:14px;display:flex;flex-direction:column;gap:10px;
@@ -284,9 +284,14 @@ svg{display:block;}
 .move-stop-icon.type-delivery{background:#0F3D45;}
 .move-stop-icon.type-hub{background:#45556C;}
 .move-stop-loc{font-size:13px;font-weight:600;color:var(--text-heading);flex:1;min-width:0;}
-.move-stop-times{font-size:11.5px;color:var(--text-subtle);white-space:nowrap;}
 .move-stop.upcoming .move-stop-loc{color:var(--text-subtle);}
-.move-stop-detail{margin-top:6px;padding-left:24px;}
+.move-stop-truth{display:flex;flex-wrap:wrap;gap:2px 16px;margin-top:6px;padding-left:24px;}
+.truth-cell{display:flex;flex-direction:column;gap:1px;min-width:64px;}
+.truth-cell .truth-label{font-size:10.5px;color:var(--text-subtle);text-transform:uppercase;letter-spacing:.02em;}
+.truth-cell .truth-value{font-size:12.5px;font-weight:600;color:var(--text-dark);}
+.truth-value.delta-late{color:var(--red);}
+.truth-value.delta-early,.truth-value.delta-ontime{color:var(--emerald);}
+.move-stop-detail{margin-top:8px;padding-left:24px;}
 .move-stop-pod{font-size:12.5px;color:var(--text-muted);margin-bottom:6px;}
 .move-stop-pod b{color:var(--text-dark);font-weight:600;}
 .move-stop-note{
@@ -496,62 +501,62 @@ const MOVES = [
   // stops carry ordinary dock friction — none of it flag-worthy, just what
   // a normal busy day actually looks like.
   { driver:'jennie', load:'7625', trailer:'77241', stops:[
-    { type:'yard', hour:5.63, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', arrived:'05:38', departed:'05:51', pod:'N/A · yard move',
+    { type:'yard', hour:5.63, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', planned:'05:30', arrived:'05:38', departed:'05:51', pod:'N/A · yard move',
       note:'Queued behind two other trucks for an empty trailer this morning — normal for a Tuesday.',
       actions:[{label:'View yard log', kind:'outline'}] },
-    { type:'pickup', hour:6.23, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'06:14', departed:'06:37', pod:'Uploaded 06:38 · verified',
+    { type:'pickup', hour:6.23, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', planned:'06:00', arrived:'06:14', departed:'06:37', pod:'Uploaded 06:38 · verified',
       note:'Live load, dock ran about fifteen minutes behind — nothing out of the ordinary.',
       actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:8.7, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'08:42', departed:'09:01', pod:'Uploaded 09:03 · verified',
+    { type:'delivery', hour:8.7, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', planned:'08:30', arrived:'08:42', departed:'09:01', pod:'Uploaded 09:03 · verified',
       note:'Delivered inside the appt window; waited on a door for about nineteen minutes, not enough to matter.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8130', trailer:'81452', stops:[
-    { type:'pickup', hour:9.27, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Pickup)', arrived:'09:16', departed:'09:24', pod:'Uploaded 09:25 · verified',
+    { type:'pickup', hour:9.27, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Pickup)', planned:'09:15', arrived:'09:16', departed:'09:24', pod:'Uploaded 09:25 · verified',
       note:'Drop-hook onto a pre-loaded trailer Apollo had no number for until dispatch keyed it manually — the same Bible workaround that eats ~30% of planning time.',
       actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:10.82, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Delivery)', arrived:'10:49', departed:'11:07', pod:'Uploaded 11:09 · verified',
+    { type:'delivery', hour:10.82, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Delivery)', planned:'10:45', arrived:'10:49', departed:'11:07', pod:'Uploaded 11:09 · verified',
       note:'Delivered clean, dock 6 — covered by this morning\'s 7am bulk ETA blast, no separate customer update needed.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8214', trailer:'81452', stops:[
-    { type:'pickup', hour:11.43, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Pickup)', arrived:'11:26', departed:'11:33', pod:'Uploaded 11:34 · verified',
+    { type:'pickup', hour:11.43, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Dallas, TX – Amazon Station', title:'Dallas, TX – Amazon Station (Pickup)', planned:'11:30', arrived:'11:26', departed:'11:33', pod:'Uploaded 11:34 · verified',
       note:'Back-haul assignment came in mid-route — dispatcher paired it with the return leg to avoid an empty deadhead to Houston.', actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:13.35, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Delivery)', arrived:'13:21', departed:'13:38', pod:'Uploaded 13:39 · verified',
+    { type:'delivery', hour:13.35, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Delivery)', planned:'13:10', arrived:'13:21', departed:'13:38', pod:'Uploaded 13:39 · verified',
       note:'Dropped at the DC dock; yard marshal waved her straight through, no queue.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'jennie', load:'8299', trailer:'81452', stops:[
-    { type:'pickup', hour:14.03, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'14:02', departed:'14:19', pod:'Uploaded 14:20 · verified',
+    { type:'pickup', hour:14.03, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', planned:'13:50', arrived:'14:02', departed:'14:19', pod:'Uploaded 14:20 · verified',
       note:'Second Houston pickup of the day, same dock as this morning\'s — dock was busier this time, seventeen minutes at the door.', actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:15.07, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Sugar Land, TX – Amazon Station', title:'Sugar Land, TX – Amazon Station (Delivery)', arrived:'—', departed:'—', pod:'—',
+    { type:'delivery', hour:15.07, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'delivery-strict',
+      loc:'Sugar Land, TX – Amazon Station', title:'Sugar Land, TX – Amazon Station (Delivery)', planned:'15:15', arrived:'—', departed:'—', pod:'—',
       note:'In transit — a shorter suburb hop for the back half of the shift instead of another full run out to Waco.', actions:[] },
   ] },
   { driver:'jennie', load:'8355', trailer:'96214', stops:[
-    { type:'pickup', hour:15.57, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Sugar Land, TX – Amazon Station', title:'Sugar Land, TX – Amazon Station (Pickup)', arrived:'—', departed:'—', pod:'—',
+    { type:'pickup', hour:15.57, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'pickup-strict',
+      loc:'Sugar Land, TX – Amazon Station', title:'Sugar Land, TX – Amazon Station (Pickup)', planned:'15:45', arrived:'—', departed:'—', pod:'—',
       note:'Not yet started — drop-hook off the same station once load 8299 clears the dock.', actions:[] },
-    { type:'delivery', hour:16.1, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Missouri City, TX – Amazon Station', title:'Missouri City, TX – Amazon Station (Delivery)', arrived:'—', departed:'—', pod:'—',
+    { type:'delivery', hour:16.1, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'delivery-strict',
+      loc:'Missouri City, TX – Amazon Station', title:'Missouri City, TX – Amazon Station (Delivery)', planned:'16:15', arrived:'—', departed:'—', pod:'—',
       note:'Not yet started.', actions:[] },
   ] },
   { driver:'jennie', load:'8410', trailer:'84420', stops:[
-    { type:'pickup', hour:16.58, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Missouri City, TX – Amazon Station', title:'Missouri City, TX – Amazon Station (Pickup)', arrived:'—', departed:'—', pod:'—',
+    { type:'pickup', hour:16.58, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'pickup-strict',
+      loc:'Missouri City, TX – Amazon Station', title:'Missouri City, TX – Amazon Station (Pickup)', planned:'16:45', arrived:'—', departed:'—', pod:'—',
       note:'Final planned load of the day — not yet started.', actions:[] },
-    { type:'delivery', hour:17.2, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Delivery)', arrived:'—', departed:'—', pod:'—',
+    { type:'delivery', hour:17.2, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'delivery-strict',
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Delivery)', planned:'17:30', arrived:'—', departed:'—', pod:'—',
       note:'Closes the loop back at Houston, plenty of clock left when she gets there.', actions:[] },
-    { type:'yard', hour:17.62, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer dropoff)', arrived:'—', departed:'—', pod:'—',
+    { type:'yard', hour:17.62, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer dropoff)', planned:'17:45', arrived:'—', departed:'—', pod:'—',
       note:'Last stop of the shift, once she gets there — returns the trailer empty and clocks out.', actions:[] },
   ] },
 
@@ -559,16 +564,16 @@ const MOVES = [
   // 08867 at the Corsicana hub; Steven Bell's move picks that same trailer
   // up and finishes the load into Houston.
   { driver:'roland', load:'7912', trailer:'08867', stops:[
-    { type:'yard', hour:3.17, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
+    { type:'yard', hour:3.17, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', planned:'03:00', arrived:'03:05', departed:'03:20', pod:'N/A · yard move',
       note:'Empty trailer 08867 hooked before the drive out to Waco.',
       actions:[{label:'View yard log', kind:'outline'}] },
-    { type:'pickup', hour:5.9, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true,
-      loc:'Envases – Waco, TX', title:'Envases – Waco, TX (Load pickup)', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
-      note:'Dwelled 1h04m before departure — origin of today’s delay. No downstream impact was assumed at the time, but it ate the slack ahead of the relay hand-off.',
+    { type:'pickup', hour:5.9, state:'needs-human', badge:'Dwelling', badgeClass:'status-dwelling', flagged:true, constraint:'pickup-strict',
+      loc:'Envases – Waco, TX', title:'Envases – Waco, TX (Load pickup)', planned:'05:15', arrived:'05:12', departed:'06:16', pod:'Uploaded 06:18 · verified',
+      note:'Dwelled 1h04m before departure — origin of today’s delay. Arrival itself was on time; no downstream impact was assumed at the time, but the dwell ate the slack ahead of the relay hand-off.',
       actions:[{label:'Verify in timeline', kind:'outline'},{label:'Message driver', kind:'primary'}] },
-    { type:'hub', hour:8.4, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Corsicana Relay Point', title:'Corsicana Relay Point (Hub dropoff)', arrived:'08:32', departed:'08:45', pod:'N/A · relay hand-off',
+    { type:'hub', hour:8.4, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'trending',
+      loc:'Corsicana Relay Point', title:'Corsicana Relay Point (Hub dropoff)', planned:'07:30', arrived:'08:32', departed:'08:45', pod:'N/A · relay hand-off',
       note:'Hand-off completed ~55min behind plan, carrying the Waco dwell forward — passed the delay to Steven’s move into Houston.',
       actions:[{label:'View relay log', kind:'outline'}] },
   ] },
@@ -578,131 +583,131 @@ const MOVES = [
   // enough hours to finish the planned shift" looks like when you can see
   // the actual loads behind it, not just the flag text.
   { driver:'roland', load:'7940', trailer:'61887', stops:[
-    { type:'pickup', hour:15.0, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Corsicana, TX – Regional Yard', title:'Corsicana, TX – Regional Yard (Load pickup)', arrived:'—', departed:'—', pod:'—',
+    { type:'pickup', hour:15.0, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'pickup-strict',
+      loc:'Corsicana, TX – Regional Yard', title:'Corsicana, TX – Regional Yard (Load pickup)', planned:'15:15', arrived:'—', departed:'—', pod:'—',
       note:'Next assignment after the Coke relay hand-off. Not yet started — the Waco dwell is what\'s eating into the window for this one.',
       actions:[] },
-    { type:'delivery', hour:16.2, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Ennis, TX – Regional DC', title:'Ennis, TX – Regional DC (Delivery)', arrived:'—', departed:'—', pod:'—',
+    { type:'delivery', hour:16.2, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'delivery-strict',
+      loc:'Ennis, TX – Regional DC', title:'Ennis, TX – Regional DC (Delivery)', planned:'16:30', arrived:'—', departed:'—', pod:'—',
       note:'Second planned load of the afternoon — depends entirely on how the pickup above goes.', actions:[] },
   ] },
   { driver:'roland', load:'7955', trailer:'61887', stops:[
-    { type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Ennis, TX – Yard', title:'Ennis, TX – Yard (Empty trailer pickup)', arrived:'—', departed:'—', pod:'—',
+    { type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'flexible',
+      loc:'Ennis, TX – Yard', title:'Ennis, TX – Yard (Empty trailer pickup)', planned:'16:45', arrived:'—', departed:'—', pod:'—',
       note:'Third and final planned move of the day, assuming he gets this far.', actions:[] },
-    { type:'pickup', hour:17.3, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Corsicana, TX – Shipper', title:'Corsicana, TX – Shipper (Load pickup)', arrived:'—', departed:'—', pod:'—',
+    { type:'pickup', hour:17.3, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'pickup-strict',
+      loc:'Corsicana, TX – Shipper', title:'Corsicana, TX – Shipper (Load pickup)', planned:'17:15', arrived:'—', departed:'—', pod:'—',
       note:'Right around where the Drive clock was projected to run out even before today\'s dwell.', actions:[] },
-    { type:'delivery', hour:18.6, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Ennis, TX – Regional DC', title:'Ennis, TX – Regional DC (Delivery)', arrived:'—', departed:'—', pod:'—',
+    { type:'delivery', hour:18.6, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'delivery-strict',
+      loc:'Ennis, TX – Regional DC', title:'Ennis, TX – Regional DC (Delivery)', planned:'18:15', arrived:'—', departed:'—', pod:'—',
       note:'Scheduled after Roland\'s Drive clock runs out (~18:11 at today\'s pace) — this is the specific stop dispatch needs to reassign, not an abstract "not enough hours."',
       actions:[{label:'Redispatch this move', kind:'primary'}] },
   ] },
 
   { driver:'steven', load:'7889', trailer:'61120', stops:[
-    { type:'pickup', hour:7.6, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Corsicana, TX – Yard', title:'Corsicana, TX – Yard (Pickup)', arrived:'07:36', departed:'07:45', pod:'Uploaded 07:46 · verified',
+    { type:'pickup', hour:7.6, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Corsicana, TX – Yard', title:'Corsicana, TX – Yard (Pickup)', planned:'07:30', arrived:'07:36', departed:'07:45', pod:'Uploaded 07:46 · verified',
       note:'Quick local hook before heading to meet Roland at the relay point.',
       actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:8.0, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Corsicana, TX – Local DC', title:'Corsicana, TX – Local DC (Delivery)', arrived:'07:58', departed:'08:05', pod:'Uploaded 08:06 · verified',
+    { type:'delivery', hour:8.0, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Corsicana, TX – Local DC', title:'Corsicana, TX – Local DC (Delivery)', planned:'07:50', arrived:'07:58', departed:'08:05', pod:'Uploaded 08:06 · verified',
       note:'Delivered clean, then straight to the Corsicana Relay Point to wait for Roland.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'steven', load:'7912', trailer:'08867', stops:[
-    { type:'hub', hour:9.3, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Corsicana Relay Point', title:'Corsicana Relay Point (Hub pickup)', arrived:'08:40', departed:'08:50', pod:'N/A · relay hand-off',
+    { type:'hub', hour:9.3, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'trending',
+      loc:'Corsicana Relay Point', title:'Corsicana Relay Point (Hub pickup)', planned:'07:30', arrived:'08:40', departed:'08:50', pod:'N/A · relay hand-off',
       note:'Hooked trailer 08867 from Roland and continued on toward Houston.',
       actions:[{label:'View relay log', kind:'outline'}] },
-    { type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true,
-      loc:'Houston, TX – Coke', title:'Houston, TX – Coke DC (Delivery)', arrived:'—', departed:'—', pod:'Not yet arrived',
+    { type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true, constraint:'delivery-strict',
+      loc:'Houston, TX – Coke', title:'Houston, TX – Coke DC (Delivery)', planned:'14:45', eta:'14:59', arrived:'—', departed:'—', pod:'Not yet arrived',
       note:'Appt window closes 14:45 CDT — projected arrival 14:59, 14 min past close, carried over from the relay hand-off delay. Customer has not yet been notified.',
       actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
-    { type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer dropoff)', arrived:'—', departed:'—', pod:'—',
+    { type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer dropoff)', planned:'15:30', arrived:'—', departed:'—', pod:'—',
       note:'Trailer 08867 drops off empty once Coke DC is closed out. Not started yet.',
       actions:[] },
   ] },
 
   // Bruce — one load, one move
   { driver:'bruce', load:'7734', trailer:'55302', stops:[
-    { type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
+    { type:'pickup', hour:5.1, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', planned:'05:00', arrived:'05:06', departed:'05:21', pod:'Uploaded 05:22 · verified',
       note:'Drop-hook — trailer was already staged at the yard, no wait.',
       actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:6.25, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
+    { type:'delivery', hour:6.25, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', planned:'06:00', arrived:'06:00', departed:'06:15', pod:'Uploaded 06:17 · verified',
       note:'Delivered on the first appointment slot RXO offered — no lumper fee, no detention logged.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'bruce', load:'7756', trailer:'48213', stops:[
-    { type:'yard', hour:6.5, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', arrived:'06:30', departed:'06:35', pod:'N/A · yard move',
+    { type:'yard', hour:6.5, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', planned:'06:30', arrived:'06:30', departed:'06:35', pod:'N/A · yard move',
       note:'Hooked an empty ahead of the Costco pickup.', actions:[{label:'View yard log', kind:'outline'}] },
-    { type:'pickup', hour:7.0, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Pickup)', arrived:'06:55', departed:'07:10', pod:'Uploaded 07:11 · verified',
+    { type:'pickup', hour:7.0, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Pickup)', planned:'06:40', arrived:'06:55', departed:'07:10', pod:'Uploaded 07:11 · verified',
       note:'Live load — Costco\'s dock ran about 15 minutes behind schedule this morning.', actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:7.83, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Costco Regional', title:'Houston, TX – Costco Regional (Delivery)', arrived:'07:50', departed:'08:00', pod:'Uploaded 08:01 · verified',
+    { type:'delivery', hour:7.83, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Houston, TX – Costco Regional', title:'Houston, TX – Costco Regional (Delivery)', planned:'07:45', arrived:'07:50', departed:'08:00', pod:'Uploaded 08:01 · verified',
       note:'Delivered clean, no detention despite the late start at the DC.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'bruce', load:'7780', trailer:'62984', stops:[
-    { type:'pickup', hour:8.5, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'08:30', departed:'08:35', pod:'Uploaded 08:36 · verified',
+    { type:'pickup', hour:8.5, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', planned:'08:30', arrived:'08:30', departed:'08:35', pod:'Uploaded 08:36 · verified',
       note:'Drop-hook — same dock Jennie ran through earlier, different trailer.', actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:9.33, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Baytown, TX – Amazon Station', title:'Baytown, TX – Amazon Station (Delivery)', arrived:'09:20', departed:'09:30', pod:'Uploaded 09:31 · verified',
+    { type:'delivery', hour:9.33, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Baytown, TX – Amazon Station', title:'Baytown, TX – Amazon Station (Delivery)', planned:'09:15', arrived:'09:20', departed:'09:30', pod:'Uploaded 09:31 · verified',
       note:'Delivered on the first appointment slot offered.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'bruce', load:'7799', trailer:'70115', stops:[
-    { type:'yard', hour:10.08, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', arrived:'10:00', departed:'10:05', pod:'N/A · yard move',
+    { type:'yard', hour:10.08, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', planned:'09:50', arrived:'10:00', departed:'10:05', pod:'N/A · yard move',
       note:'His second empty-trailer hook of the day — dispatch hasn\'t combined his yard runs with anyone else\'s route.', actions:[{label:'View yard log', kind:'outline'}] },
-    { type:'pickup', hour:10.42, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', arrived:'10:25', departed:'10:35', pod:'Uploaded 10:36 · verified',
+    { type:'pickup', hour:10.42, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – RXO Yard', title:'Houston, TX – RXO Yard (Pickup)', planned:'10:20', arrived:'10:25', departed:'10:35', pod:'Uploaded 10:36 · verified',
       note:'Same RXO yard as this morning\'s run, different customer order.', actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:11.25, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Pasadena, TX – RXO Local', title:'Pasadena, TX – RXO Local (Delivery)', arrived:'11:15', departed:'11:25', pod:'Uploaded 11:26 · verified',
+    { type:'delivery', hour:11.25, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Pasadena, TX – RXO Local', title:'Pasadena, TX – RXO Local (Delivery)', planned:'11:15', arrived:'11:15', departed:'11:25', pod:'Uploaded 11:26 · verified',
       note:'Delivered clean, closing out the fourth load of the day.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
 
   // Emily — one load, one move, three stops (pickup, delivery, empty dropoff)
   { driver:'emily', load:'9865', trailer:'66210', stops:[
-    { type:'pickup', hour:4.37, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Dallas, TX – RXO Cross-dock', title:'Dallas, TX – RXO Cross-dock (Pickup)',
+    { type:'pickup', hour:4.37, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Dallas, TX – RXO Cross-dock', title:'Dallas, TX – RXO Cross-dock (Pickup)', planned:'04:15',
       arrived:'04:22', departed:'04:55', pod:'Uploaded 04:56 · verified',
       note:'Both timestamps present, POD matched to the load. Clears for billing.',
       actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:7.67, state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing',
-      loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Delivery)',
+    { type:'delivery', hour:7.67, state:'blocking', badge:'POD missing', badgeClass:'status-pod-missing', constraint:'delivery-strict',
+      loc:'Houston, TX – Costco DC', title:'Houston, TX – Costco DC (Delivery)', planned:'07:30',
       arrived:'07:40', departed:'07:58', pod:'Not uploaded · 6h33m',
       note:'Driver has moved on to the next stop. Nothing to review — the document does not exist yet.',
       actions:[{label:'Message driver', kind:'outline'},{label:'Snooze 1h', kind:'ghost'}] },
-    { type:'yard', hour:8.33, state:'needs-human', badge:'Unverified', badgeClass:'status-unverified',
-      loc:'Houston Yard', title:'Houston Yard (Empty dropoff)',
+    { type:'yard', hour:8.33, state:'needs-human', badge:'Unverified', badgeClass:'status-unverified', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty dropoff)', planned:'08:15',
       arrived:'08:20', departed:'—', pod:'Uploaded 08:24 · unverified',
       note:'Photo attached but unreadable at the signature block. Uploaded is not the same as valid.',
       actions:[{label:'Request re-upload', kind:'outline'},{label:'Review POD', kind:'primary'}] },
   ] },
   { driver:'emily', load:'9890', trailer:'58847', stops:[
-    { type:'pickup', hour:9.08, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston Yard', title:'Houston Yard (Pickup)', arrived:'09:00', departed:'09:05', pod:'Uploaded 09:06 · verified',
+    { type:'pickup', hour:9.08, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston Yard', title:'Houston Yard (Pickup)', planned:'08:55', arrived:'09:00', departed:'09:05', pod:'Uploaded 09:06 · verified',
       note:'Drop-hook right after closing out the Costco delivery — no break between loads.',
       actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:9.83, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', arrived:'09:50', departed:'10:00', pod:'Uploaded 10:01 · verified',
+    { type:'delivery', hour:9.83, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Houston, TX – RXO Local', title:'Houston, TX – RXO Local (Delivery)', planned:'09:45', arrived:'09:50', departed:'10:00', pod:'Uploaded 10:01 · verified',
       note:'Delivered clean — second stop at this RXO dock today, Bruce ran through earlier.',
       actions:[{label:'View POD', kind:'outline'}] },
   ] },
   { driver:'emily', load:'9905', trailer:'63102', stops:[
-    { type:'yard', hour:10.83, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', arrived:'10:45', departed:'10:50', pod:'N/A · yard move',
+    { type:'yard', hour:10.83, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'flexible',
+      loc:'Houston Yard', title:'Houston Yard (Empty trailer pickup)', planned:'10:40', arrived:'10:45', departed:'10:50', pod:'N/A · yard move',
       note:'Grabbed a fresh trailer before the Amazon pickup — no connection to the earlier Costco POD gap.', actions:[{label:'View yard log', kind:'outline'}] },
-    { type:'pickup', hour:11.33, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', arrived:'11:10', departed:'11:20', pod:'Uploaded 11:21 · verified',
+    { type:'pickup', hour:11.33, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'pickup-strict',
+      loc:'Houston, TX – Amazon DC', title:'Houston, TX – Amazon DC (Pickup)', planned:'11:05', arrived:'11:10', departed:'11:20', pod:'Uploaded 11:21 · verified',
       note:'Same DC dock the regional-runs drivers use — different trailer.', actions:[{label:'View POD', kind:'outline'}] },
-    { type:'delivery', hour:12.58, state:'done', badge:'Closed out', badgeClass:'status-done',
-      loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', arrived:'12:35', departed:'12:45', pod:'Uploaded 12:46 · verified',
+    { type:'delivery', hour:12.58, state:'done', badge:'Closed out', badgeClass:'status-done', constraint:'delivery-strict',
+      loc:'Waco, TX – Amazon Station', title:'Waco, TX – Amazon Station (Delivery)', planned:'12:30', arrived:'12:35', departed:'12:45', pod:'Uploaded 12:46 · verified',
       note:'Delivered clean — closes out her day quietly after the morning\'s POD gap.', actions:[{label:'View POD', kind:'outline'}] },
   ] },
 ];
@@ -1044,16 +1049,57 @@ function renderMoveCard(move, showDriver){
   </div>`;
 }
 
+const CONSTRAINT_LABELS = {
+  'pickup-strict': 'Pickup-strict',
+  'delivery-strict': 'Delivery-strict',
+  'trending': 'Trending',
+  'flexible': 'Flexible',
+};
+
+function timeToMinutes(hhmm){
+  if (!hhmm || hhmm === '—') return null;
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+function formatDeltaMinutes(diff){
+  if (diff === 0) return 'On time';
+  return (diff > 0 ? '+' : '−') + Math.abs(diff) + 'm';
+}
+/* The one non-negotiable per-stop truth: planned vs. actual and the gap
+   between them. Delta is only ever computed from a REALIZED arrival
+   time, or — failing that — a stated `eta` (marked "(proj.)" so it's
+   never confused with something that already happened); otherwise it's
+   an honest '—', never a fabricated number. */
+function stopDelta(stop){
+  const planned = timeToMinutes(stop.planned);
+  if (planned === null) return { text: '—', minutes: null };
+  const actualMin = timeToMinutes(stop.arrived);
+  if (actualMin !== null) return { text: formatDeltaMinutes(actualMin - planned), minutes: actualMin - planned };
+  if (stop.eta) {
+    const diff = timeToMinutes(stop.eta) - planned;
+    return { text: formatDeltaMinutes(diff) + ' (proj.)', minutes: diff };
+  }
+  return { text: '—', minutes: null };
+}
+
 function renderMoveStopRow(stop){
   const actionBtn = a => `<button class="btn btn-${a.kind} btn-sm">${a.label}</button>`;
   const needsDetail = stop.state !== 'done';
+  const delta = stopDelta(stop);
+  const deltaClass = delta.minutes === null ? '' : delta.minutes === 0 ? 'delta-ontime' : delta.minutes > 0 ? 'delta-late' : 'delta-early';
+  const actualDisplay = stop.arrived === '—' ? '—' : `${stop.arrived}${stop.departed !== '—' ? ' → ' + stop.departed : ''}`;
   return `
   <div class="move-stop ${stop.state}">
     <div class="move-stop-main">
       <span class="move-stop-icon type-${stop.type}"></span>
       <span class="move-stop-loc">${stop.title}</span>
-      <span class="move-stop-times">${stop.arrived}${stop.departed !== '—' ? ' → ' + stop.departed : ''}</span>
       <span class="status-chip ${stop.badgeClass}">${stop.badge}</span>
+    </div>
+    <div class="move-stop-truth">
+      <div class="truth-cell"><span class="truth-label">Planned</span><span class="truth-value">${stop.planned}</span></div>
+      <div class="truth-cell"><span class="truth-label">Actual</span><span class="truth-value">${actualDisplay}</span></div>
+      <div class="truth-cell"><span class="truth-label">Δ</span><span class="truth-value ${deltaClass}">${delta.text}</span></div>
+      <div class="truth-cell"><span class="truth-label">Constraint</span><span class="truth-value">${CONSTRAINT_LABELS[stop.constraint] || stop.constraint}</span></div>
     </div>
     ${needsDetail ? `
     <div class="move-stop-detail">
