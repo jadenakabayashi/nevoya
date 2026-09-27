@@ -877,7 +877,7 @@ function statusPill(status){
    LOAD, since one driver can run several), true on the Load tab only
    when a load actually has more than one driver (a relay) — otherwise
    there's nothing to disambiguate. */
-function renderEntityRow({ id, badges, moves, legLine, current, status, banner, shiftStart, hos, groupByDriver }){
+function renderEntityRow({ id, badges, moves, caption, current, status, banner, shiftStart, hos, groupByDriver }){
   const flat = flattenStops(moves);
   const timelineCaption = groupByDriver
     ? groupCaption(flat, mv => mv.driver, d => DRIVERS[d].name)
@@ -890,7 +890,7 @@ function renderEntityRow({ id, badges, moves, legLine, current, status, banner, 
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
         <div class="line">${ICONS.pin}<span>${origin}</span>${ICONS.arrow}${ICONS.pin}<span>${destination}</span></div>
-        <div class="leg">${legLine}</div>
+        ${caption ? `<div class="leg">${caption}</div>` : ''}
       </div>
       <div class="row-status">${statusPill(status)}</div>
     </div>
@@ -907,16 +907,27 @@ function renderEntityRow({ id, badges, moves, legLine, current, status, banner, 
   </div>`;
 }
 
+/* Driver column only ever shows the CURRENT assignment — one load, one
+   truck, one trailer, one leg — not every load/trailer touched all
+   shift. A driver who's run 6 loads today shouldn't need 6 load chips
+   and 3 trailer chips just to say who they are right now; "6 loads
+   this shift" (the caption) is what tells you there's more history,
+   and the expanded move-cards are where that history actually lives. */
 function renderDriverRow(driverKey){
   const moves = movesForDriver(driverKey);
   const loads = loadsOnDriver(driverKey);
   const meta = DRIVER_META[driverKey];
-  const trailers = [...new Set(moves.map(m => m.trailer))];
-  const badges = [driverChip(driverKey, true), ...loads.map(l => loadChip(l)), truckChip(driverKey), ...trailers.map(trailerChip)];
   const current = currentMove(moves);
-  const legLine = `Leg ${moveFraction(current)} · Load ${current.load}` + (loads.length > 1 ? ` · ${loads.length} loads this shift` : '');
+  const badges = [
+    driverChip(driverKey, true),
+    loadChip(current.load),
+    truckChip(driverKey),
+    trailerChip(current.trailer),
+    `<span class="chip">Leg ${moveFraction(current)}</span>`,
+  ];
   return renderEntityRow({
-    id:`driver-${driverKey}`, badges, moves, legLine, current,
+    id:`driver-${driverKey}`, badges, moves, current,
+    caption: loads.length > 1 ? `${loads.length} loads this shift` : '',
     status: meta.status, banner: meta.banner,
     shiftStart: meta.shiftStart, hos: meta.hos,
     groupByDriver: false,
@@ -928,11 +939,16 @@ function renderLoadRow(loadId){
   const drivers = driversOnLoad(loadId);
   const meta = LOAD_META[loadId];
   const trailers = [...new Set(moves.map(m => m.trailer))];
-  const badges = [loadChip(loadId, true), ...drivers.flatMap(d => [driverChip(d), truckChip(d)]), ...trailers.map(trailerChip)];
   const current = currentMove(moves);
-  const legLine = `Leg ${moveFraction(current)}` + (drivers.length > 1 ? ` · Relay · ${drivers.length} drivers` : '');
+  const badges = [
+    loadChip(loadId, true),
+    ...drivers.flatMap(d => [driverChip(d), truckChip(d)]),
+    ...trailers.map(trailerChip),
+    `<span class="chip">Leg ${moveFraction(current)}</span>`,
+  ];
   return renderEntityRow({
-    id:`load-${loadId}`, badges, moves, legLine, current,
+    id:`load-${loadId}`, badges, moves, current,
+    caption: drivers.length > 1 ? `Relay · ${drivers.length} drivers` : '',
     status: meta.status, banner: meta.banner,
     shiftStart: null, hos: null, // HOS/14h are driver-scoped — never shown on a load, which can span drivers
     groupByDriver: drivers.length > 1,
