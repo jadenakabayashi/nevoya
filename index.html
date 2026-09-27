@@ -196,7 +196,17 @@ svg{display:block;}
 .row-route{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-default);min-width:0;}
 .row-route .line{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px;gap:6px;}
 .row-route .line svg{width:14px;height:14px;flex:none;color:var(--text-muted);}
-.row-route .leg{font-size:12px;color:var(--text-subtle);}
+.row-now,.row-next{font-size:12px;color:var(--text-subtle);display:flex;align-items:baseline;flex-wrap:wrap;gap:5px;}
+.row-now .now-label{color:var(--text-subtle);}
+.row-now .now-value{color:var(--text-muted);font-weight:600;}
+.row-now .now-arrow{color:var(--border-muted);}
+.row-next .next-label{color:var(--text-subtle);}
+.row-next .next-loc{color:var(--text-muted);font-weight:600;}
+.row-next .next-eta b{color:var(--text-dark);}
+.row-next .next-delta{font-weight:600;}
+.row-next .next-delta.delta-late{color:var(--red);}
+.row-next .next-delta.delta-early,.row-next .next-delta.delta-ontime{color:var(--emerald);}
+.row-next .next-reason{color:var(--text-subtle);font-style:italic;}
 .row-status{display:flex;justify-content:flex-end;}
 
 .row-flagbanner{
@@ -621,6 +631,7 @@ const MOVES = [
       actions:[{label:'View relay log', kind:'outline'}] },
     { type:'delivery', hour:14.98, state:'blocking', badge:'At risk', badgeClass:'status-atrisk', flagged:true, constraint:'delivery-strict',
       loc:'Houston, TX – Coke', title:'Houston, TX – Coke DC (Delivery)', planned:'14:45', eta:'14:59', arrived:'—', departed:'—', pod:'Not yet arrived',
+      reason:'Relay hand-off ran ~55m behind, carried forward from the Waco dwell',
       note:'Appt window closes 14:45 CDT — projected arrival 14:59, 14 min past close, carried over from the relay hand-off delay. Customer has not yet been notified.',
       actions:[{label:'Verify in timeline', kind:'outline'},{label:'Pull &amp; reassign', kind:'disruptive'}] },
     { type:'yard', hour:16.5, state:'upcoming', badge:'Upcoming', badgeClass:'status-upcoming', constraint:'flexible',
@@ -782,7 +793,6 @@ const FLAGS = [
 function movesForDriver(key){ return MOVES.filter(m => m.driver === key).sort((a,b) => a.stops[0].hour - b.stops[0].hour); }
 function movesForLoad(id){ return MOVES.filter(m => m.load === id).sort((a,b) => a.stops[0].hour - b.stops[0].hour); }
 function driversOnLoad(id){ return [...new Set(movesForLoad(id).map(m => m.driver))]; }
-function loadsOnDriver(key){ return [...new Set(movesForDriver(key).map(m => m.load))]; }
 
 /* Flattens a move list down to its stops for anything that needs one
    continuous timeline (route chain, Gantt markers) — each stop keeps a
@@ -804,6 +814,51 @@ function moveFraction(move){
   return `${siblings.indexOf(move) + 1}/${siblings.length}`;
 }
 function moveLabel(move){ return `Move ${moveFraction(move)}`; }
+
+/* A stop's title always ends "(Load pickup)"/"(Hub dropoff)"/etc — pull
+   that out rather than re-deriving it from `type`, since the same type
+   (e.g. 'hub') reads as "pickup" or "dropoff" depending on which end of
+   the relay it's on. */
+function stopKindLabel(stop){
+  const m = stop.title.match(/\(([^)]+)\)\s*$/);
+  return m ? m[1] : stop.type;
+}
+
+/* What the current move is actually doing right now: its own pickup and
+   dropoff bookends (first/last stop), each tagged with its real kind —
+   an empty-trailer hook reads very differently from a load pickup, and
+   a relay hand-off from a final delivery — and scheduled time. This is
+   the move currentMove() picked (in progress, else most recently
+   finished, else earliest upcoming), NOT necessarily the move the next
+   stop below belongs to (a driver can be idle between two moves). */
+function moveNowLine(move){
+  const pickup = move.stops[0];
+  const dropoff = move.stops[move.stops.length - 1];
+  return `
+    <span class="now-label">Pickup</span><span class="now-value">${stopKindLabel(pickup)} · ${pickup.planned}</span>
+    <span class="now-arrow">→</span>
+    <span class="now-label">Dropoff</span><span class="now-value">${stopKindLabel(dropoff)} · ${dropoff.planned}</span>`;
+}
+
+/* The next stop that hasn't happened yet, anywhere in this entity's
+   flattened chain — can sit in a later move than the current one.
+   ETA defaults to the planned time (on schedule) unless the stop itself
+   carries a projected `eta`; delta and its cause only render once one
+   is actually known, never fabricated for a stop with neither. */
+function nextStopLine(flatStops){
+  const next = flatStops.find(s => s.arrived === '—');
+  if (!next) return `<span class="next-label">Next</span> No more stops planned this shift`;
+  const eta = next.eta || next.planned;
+  const deltaMin = timeToMinutes(eta) - timeToMinutes(next.planned);
+  const deltaClass = deltaMin === 0 ? 'delta-ontime' : deltaMin > 0 ? 'delta-late' : 'delta-early';
+  const reason = next.reason || (deltaMin !== 0 && next.note ? next.note.split(/(?<=\.)\s/)[0] : '');
+  return `
+    <span class="next-label">Next</span><span class="next-loc">${next.loc}</span>
+    <span class="next-eta">ETA <b>${eta}</b></span>
+    <span>planned ${next.planned}</span>
+    <span class="next-delta ${deltaClass}">${formatDeltaMinutes(deltaMin)}</span>
+    ${deltaMin !== 0 && reason ? `<span class="next-reason">${reason}</span>` : ''}`;
+}
 
 /* Walks flattened stops in order and names each new value it hits under
    `keyFn` (applied to the stop's parent move) — e.g. "Load 7625 → Load
@@ -882,7 +937,7 @@ function statusPill(status){
    LOAD, since one driver can run several), true on the Load tab only
    when a load actually has more than one driver (a relay) — otherwise
    there's nothing to disambiguate. */
-function renderEntityRow({ id, badges, moves, caption, current, status, banner, shiftStart, hos, groupByDriver }){
+function renderEntityRow({ id, badges, moves, current, status, banner, shiftStart, hos, groupByDriver }){
   const flat = flattenStops(moves);
   const timelineCaption = groupByDriver
     ? groupCaption(flat, mv => mv.driver, d => DRIVERS[d].name)
@@ -895,7 +950,8 @@ function renderEntityRow({ id, badges, moves, caption, current, status, banner, 
       <div class="row-badges">${badges.join('')}</div>
       <div class="row-route">
         <div class="line">${ICONS.pin}<span>${origin}</span>${ICONS.arrow}${ICONS.pin}<span>${destination}</span></div>
-        ${caption ? `<div class="leg">${caption}</div>` : ''}
+        <div class="row-now">${moveNowLine(current)}</div>
+        <div class="row-next">${nextStopLine(flat)}</div>
       </div>
       <div class="row-status">${statusPill(status)}</div>
     </div>
@@ -920,7 +976,6 @@ function renderEntityRow({ id, badges, moves, caption, current, status, banner, 
    and the expanded move-cards are where that history actually lives. */
 function renderDriverRow(driverKey){
   const moves = movesForDriver(driverKey);
-  const loads = loadsOnDriver(driverKey);
   const meta = DRIVER_META[driverKey];
   const current = currentMove(moves);
   const badges = [
@@ -932,7 +987,6 @@ function renderDriverRow(driverKey){
   ];
   return renderEntityRow({
     id:`driver-${driverKey}`, badges, moves, current,
-    caption: loads.length > 1 ? `${loads.length} loads this shift` : '',
     status: meta.status, banner: meta.banner,
     shiftStart: meta.shiftStart, hos: meta.hos,
     groupByDriver: false,
@@ -941,9 +995,7 @@ function renderDriverRow(driverKey){
 
 /* Same "current assignment only" rule as the Driver tab: a relay load's
    badges show whichever driver/truck/trailer is on it RIGHT NOW (via
-   currentMove()), not every driver who's ever touched it. "Relay · N
-   drivers" is the caption that tells you there's more history — the
-   full hand-off chain is what the expanded move-cards are for. */
+   currentMove()), not every driver who's ever touched it. */
 function renderLoadRow(loadId){
   const moves = movesForLoad(loadId);
   const drivers = driversOnLoad(loadId);
@@ -958,7 +1010,6 @@ function renderLoadRow(loadId){
   ];
   return renderEntityRow({
     id:`load-${loadId}`, badges, moves, current,
-    caption: drivers.length > 1 ? `Relay · ${drivers.length} drivers` : '',
     status: meta.status, banner: meta.banner,
     shiftStart: null, hos: null, // HOS/14h are driver-scoped — never shown on a load, which can span drivers
     groupByDriver: drivers.length > 1,
