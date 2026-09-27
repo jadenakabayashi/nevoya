@@ -471,6 +471,7 @@ const ICONS = {
   truck: `<img src="assets/truck.svg" alt="" width="14" height="14"/>`,
   trailer: `<img src="assets/trailer.svg" alt="" width="14" height="14"/>`,
   alertTriangle: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3 2 21h20L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.7" r="1.1" fill="currentColor"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5l3.2 1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 };
 
 const DRIVERS = {
@@ -913,10 +914,22 @@ function currentMove(moves){
   return scored.slice().sort((a, b) => a.start - b.start)[0].mv;
 }
 
+/* Decimal-hour shiftStart (e.g. 5.5) -> a clock string ("05:30"), for
+   showing when a driver actually signed on — the fixed reference point
+   the 14h on-duty line and every HOS number are measured from. */
+function hourToClock(h){
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+
 /* ---------- Chip renderers ---------- */
 function driverChip(key, lead){
   const d = DRIVERS[key];
   return `<span class="chip ${lead?'chip-lead':''}">${ICONS.driver}${d.name}</span>`;
+}
+function signOnChip(driverKey){
+  return `<span class="chip">${ICONS.clock}Signed in ${hourToClock(DRIVER_META[driverKey].shiftStart)}</span>`;
 }
 function loadChip(load, lead){
   return `<span class="chip ${lead?'chip-lead':''}"><span class="chip-dot" style="background:#155DFC"></span>Load ${load}</span>`;
@@ -991,6 +1004,7 @@ function renderDriverRow(driverKey){
   const current = currentMove(moves);
   const badges = [
     driverChip(driverKey, true),
+    signOnChip(driverKey),
     loadChip(current.load),
     truckChip(driverKey),
     trailerChip(current.trailer),
@@ -1014,6 +1028,7 @@ function renderLoadRow(loadId){
   const badges = [
     loadChip(loadId, true),
     driverChip(current.driver),
+    signOnChip(current.driver),
     truckChip(current.driver),
     trailerChip(current.trailer),
   ];
